@@ -56,6 +56,11 @@ class SchemaFieldMap extends SchemaField implements ISchemaMapValue {
     }
 
     @Override
+    public List<GenericItem> getGenericItems() {
+        return genericItems;
+    }
+
+    @Override
     public boolean isAbstractType() {
         return false;
     }

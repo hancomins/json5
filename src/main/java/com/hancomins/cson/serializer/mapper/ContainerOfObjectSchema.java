@@ -4,7 +4,7 @@ import com.hancomins.cson.CommentObject;
 import com.hancomins.cson.CommentPosition;
 import com.hancomins.cson.container.*;
 import com.hancomins.cson.util.ArrayMap;
-import com.hancomins.cson.util.DataConverter;
+import com.hancomins.cson.util.GenericTypeAnalyzer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +16,10 @@ public class ContainerOfObjectSchema implements KeyValueDataContainer {
     private _ObjectNode objectNode;
     private Object rootObject;
 
-    private List<Integer> whildObjectIdList = null;
-
     private ArrayMap<Object> parentMap = null;
-
     private List<Runnable> setValueExecutorList = new ArrayList<>();
+    private List<Integer> whildObjectIdList = null;
+    private int wildObjectLevel = 0;
 
     public ContainerOfObjectSchema(Class<?> classType) {
         ClassSchema classSchema = ClassSchemaMap.getInstance().getClassSchema(classType);
@@ -50,6 +49,13 @@ public class ContainerOfObjectSchema implements KeyValueDataContainer {
         this.objectNode = objectNode;
     }
 
+    private ContainerOfObjectSchema(ArrayMap<Object> parentMap,List<Integer> whildObjectIdList, int wiledObjectLevel) {
+        this.parentMap = parentMap;
+        this.whildObjectIdList = whildObjectIdList;
+        this.wildObjectLevel = wiledObjectLevel;
+    }
+
+
     // todo: Setter에서 문제가 발생할 수 있다.
     // 빈 오브젝트나 비 컬렉션을 먼저 Setter로 넣고, 그 다음에 컬렉션을 넣으면 의미가 없음.
 
@@ -64,17 +70,25 @@ public class ContainerOfObjectSchema implements KeyValueDataContainer {
                     continue;
                 }
                 SchemaValueAbs schemaValueAbs = schemaPointer.getSchema();
+                if(!(schemaValueAbs instanceof ISchemaMapValue)) {
+                    continue;
+                }
+                ISchemaMapValue schemaMapValue = (ISchemaMapValue)schemaValueAbs;
+
                 if(object instanceof Map) {
                     if(!(value instanceof BaseDataContainer)) {
                         Object convertedValue = schemaValueAbs.convertValue(value);
                         //noinspection unchecked
                         ((Map<String, Object>) object).put(key, convertedValue);
                     } else if(value instanceof KeyValueDataContainerWrapper) {
-                        if (((KeyValueDataContainerWrapper) value).hasContainer()) {
-                            ContainerOfObjectSchema childContainer = new ContainerOfObjectSchema(parentMap, childObjectNode);
+                        int wildObjectLevel = this.wildObjectLevel + 1;
+                        List<GenericItem> genericItems = schemaMapValue.getGenericItems();
+                        if(genericItems.size() <= wildObjectLevel) {
+                            continue;
+                        }
+                        if (!((KeyValueDataContainerWrapper) value).hasContainer()) {
 
                         }
-                        ContainerOfObjectSchema childContainer = keyValueDataContainerWrapper.getContainer();
                     }
                 }
 
@@ -114,7 +128,6 @@ public class ContainerOfObjectSchema implements KeyValueDataContainer {
                             Object parent = parentMap.get(parentId);
                             final Object finalObject = object;
                             setValueExecutorList.add(() -> schemaValue.setValue(parent, finalObject));
-
                         }
                     }
                 }

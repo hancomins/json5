@@ -1,5 +1,7 @@
 package com.hancomins.cson.serializer.mapper;
 
+import com.hancomins.cson.util.GenericTypeAnalyzer;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -17,6 +19,22 @@ public interface ISchemaMapValue {
     Object newInstance();
 
 
+    List<GenericItem> getGenericItems();
+
+    default GenericItem getGenericItem() {
+        if(getGenericItems().isEmpty()) {
+            return null;
+        }
+        return getGenericItems().get(0);
+    }
+
+    default GenericItem getGenericItem(int index) {
+        List<GenericItem> collectionItems = getGenericItems();
+        if(index < 0 || index >= collectionItems.size()) {
+            return null;
+        }
+        return collectionItems.get(index);
+    }
     ObtainTypeValueInvoker getObtainTypeValueInvoker();
 
 

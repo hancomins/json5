@@ -62,7 +62,7 @@ class SchemaSetterGetterUseCollection extends SchemaMethod implements ISchemaArr
 
 
     @Override
-    public List<GenericItem> getCollectionItems() {
+    public List<GenericItem> getGenericItems() {
         return collectionBundles;
     }
 
@@ -104,7 +104,7 @@ class SchemaSetterGetterUseCollection extends SchemaMethod implements ISchemaArr
         if(!(schemaValueAbs instanceof ISchemaArrayValue)) {
             return false;
         }
-        if(!ISchemaArrayValue.equalsCollectionTypes(this.getCollectionItems(), ((ISchemaArrayValue)schemaValueAbs).getCollectionItems())) {
+        if(!ISchemaArrayValue.equalsCollectionTypes(this.getGenericItems(), ((ISchemaArrayValue)schemaValueAbs).getGenericItems())) {
             return false;
         }
         if(this.schemaValueType != ((ISchemaArrayValue)schemaValueAbs).getEndpointValueType()) {

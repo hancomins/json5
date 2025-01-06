@@ -30,7 +30,7 @@ public class ContainerOfCollectionMapping implements ArrayDataContainer {
 
         for(_ArraySchemePointer arraySchemePointer : arraySchemePointerList) {
             ISchemaArrayValue iSchemaArrayValue = arraySchemePointer.getSchema();
-            GenericItem collectionItem = iSchemaArrayValue.getCollectionItem();
+            GenericItem collectionItem = iSchemaArrayValue.getGenericItem();
             if(collectionItem == null) {
                 continue;
             }
@@ -50,7 +50,7 @@ public class ContainerOfCollectionMapping implements ArrayDataContainer {
         List<_ArraySchemePointer> arraySchemePointerList =  rootNode.getArraySchemaPointers();
         for(int i = 0,n = arraySchemePointerList.size(); i < n; i++) {
             ISchemaArrayValue iSchemaArrayValue = arraySchemePointerList.get(i).getSchema();
-            GenericItem collectionItem = iSchemaArrayValue.getCollectionItem(depth);
+            GenericItem collectionItem = iSchemaArrayValue.getGenericItem(depth);
             ValueBundle parentValueBundle = parentValues.get(i);
             if(collectionItem == null || !parentValueBundle.isAvailable()) {
                 this.values.add(ValueBundle.notAvailable());

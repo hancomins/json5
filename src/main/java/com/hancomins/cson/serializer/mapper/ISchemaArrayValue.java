@@ -9,17 +9,17 @@ interface ISchemaArrayValue extends ISchemaValue {
      Class<?> getEndpointValueTypeClass();
 
 
-     List<GenericItem> getCollectionItems();
+     List<GenericItem> getGenericItems();
 
-     default GenericItem getCollectionItem() {
-         if(getCollectionItems().isEmpty()) {
+     default GenericItem getGenericItem() {
+         if(getGenericItems().isEmpty()) {
              return null;
          }
-            return getCollectionItems().get(0);
+            return getGenericItems().get(0);
      }
 
-    default GenericItem getCollectionItem(int index) {
-        List<GenericItem> collectionItems = getCollectionItems();
+    default GenericItem getGenericItem(int index) {
+        List<GenericItem> collectionItems = getGenericItems();
         if(index < 0 || index >= collectionItems.size()) {
             return null;
         }

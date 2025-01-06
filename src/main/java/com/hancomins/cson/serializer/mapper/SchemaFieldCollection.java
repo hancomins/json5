@@ -27,7 +27,7 @@ class SchemaFieldCollection extends SchemaField implements ISchemaArrayValue {
 
 
     @Override
-    public List<GenericItem> getCollectionItems() {
+    public List<GenericItem> getGenericItems() {
         return genericItems;
     }
 
@@ -68,7 +68,7 @@ class SchemaFieldCollection extends SchemaField implements ISchemaArrayValue {
         if(!(schemaValueAbs instanceof ISchemaArrayValue)) {
             return false;
         }
-        if(!ISchemaArrayValue.equalsCollectionTypes(this.getCollectionItems(), ((ISchemaArrayValue)schemaValueAbs).getCollectionItems())) {
+        if(!ISchemaArrayValue.equalsCollectionTypes(this.getGenericItems(), ((ISchemaArrayValue)schemaValueAbs).getGenericItems())) {
             return false;
         }
         if(this.getEndpointValueType() != ((ISchemaArrayValue)schemaValueAbs).getEndpointValueType()) {

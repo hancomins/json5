@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.List;
 import java.util.Map;
 
 class SetterGetterSchemaUseMap extends SchemaMethod implements ISchemaMapValue {
@@ -106,6 +107,11 @@ class SetterGetterSchemaUseMap extends SchemaMethod implements ISchemaMapValue {
         } catch (InstantiationException | IllegalAccessException | java.lang.reflect.InvocationTargetException e) {
             throw new CSONMapperException("Map type " + getValueTypeClass().getName() + " has no default constructor. (path: " + methodPath + ")", e);
         }
+    }
+
+    @Override
+    public List<GenericItem> getGenericItems() {
+        return null;
     }
 
 

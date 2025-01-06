@@ -95,7 +95,7 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
         else if(node instanceof ISchemaArrayValue && this instanceof ISchemaArrayValue) {
             ISchemaArrayValue nodeArray = (ISchemaArrayValue) node;
             ISchemaArrayValue thisArray = (ISchemaArrayValue) this;
-            if(nodeArray.getCollectionItems().size() != thisArray.getCollectionItems().size()) {
+            if(nodeArray.getGenericItems().size() != thisArray.getGenericItems().size()) {
                 //TODO 예외 발생 시켜야한다.
                 // TODO 이건 좀 고민중...
                 //return false;
