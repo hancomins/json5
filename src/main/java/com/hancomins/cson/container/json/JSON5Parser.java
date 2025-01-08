@@ -37,7 +37,7 @@ public class JSON5Parser {
 
     private final boolean allowUnquoted;
     private final boolean allowComment;
-    private final boolean ignoreNonNumeric;
+
     private final boolean ignoreTrailingData;
     private final boolean skipComments;
     private ReadCountReader readCountReader;
@@ -45,7 +45,7 @@ public class JSON5Parser {
     private JSON5Parser(JsonParsingOptions jsonOption, KeyValueDataContainerFactory keyValueDataContainerFactory, ArrayDataContainerFactory arrayDataContainerFactory) {
         this.allowUnquoted = jsonOption.isAllowUnquoted();
         this.allowComment = jsonOption.isAllowComments();
-        this.ignoreNonNumeric = jsonOption.isIgnoreNonNumeric();
+
         this.skipComments = jsonOption.isSkipComments();
         this.consecutiveCommas = jsonOption.isAllowConsecutiveCommas();
         CharacterBuffer keyBuffer = new CharacterBuffer(128);

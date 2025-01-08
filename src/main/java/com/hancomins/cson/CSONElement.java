@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 public abstract  class CSONElement implements Iterable<Object>  {
 
 	private ParsingOptions<?> parsingOptions = ParsingOptions.getDefaultParsingOptions();
-	private WritingOptions<?> writingOptions = WritingOptions.getDefaultWritingOptions();
+	private WritingOptions writingOptions = WritingOptions.getDefaultWritingOptions();
 
 	private static final Pattern BASE64_PREFIX_REPLACE_PATTERN = Pattern.compile("(?i)^base64,");
 	private static final Pattern BASE64_PREFIX_PATTERN = Pattern.compile("^((?i)base64,)([a-zA-Z0-9+/]*={0,2})$");
@@ -38,13 +38,13 @@ public abstract  class CSONElement implements Iterable<Object>  {
 	private boolean unknownObjectToString = false;
 
 
-	protected CSONElement(ElementType type, ParsingOptions<?> parsingOptions, WritingOptions<?> writingOptions) {
+	protected CSONElement(ElementType type, ParsingOptions<?> parsingOptions, WritingOptions writingOptions) {
 		this.type = type;
 		this.parsingOptions = parsingOptions;
 		this.writingOptions = writingOptions;
 	}
 
-	protected CSONElement(ElementType type, WritingOptions<?> writingOptions) {
+	protected CSONElement(ElementType type, WritingOptions writingOptions) {
 		this.type = type;
 		this.writingOptions = writingOptions;
 	}
@@ -71,7 +71,7 @@ public abstract  class CSONElement implements Iterable<Object>  {
 	}
 
 	@SuppressWarnings({"unchecked", "unused"})
-	public <T extends CSONElement> T setWritingOptions(WritingOptions<?> writingOptions) {
+	public <T extends CSONElement> T setWritingOptions(WritingOptions writingOptions) {
 		this.writingOptions = writingOptions;
         //noinspection unchecked
         return (T) this;
@@ -87,7 +87,7 @@ public abstract  class CSONElement implements Iterable<Object>  {
 	}
 
 
-	public WritingOptions<?> getWritingOptions() {
+	public WritingOptions getWritingOptions() {
 		return writingOptions;
 	}
 
@@ -134,7 +134,7 @@ public abstract  class CSONElement implements Iterable<Object>  {
 	protected abstract void write(FormatWriter writer);
 
 
-	public abstract String toString(WritingOptions<?> option);
+	public abstract String toString(WritingOptions option);
 
 
 	public enum ElementType { Object, Array}

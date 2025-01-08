@@ -35,7 +35,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	@SuppressWarnings("unused")
-	public static CSONObject fromObject(Object obj, WritingOptions<?> writingOptions) {
+	public static CSONObject fromObject(Object obj, WritingOptions writingOptions) {
 		CSONObject csonObject = CSONSerializer.toCSONObject(obj);
 		csonObject.setWritingOptions(writingOptions);
 		return csonObject;
@@ -119,7 +119,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 
-	public CSONObject(WritingOptions<?> writingOptions) {
+	public CSONObject(WritingOptions writingOptions) {
 		super(ElementType.Object, writingOptions);
 	}
 
@@ -130,7 +130,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 		reader.close();
 	}
 
-	public CSONObject(String json, WritingOptions<?> writingOptions) {
+	public CSONObject(String json, WritingOptions writingOptions) {
 		super(ElementType.Object);
 		NoSynchronizedStringReader reader = new NoSynchronizedStringReader(json);
 		parse(reader, ParsingOptions.getDefaultParsingOptions());
@@ -916,7 +916,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	@Override
-	public String toString(WritingOptions<?> writingOptions) {
+	public String toString(WritingOptions writingOptions) {
 		if(writingOptions instanceof JSON5WriterOption) {
 			JSON5Writer jsonWriter = new JSON5Writer((JSON5WriterOption)writingOptions);
 			write(jsonWriter);

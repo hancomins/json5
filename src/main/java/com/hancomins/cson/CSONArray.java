@@ -30,7 +30,7 @@ public class CSONArray extends CSONElement  implements Collection<Object>, Clone
 		return CSONSerializer.collectionToCSONArray(collection);
 	}
 
-	public static CSONArray fromCollection(Collection<?> collection, WritingOptions<?> writingOptions) {
+	public static CSONArray fromCollection(Collection<?> collection, WritingOptions writingOptions) {
 		CSONArray csonArray = CSONSerializer.collectionToCSONArray(collection);
 		csonArray.setWritingOptions(writingOptions);
 		return csonArray;
@@ -56,7 +56,7 @@ public class CSONArray extends CSONElement  implements Collection<Object>, Clone
 		parse(stringSource, ParsingOptions.getDefaultParsingOptions());
 	}
 
-	public CSONArray(Reader stringSource, WritingOptions<?> writingOptions) {
+	public CSONArray(Reader stringSource, WritingOptions writingOptions) {
 		super(ElementType.Array);
 		parse(stringSource, ParsingOptions.getDefaultParsingOptions());
 		this.setWritingOptions(writingOptions);
@@ -82,7 +82,7 @@ public class CSONArray extends CSONElement  implements Collection<Object>, Clone
 		noSynchronizedStringReader.close();
 	}
 
-	public CSONArray(String jsonArray, WritingOptions<?> options) throws CSONException {
+	public CSONArray(String jsonArray, WritingOptions options) throws CSONException {
 		super(ElementType.Array);
 		NoSynchronizedStringReader noSynchronizedStringReader = new NoSynchronizedStringReader(jsonArray);
 		parse(noSynchronizedStringReader, ParsingOptions.getDefaultParsingOptions());
@@ -92,7 +92,7 @@ public class CSONArray extends CSONElement  implements Collection<Object>, Clone
 
 
 
-	public CSONArray(WritingOptions<?> writingOptions) {
+	public CSONArray(WritingOptions writingOptions) {
 
 		super(ElementType.Array, writingOptions);
 	}
@@ -1045,7 +1045,7 @@ public class CSONArray extends CSONElement  implements Collection<Object>, Clone
 		return toString(getWritingOptions());
 	}
 
-	public String toString(WritingOptions<?> writingOptions) {
+	public String toString(WritingOptions writingOptions) {
 		if(writingOptions instanceof JSON5WriterOption) {
 			JSON5Writer jsonWriter  = new JSON5Writer((JSON5WriterOption)writingOptions);
 			write(jsonWriter);

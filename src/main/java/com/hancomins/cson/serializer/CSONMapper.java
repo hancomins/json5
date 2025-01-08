@@ -215,7 +215,7 @@ public class CSONMapper {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> List<T> csonArrayToList(ArrayDataContainer csonArray, Class<T> valueType, WritingOptions<?> writingOptions, boolean ignoreError, T defaultValue) {
+    public <T> List<T> csonArrayToList(ArrayDataContainer csonArray, Class<T> valueType, WritingOptions writingOptions, boolean ignoreError, T defaultValue) {
         Types types = Types.of(valueType);
         if(valueType.isPrimitive()) {
             if(ignoreError) {

@@ -1,6 +1,6 @@
 package com.hancomins.cson.options;
 
-public class JSON5WriterOption extends MutableINumberConversionOption<JSON5WriterOption> implements WritingOptions<JSON5WriterOption> {
+public class JSON5WriterOption  implements WritingOptions {
     private boolean pretty = false;
     private boolean skipComments = false;
     private boolean isUnprettyArray = false;
@@ -22,12 +22,6 @@ public class JSON5WriterOption extends MutableINumberConversionOption<JSON5Write
 
     public static JSON5WriterOption json5() {
         JSON5WriterOption JSON5WriterOption = new JSON5WriterOption();
-        JSON5WriterOption.setAllowNaN(true);
-        JSON5WriterOption.setAllowInfinity(true);
-        JSON5WriterOption.setAllowHexadecimal(true);
-        JSON5WriterOption.setLeadingZeroOmission(true);
-        JSON5WriterOption.setAllowPositiveSing(true);
-        JSON5WriterOption.setAllowHexadecimal(true);
         JSON5WriterOption.setPretty(false);
         JSON5WriterOption.setUnprettyArray(false);
         JSON5WriterOption.setSpace(4);
@@ -41,13 +35,6 @@ public class JSON5WriterOption extends MutableINumberConversionOption<JSON5Write
 
     public static JSON5WriterOption json() {
         JSON5WriterOption JSON5WriterOption = new JSON5WriterOption();
-        JSON5WriterOption.setAllowNaN(false);
-        JSON5WriterOption.setAllowInfinity(false);
-        JSON5WriterOption.setAllowHexadecimal(true);
-        JSON5WriterOption.setLeadingZeroOmission(false);
-        JSON5WriterOption.setAllowPositiveSing(false);
-        JSON5WriterOption.setIgnoreNonNumeric(true);
-        JSON5WriterOption.setAllowHexadecimal(true);
         JSON5WriterOption.setPretty(false);
         JSON5WriterOption.setUnprettyArray(false);
         JSON5WriterOption.setSpace(4);

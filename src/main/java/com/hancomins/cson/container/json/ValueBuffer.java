@@ -57,13 +57,6 @@ public class ValueBuffer {
     private boolean endString = false;
 
 
-    private boolean allowNaN = false;
-    private boolean allowInfinity = false;
-    private boolean allowHexadecimal = false;
-    private boolean leadingZeroOmission = false;
-    private boolean allowPositiveSign = false;
-    private boolean onlyPrimitiveValue = false;
-
     /**
      * 제어문자를 허용할 것인지 여부를 설정한다.
      */
@@ -80,16 +73,9 @@ public class ValueBuffer {
         this(new CharacterBuffer(), INumberConversionOption);
     }
 
-    ValueBuffer(CharacterBuffer characterBuffer, INumberConversionOption INumberConversionOption) {
+    ValueBuffer(CharacterBuffer characterBuffer) {
         this.characterBuffer = characterBuffer;
         numberBuffer = new CharacterBuffer();
-        allowNaN = INumberConversionOption.isAllowNaN();
-        allowInfinity = INumberConversionOption.isAllowInfinity();
-        allowHexadecimal = INumberConversionOption.isAllowHexadecimal();
-        leadingZeroOmission = INumberConversionOption.isLeadingZeroOmission();
-        allowPositiveSign = INumberConversionOption.isAllowPositiveSing();
-        onlyPrimitiveValue = !INumberConversionOption.isIgnoreNonNumeric();
-
 
     }
 

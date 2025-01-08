@@ -1,7 +1,7 @@
 package com.hancomins.cson.options;
 
 
-public interface ParsingOptions<T> extends IMutableINumberConversionOption<T> {
+public interface ParsingOptions<T>  {
 
 
 
@@ -22,10 +22,6 @@ public interface ParsingOptions<T> extends IMutableINumberConversionOption<T> {
         return JsonParsingOptions.json5();
     }
 
-
-    static JsonParsingOptions json() {
-        return JsonParsingOptions.json();
-    }
 
 
 }

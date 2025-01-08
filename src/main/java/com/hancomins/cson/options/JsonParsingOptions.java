@@ -2,7 +2,7 @@ package com.hancomins.cson.options;
 
 
 @SuppressWarnings("UnusedReturnValue")
-public class JsonParsingOptions extends MutableINumberConversionOption<JsonParsingOptions>  implements ParsingOptions<JsonParsingOptions> {
+public class JsonParsingOptions implements ParsingOptions<JsonParsingOptions> {
 
         private StringFormatType formatType = StringFormatType.JSON5;
 
@@ -19,32 +19,11 @@ public class JsonParsingOptions extends MutableINumberConversionOption<JsonParsi
 
         public static JsonParsingOptions json5() {
             JsonParsingOptions jsonParsingOptions = new JsonParsingOptions();
-            jsonParsingOptions.setIgnoreNonNumeric(false);
-            jsonParsingOptions.setAllowNaN(true);
-            jsonParsingOptions.setAllowPositiveSing(true);
-            jsonParsingOptions.setAllowInfinity(true);
-            jsonParsingOptions.setAllowHexadecimal(true);
-            jsonParsingOptions.setLeadingZeroOmission(true);
             jsonParsingOptions.setAllowUnquoted(true);
             jsonParsingOptions.setAllowComments(true);
             jsonParsingOptions.formatType = StringFormatType.JSON5;
             return jsonParsingOptions;
         }
-
-    public static JsonParsingOptions json() {
-        JsonParsingOptions jsonParsingOptions = new JsonParsingOptions();
-        jsonParsingOptions.setIgnoreNonNumeric(false);
-        jsonParsingOptions.setAllowNaN(false);
-        jsonParsingOptions.setAllowPositiveSing(false);
-        jsonParsingOptions.setAllowInfinity(false);
-        jsonParsingOptions.setAllowHexadecimal(true);
-        jsonParsingOptions.setLeadingZeroOmission(false);
-        jsonParsingOptions.setAllowUnquoted(false);
-        jsonParsingOptions.setAllowComments(false);
-        jsonParsingOptions.setAllowControlCharacters(false);
-        jsonParsingOptions.formatType = StringFormatType.JSON5;
-        return jsonParsingOptions;
-    }
 
 
         private boolean allowConsecutiveCommas = false;

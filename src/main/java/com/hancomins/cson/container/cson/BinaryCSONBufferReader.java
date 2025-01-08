@@ -336,13 +336,13 @@ class BinaryCSONBufferReader {
 	
 	
 	public interface ParseCallback {
-		public void onVersion(byte[] version);
-		public void onOpenObject();
-		public void onCloseObject();
-		public void onOpenArray();
-		public void onCloseArray();
-		public void onKey(String key);
-		public void onValue(Object value);
+		void onVersion(byte[] version);
+		void onOpenObject();
+		void onCloseObject();
+		void onOpenArray();
+		void onCloseArray();
+		void onKey(String key);
+		void onValue(Object value);
 	}
 
 }

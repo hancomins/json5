@@ -1,13 +1,13 @@
 package com.hancomins.cson.options;
 
-public interface WritingOptions<T> extends IMutableINumberConversionOption<T> {
+public interface WritingOptions {
 
 
-    static void setDefaultWritingOptions(WritingOptions<?> options) {
+    static void setDefaultWritingOptions(WritingOptions options) {
         DefaultOptions.DEFAULT_WRITING_OPTIONS = options;
     }
 
-    static WritingOptions<?> getDefaultWritingOptions() {
+    static WritingOptions getDefaultWritingOptions() {
         return DefaultOptions.DEFAULT_WRITING_OPTIONS;
     }
 
