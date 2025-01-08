@@ -14,24 +14,24 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class ClassSchema implements ISchemaNode {
+class SchemaClassType implements ISchemaNode {
 
 
-    protected static final ClassSchema CSON_OBJECT;
+    protected static final SchemaClassType CSON_OBJECT;
 
     static {
         try {
-            CSON_OBJECT = new ClassSchema(CSONObject.class, CSONObject.class.getConstructor());
+            CSON_OBJECT = new SchemaClassType(CSONObject.class, CSONObject.class.getConstructor());
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
     }
 
-    protected static final ClassSchema CSON_ARRAY;
+    protected static final SchemaClassType CSON_ARRAY;
 
     static {
         try {
-            CSON_ARRAY = new ClassSchema(CSONArray.class, CSONArray.class.getConstructor());
+            CSON_ARRAY = new SchemaClassType(CSONArray.class, CSONArray.class.getConstructor());
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -41,8 +41,6 @@ class ClassSchema implements ISchemaNode {
     private final Class<?> type;
     private final Constructor<?> constructor;
     private final ConcurrentHashMap<String, ObtainTypeValueInvoker> fieldValueObtainMap = new ConcurrentHashMap<>();
-
-    //private SchemaObjectNode rootNode;
 
     private final String comment;
     private final String commentAfter;
@@ -88,7 +86,7 @@ class ClassSchema implements ISchemaNode {
 
 
 
-    protected synchronized static ClassSchema create(Class<?> type) {
+    protected synchronized static SchemaClassType create(Class<?> type) {
         type = findNoAnonymousClass(type);
 
         if(CSONObject.class.isAssignableFrom(type)) {
@@ -103,7 +101,7 @@ class ClassSchema implements ISchemaNode {
             constructor = type.getDeclaredConstructor();
             constructor.setAccessible(true);
         } catch (NoSuchMethodException ignored) {}
-        return new ClassSchema(type, constructor);
+        return new SchemaClassType(type, constructor);
     }
 
 
@@ -126,7 +124,7 @@ class ClassSchema implements ISchemaNode {
         return genericTypeNames.contains(name);
     }
 
-    private ClassSchema(Class<?> type, Constructor<?> constructor) {
+    private SchemaClassType(Class<?> type, Constructor<?> constructor) {
         this.type = type;
         this.constructor = constructor;
         CSON cson = type.getAnnotation(CSON.class);
@@ -269,7 +267,7 @@ class ClassSchema implements ISchemaNode {
 
     @Override
     public String toString() {
-        return "ClassSchema{" +
+        return "SchemaClassType{" +
                 "type=" + type.getName() +
                 '}';
     }

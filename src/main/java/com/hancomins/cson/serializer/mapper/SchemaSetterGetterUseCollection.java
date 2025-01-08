@@ -39,8 +39,8 @@ class SchemaSetterGetterUseCollection extends SchemaMethod implements ISchemaArr
 
 
 
-    SchemaSetterGetterUseCollection(ClassSchema classSchema, Method method) {
-        super(classSchema, method);
+    SchemaSetterGetterUseCollection(SchemaClassType schemaClassType, Method method) {
+        super(schemaClassType, method);
         boolean isGetter = getMethodType() == MethodType.Getter;
         String methodPath = method.getDeclaringClass().getName() + "." + method.getName();
         if(isGetter) {
@@ -54,7 +54,7 @@ class SchemaSetterGetterUseCollection extends SchemaMethod implements ISchemaArr
         endpointClass = collectionBundles.get(collectionBundles.size() - 1).getValueType();
         schemaValueType = SchemaType.of(endpointClass);
         if(schemaValueType == SchemaType.Object || schemaValueType == SchemaType.AbstractObject) {
-            ClassSchema result = ClassSchemaMap.getInstance().getClassSchema(endpointClass);
+            SchemaClassType result = ClassSchemaMap.getInstance().getClassSchema(endpointClass);
             setObjectTypeSchema(result);
         }
     }

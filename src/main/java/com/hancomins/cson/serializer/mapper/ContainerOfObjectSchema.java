@@ -4,7 +4,6 @@ import com.hancomins.cson.CommentObject;
 import com.hancomins.cson.CommentPosition;
 import com.hancomins.cson.container.*;
 import com.hancomins.cson.util.ArrayMap;
-import com.hancomins.cson.util.GenericTypeAnalyzer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,19 +21,19 @@ public class ContainerOfObjectSchema implements KeyValueDataContainer {
     private int wildObjectLevel = 0;
 
     public ContainerOfObjectSchema(Class<?> classType) {
-        ClassSchema classSchema = ClassSchemaMap.getInstance().getClassSchema(classType);
-        initRootNode(classSchema, null);
+        SchemaClassType schemaClassType = ClassSchemaMap.getInstance().getClassSchema(classType);
+        initRootNode(schemaClassType, null);
     }
 
     public ContainerOfObjectSchema(Object rootValue) {
-        ClassSchema classSchema = ClassSchemaMap.getInstance().getClassSchema(rootValue.getClass());
-        initRootNode(classSchema, rootValue);
+        SchemaClassType schemaClassType = ClassSchemaMap.getInstance().getClassSchema(rootValue.getClass());
+        initRootNode(schemaClassType, rootValue);
     }
 
-    private void initRootNode(ClassSchema classSchema, Object rootValue) {
-        this.objectNode = new _NodeBuilder().makeNode(classSchema);
+    private void initRootNode(SchemaClassType schemaClassType, Object rootValue) {
+        this.objectNode = new _NodeBuilder().makeNode(schemaClassType);
         this.parentMap = new ArrayMap<>(this.objectNode.getMaxSchemaId());
-        this.rootObject = rootValue != null ? rootValue : classSchema.newInstance();
+        this.rootObject = rootValue != null ? rootValue : schemaClassType.newInstance();
         parentMap.put(1, rootObject);
     }
 
@@ -121,8 +120,8 @@ public class ContainerOfObjectSchema implements KeyValueDataContainer {
                                 }
                                 mapIdList.add(id);
                             } else {
-                                ClassSchema classSchema = schemaValue.getClassSchema();
-                                object = classSchema.newInstance();
+                                SchemaClassType schemaClassType = schemaValue.getClassSchema();
+                                object = schemaClassType.newInstance();
                             }
                             parentMap.put(id, object);
                             Object parent = parentMap.get(parentId);

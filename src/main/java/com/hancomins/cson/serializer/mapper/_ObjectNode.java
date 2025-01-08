@@ -78,8 +78,8 @@ public class _ObjectNode extends _AbsNode{
 
     void putNodeSchema(ISchemaNode iSchemaNode, int id, int parentId) {
         _SchemaPointer pointer= null;
-        if(iSchemaNode instanceof ClassSchema) {
-            pointer = new _SchemaPointer((ClassSchema)iSchemaNode, id, parentId);
+        if(iSchemaNode instanceof SchemaClassType) {
+            pointer = new _SchemaPointer((SchemaClassType)iSchemaNode, id, parentId);
         } else if(iSchemaNode instanceof SchemaValueAbs) {
             pointer = new _SchemaPointer((SchemaValueAbs) iSchemaNode, id, parentId);
         }
@@ -94,8 +94,8 @@ public class _ObjectNode extends _AbsNode{
             if(fieldSchemedPointerList == null) {
                 fieldSchemedPointerList = new ArrayList<>();
             }
-            if(iSchemaNode instanceof ClassSchema) {
-                System.out.println("ClassSchema");
+            if(iSchemaNode instanceof SchemaClassType) {
+                System.out.println("SchemaClassType");
             }
             fieldSchemedPointerList.add(pointer);
         }*/

@@ -25,13 +25,13 @@ public class _NodeBuilder {
     }
 
 
-    _ObjectNode makeNode(ClassSchema targetTypeSchema) {
+    _ObjectNode makeNode(SchemaClassType targetTypeSchema) {
         return makeNode(targetTypeSchema, -1);
     }
 
     private  _ObjectNode makeNode(SchemaValueAbs targetTypeSchema, int parentID) {
-        ClassSchema classSchema = targetTypeSchema.getClassSchema();
-        _ObjectNode rootObject = makeNode(classSchema, parentID);
+        SchemaClassType schemaClassType = targetTypeSchema.getClassSchema();
+        _ObjectNode rootObject = makeNode(schemaClassType, parentID);
         _SchemaPointer schemaPointer = rootObject.getFirstNodeSchemaPointer();
         if(schemaPointer != null) {
             schemaPointer.setSchemaValue(targetTypeSchema);
@@ -45,7 +45,7 @@ public class _NodeBuilder {
         return rootObject;
     }
 
-    _ObjectNode makeNode(ClassSchema targetTypeSchema, int parentID) {
+    _ObjectNode makeNode(SchemaClassType targetTypeSchema, int parentID) {
         if(targetTypeSchema == null) {
             return makeWildNode(parentID);
         }
@@ -75,7 +75,7 @@ public class _NodeBuilder {
 
 
 
-    private  List<SchemaValueAbs> searchAllFields(ClassSchema typeSchema, Class<?> clazz) {
+    private  List<SchemaValueAbs> searchAllFields(SchemaClassType typeSchema, Class<?> clazz) {
         //Set<String> fieldPaths = new HashSet<>();
         List<SchemaValueAbs> results = new ArrayList<>();
         findSchemaByAncestors(typeSchema, results, clazz);
@@ -86,7 +86,7 @@ public class _NodeBuilder {
         return results;
     }
 
-    private  void findSchemaByAncestors(ClassSchema typeSchema, List<SchemaValueAbs> results, Class<?> currentClass) {
+    private  void findSchemaByAncestors(SchemaClassType typeSchema, List<SchemaValueAbs> results, Class<?> currentClass) {
         List<Field> fields = ReflectionUtils.getAllInheritedFields(currentClass);
         List<Method> methods = ReflectionUtils.getAllInheritedMethods(currentClass);
         TypeUtil.filterSupportedTypes(fields).stream().map(field -> SchemaValueAbs.of(typeSchema, field))
@@ -97,7 +97,7 @@ public class _NodeBuilder {
     }
 
 
-    private  void findCsonGetterSetterMethods(ClassSchema typeSchema, List<SchemaValueAbs> results, List<Method> methods) {
+    private  void findCsonGetterSetterMethods(SchemaClassType typeSchema, List<SchemaValueAbs> results, List<Method> methods) {
         if(methods != null) {
             for(Method method : methods) {
                 SchemaMethod methodRack = (SchemaMethod) SchemaValueAbs.of(typeSchema,method);
@@ -234,7 +234,7 @@ public class _NodeBuilder {
 
         _ObjectNode currentNode = rootNode;
 
-        /*ClassSchema classSchema = fieldRack.getClassSchema();
+        /*SchemaClassType classSchema = fieldRack.getClassSchema();
         _ObjectNode childNode = makeNode(classSchema, id);
         childNode.setComment(fieldRack.getComment(), fieldRack.getAfterComment());*/
 
@@ -282,7 +282,7 @@ public class _NodeBuilder {
             // 마지막 노드인 경우
             if(pathItem.isEndPoint()) {
                 // todo : Array 타입 구분.,
-                ClassSchema objectTypeSchema = valueSchema.getClassSchema();
+                SchemaClassType objectTypeSchema = valueSchema.getClassSchema();
                 SchemaType schemaType = valueSchema.getSchemaType();
                 if(objectTypeSchema != null || schemaType == SchemaType.Map) {
                     makeObjectNode(currentNode, valueSchema, parentID);

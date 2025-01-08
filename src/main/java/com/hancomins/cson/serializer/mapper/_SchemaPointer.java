@@ -34,8 +34,8 @@ public class _SchemaPointer {
         }
     }
 
-    _SchemaPointer(ClassSchema classSchema, int id, int parentId) {
-        this.typeSchema = classSchema;
+    _SchemaPointer(SchemaClassType schemaClassType, int id, int parentId) {
+        this.typeSchema = schemaClassType;
         this.id = id;
         this.parentId = parentId;
         if(this.schemaNode == null) {
@@ -59,8 +59,8 @@ public class _SchemaPointer {
         return indexList;
     }
 
-    void setTypeSchema(ClassSchema classSchema) {
-        this.typeSchema = classSchema;
+    void setTypeSchema(SchemaClassType schemaClassType) {
+        this.typeSchema = schemaClassType;
     }
 
 

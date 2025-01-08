@@ -194,7 +194,7 @@ class SchemaMethod extends SchemaValueAbs implements ObtainTypeValueInvokerGette
     private final boolean isStatic;
 
 
-    SchemaMethod(ClassSchema parentsTypeSchema, Method method) {
+    SchemaMethod(SchemaClassType parentsTypeSchema, Method method) {
         super(parentsTypeSchema,getPath(method), getValueType(method), getGenericType(method));
         this.isStatic = java.lang.reflect.Modifier.isStatic(method.getModifiers());
 

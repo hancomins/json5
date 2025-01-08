@@ -8,7 +8,7 @@ import java.util.*;
 class SchemaObjectNode extends SchemaElementNode {
 
     private final Map<Object, ISchemaNode> map = new LinkedHashMap<>();
-    private ClassSchema objectTypeSchema;
+    private SchemaClassType objectTypeSchema;
 
     private List<SchemaFieldNormal> schemaFieldList = new ArrayList<>();
 
@@ -34,12 +34,12 @@ class SchemaObjectNode extends SchemaElementNode {
         return schemaFieldList;
     }
 
-    SchemaObjectNode setObjectTypeSchema(ClassSchema objectTypeSchema) {
+    SchemaObjectNode setObjectTypeSchema(SchemaClassType objectTypeSchema) {
         this.objectTypeSchema = objectTypeSchema;
         return this;
     }
 
-    ClassSchema getObjectTypeSchema() {
+    SchemaClassType getObjectTypeSchema() {
         return objectTypeSchema;
     }
 

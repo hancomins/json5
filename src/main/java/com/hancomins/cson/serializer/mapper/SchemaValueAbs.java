@@ -7,14 +7,13 @@ import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
 
 
 
-    final ClassSchema parentsTypeSchema;
-    private ClassSchema objectTypeSchema;
+    final SchemaClassType parentsTypeSchema;
+    private SchemaClassType objectTypeSchema;
 
     final String path;
     private SchemaType type;
@@ -30,7 +29,7 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
     private final ArrayList<SchemaValueAbs> allSchemaValueAbsList = new ArrayList<>();
 
 
-    static SchemaValueAbs of(ClassSchema typeSchema, Field field) {
+    static SchemaValueAbs of(SchemaClassType typeSchema, Field field) {
 
 
         int modifiers = field.getModifiers();
@@ -56,9 +55,9 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
         SchemaValueAbs schemaValue;
         if(Collection.class.isAssignableFrom(field.getType())) {
             schemaValue = new SchemaFieldCollection(typeSchema, field, key);
-        } else if(Map.class.isAssignableFrom(field.getType())) {
+        } /* else if(Map.class.isAssignableFrom(field.getType())) {
             schemaValue = new SchemaFieldMap(typeSchema, field, key);
-        }
+        } */
         else {
             schemaValue = new SchemaFieldNormal(typeSchema, field, key);
         }
@@ -66,7 +65,7 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
         return schemaValue;
     }
 
-    static SchemaValueAbs of(ClassSchema typeSchema, Method method) {
+    static SchemaValueAbs of(SchemaClassType typeSchema, Method method) {
         CSONValueGetter getter = method.getAnnotation(CSONValueGetter.class);
         CSONValueSetter setter = method.getAnnotation(CSONValueSetter.class);
         if(setter == null && getter == null) return null;
@@ -80,7 +79,7 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
     }
 
 
-    public boolean isDeclaredType(ClassSchema typeSchema) {
+    public boolean isDeclaredType(SchemaClassType typeSchema) {
         return typeSchema == parentsTypeSchema;
     }
 
@@ -112,11 +111,11 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
 
 
 
-    void setObjectTypeSchema(ClassSchema objectTypeSchema) {
+    void setObjectTypeSchema(SchemaClassType objectTypeSchema) {
         this.objectTypeSchema = objectTypeSchema;
     }
 
-    ClassSchema getClassSchema() {
+    SchemaClassType getClassSchema() {
         return objectTypeSchema;
     }
 
@@ -128,7 +127,7 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
 
 
 
-    SchemaValueAbs(ClassSchema parentsTypeSchema, String path, Class<?> valueTypeClass, Type genericType) {
+    SchemaValueAbs(SchemaClassType parentsTypeSchema, String path, Class<?> valueTypeClass, Type genericType) {
 
         this.path = path;
         this.valueTypeClass = valueTypeClass;
@@ -152,6 +151,9 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
             } catch (CSONMapperException e) {
                 throw new CSONMapperException("A type that cannot be used as a serialization object : " + valueTypeClass.getName() + ". (path: " + parentsTypeSchema.getType().getName() + "." + path + ")", e);
             }
+        }
+        else if(this.type == SchemaType.Map) {
+            this.objectTypeSchema = ClassSchemaMap.getInstance().getClassSchema(valueTypeClass);
         }
         else {
             this.objectTypeSchema = null;

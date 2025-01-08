@@ -55,7 +55,7 @@ public class ContainerOfWildKeyValueType implements KeyValueDataContainer {
 
     @Override
     public Set<String> keySet() {
-        return Set.of();
+        return null;
     }
 
     @Override

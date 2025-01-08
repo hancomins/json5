@@ -20,7 +20,7 @@ public class NodePath {
     }
 
 
-    static SchemaObjectNode makeNode(ClassSchema targetTypeSchema, SchemaValueAbs parentFieldRack) {
+    static SchemaObjectNode makeNode(SchemaClassType targetTypeSchema, SchemaValueAbs parentFieldRack) {
         List<SchemaValueAbs> fieldRacks = searchAllFields(targetTypeSchema, targetTypeSchema.getType());
         SchemaObjectNode objectNode = new SchemaObjectNode()
                 .addSchemaField((SchemaFieldNormal) parentFieldRack)
@@ -30,7 +30,7 @@ public class NodePath {
             fieldRack.setParentFiled(parentFieldRack);
             String path = fieldRack.getPath();
             if(fieldRack.getSchemaType() == SchemaType.Object) {
-                ClassSchema typeSchema = ClassSchemaMap.getInstance().getClassSchema(fieldRack.getValueTypeClass());
+                SchemaClassType typeSchema = ClassSchemaMap.getInstance().getClassSchema(fieldRack.getValueTypeClass());
                 SchemaObjectNode childTree = makeNode(typeSchema,fieldRack);
                 childTree.setComment(fieldRack.getComment());
                 childTree.setAfterComment(fieldRack.getAfterComment());
@@ -51,7 +51,7 @@ public class NodePath {
     }
 
 
-    private static List<SchemaValueAbs> searchAllFields(ClassSchema typeSchema, Class<?> clazz) {
+    private static List<SchemaValueAbs> searchAllFields(SchemaClassType typeSchema, Class<?> clazz) {
         //Set<String> fieldPaths = new HashSet<>();
         List<SchemaValueAbs> results = new ArrayList<>();
         findSchemaByAncestors(typeSchema, results, clazz);
@@ -62,7 +62,7 @@ public class NodePath {
         return results;
     }
 
-    private static void findSchemaByAncestors(ClassSchema typeSchema, List<SchemaValueAbs> results, Class<?> currentClass) {
+    private static void findSchemaByAncestors(SchemaClassType typeSchema, List<SchemaValueAbs> results, Class<?> currentClass) {
         List<Field> fields = ReflectionUtils.getAllInheritedFields(currentClass);
         List<Method> methods = ReflectionUtils.getAllInheritedMethods(currentClass);
         TypeUtil.filterSupportedTypes(fields).stream().map(field -> SchemaValueAbs.of(typeSchema, field))
@@ -73,7 +73,7 @@ public class NodePath {
     }
 
 
-    private static void findCsonGetterSetterMethods(ClassSchema typeSchema, List<SchemaValueAbs> results, List<Method> methods) {
+    private static void findCsonGetterSetterMethods(SchemaClassType typeSchema, List<SchemaValueAbs> results, List<Method> methods) {
         if(methods != null) {
             for(Method method : methods) {
                 SchemaMethod methodRack = (SchemaMethod) SchemaValueAbs.of(typeSchema,method);

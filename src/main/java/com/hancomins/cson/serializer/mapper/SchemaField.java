@@ -17,7 +17,7 @@ public abstract class SchemaField extends SchemaValueAbs implements ObtainTypeVa
     //private final boolean isMapField;
 
 
-    SchemaField(ClassSchema parentsTypeSchema, Field field, String path) {
+    SchemaField(SchemaClassType parentsTypeSchema, Field field, String path) {
         super(parentsTypeSchema, path, field.getType(), field.getGenericType());
         this.field = field;
         this.fieldName = field.getName();

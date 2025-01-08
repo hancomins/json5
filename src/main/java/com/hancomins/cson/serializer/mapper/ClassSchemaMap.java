@@ -7,7 +7,7 @@ class ClassSchemaMap {
 
     private static final ClassSchemaMap instance = new ClassSchemaMap();
 
-    private final Map<Class<?>, ClassSchema> typeInfoMap = new ConcurrentHashMap<>();
+    private final Map<Class<?>, SchemaClassType> typeInfoMap = new ConcurrentHashMap<>();
 
     private ClassSchemaMap() {
     }
@@ -23,11 +23,11 @@ class ClassSchemaMap {
 
 
 
-    ClassSchema getClassSchema(Class<?> type) {
+    SchemaClassType getClassSchema(Class<?> type) {
         if(type.isAnonymousClass()) {
             type =  TypeUtil.getSuperClassIfAnonymous(type);
         }
-        return typeInfoMap.computeIfAbsent(type, ClassSchema::create);
+        return typeInfoMap.computeIfAbsent(type, SchemaClassType::create);
     }
 
 

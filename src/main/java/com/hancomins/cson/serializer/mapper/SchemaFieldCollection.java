@@ -11,7 +11,7 @@ class SchemaFieldCollection extends SchemaField implements ISchemaArrayValue {
     private final ObtainTypeValueInvoker obtainTypeValueInvoker;
     private final Class<?> endpointValueTypeClass;
 
-    protected SchemaFieldCollection(ClassSchema parentsTypeSchema, Field field, String path) {
+    protected SchemaFieldCollection(SchemaClassType parentsTypeSchema, Field field, String path) {
         super(parentsTypeSchema, field, path);
         String fieldPath = field.getDeclaringClass().getName() + "." + field.getName() + "<type: " + field.getType().getName() + ">";
         this.genericItems = GenericItem.analyzeField(field);
@@ -19,8 +19,8 @@ class SchemaFieldCollection extends SchemaField implements ISchemaArrayValue {
         endpointValueTypeClass = this.genericItems.get(this.genericItems.size() - 1).getValueType();
         valueSchemaType = SchemaType.of(endpointValueTypeClass);
         if (valueSchemaType == SchemaType.Object || valueSchemaType == SchemaType.AbstractObject ) {
-            ClassSchema valueClassSchema = ClassSchemaMap.getInstance().getClassSchema(endpointValueTypeClass);
-            setObjectTypeSchema(valueClassSchema);
+            SchemaClassType valueSchemaClassType = ClassSchemaMap.getInstance().getClassSchema(endpointValueTypeClass);
+            setObjectTypeSchema(valueSchemaClassType);
         }
     }
 

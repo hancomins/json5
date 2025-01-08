@@ -7,7 +7,7 @@ import java.lang.reflect.Field;
 public class SchemaFieldNormal extends SchemaField {
 
 
-    protected SchemaFieldNormal(ClassSchema typeSchema, Field field, String path) {
+    protected SchemaFieldNormal(SchemaClassType typeSchema, Field field, String path) {
         super(typeSchema, field, path);
     }
 

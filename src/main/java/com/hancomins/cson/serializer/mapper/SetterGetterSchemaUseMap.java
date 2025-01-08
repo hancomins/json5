@@ -31,7 +31,7 @@ class SetterGetterSchemaUseMap extends SchemaMethod implements ISchemaMapValue {
 
     private final String methodPath;
 
-    SetterGetterSchemaUseMap(ClassSchema parentsTypeSchema, Method method) {
+    SetterGetterSchemaUseMap(SchemaClassType parentsTypeSchema, Method method) {
         super(parentsTypeSchema, method);
 
         boolean isGetter = getMethodType() == MethodType.Getter;

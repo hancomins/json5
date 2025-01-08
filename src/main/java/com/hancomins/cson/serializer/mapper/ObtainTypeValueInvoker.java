@@ -11,7 +11,7 @@ import java.util.*;
 
 public class ObtainTypeValueInvoker {
 
-    static List<ObtainTypeValueInvoker> searchObtainTypeValueInvoker(ClassSchema typeSchema) {
+    static List<ObtainTypeValueInvoker> searchObtainTypeValueInvoker(SchemaClassType typeSchema) {
         List<ObtainTypeValueInvoker> result = new ArrayList<>();
 
         // 이미 등록된 메서드를 덮어쓰지 않도록 하기 위해 HashSet을 사용한다.

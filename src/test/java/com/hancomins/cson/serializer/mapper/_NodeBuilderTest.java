@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,8 +39,8 @@ public class _NodeBuilderTest {
     void test() {
         _ObjectNode node = new _ObjectNode();
         nodeBuilder = new _NodeBuilder(null);
-        ClassSchema classSchema = ClassSchemaMap.getInstance().getClassSchema(TestClass.class);
-        _ObjectNode rootObjectNode = nodeBuilder.makeNode(classSchema);
+        SchemaClassType schemaClassType = ClassSchemaMap.getInstance().getClassSchema(TestClass.class);
+        _ObjectNode rootObjectNode = nodeBuilder.makeNode(schemaClassType);
         assertNotNull(rootObjectNode);
         _ObjectNode aNode = (_ObjectNode) rootObjectNode.getNode("a");
         assertNotNull(aNode);
@@ -83,8 +84,8 @@ public class _NodeBuilderTest {
         try {
             _ObjectNode node = new _ObjectNode();
             nodeBuilder = new _NodeBuilder(null);
-            ClassSchema classSchema = ClassSchemaMap.getInstance().getClassSchema(ConflictParentClass.class);
-            _ObjectNode objectNode = nodeBuilder.makeNode(classSchema);
+            SchemaClassType schemaClassType = ClassSchemaMap.getInstance().getClassSchema(ConflictParentClass.class);
+            _ObjectNode objectNode = nodeBuilder.makeNode(schemaClassType);
             fail();
         } catch (CSONException csonException) {
             csonException.printStackTrace();
@@ -117,9 +118,9 @@ public class _NodeBuilderTest {
     @Test
     @DisplayName("컬렉션 노드 테스트")
     void testForCollectionNode() {
-        ClassSchema classSchema = ClassSchemaMap.getInstance().getClassSchema(CollectionTestClass.class);
+        SchemaClassType schemaClassType = ClassSchemaMap.getInstance().getClassSchema(CollectionTestClass.class);
         nodeBuilder = new _NodeBuilder(null);
-        _ObjectNode objectNode = nodeBuilder.makeNode(classSchema);
+        _ObjectNode objectNode = nodeBuilder.makeNode(schemaClassType);
 
         _CollectionNode collectionNode = (_CollectionNode) objectNode.getNode("stringSet");
         assertNotNull(collectionNode);
@@ -129,6 +130,26 @@ public class _NodeBuilderTest {
         System.out.println(objectNode);
     }
 
+
+    public static class SimpleClass {
+        String value = "a";
+    }
+    public static class SimpleMapClass {
+        Map<String, String> map;
+        SimpleClass simpleClass;
+
+    }
+
+    @Test
+    @DisplayName("맵 노드 테스트")
+    void testForMapNode() {
+        SchemaClassType schemaClassType = ClassSchemaMap.getInstance().getClassSchema(SimpleMapClass.class);
+        nodeBuilder = new _NodeBuilder(null);
+        _ObjectNode objectNode = nodeBuilder.makeNode(schemaClassType);
+
+
+        System.out.println(objectNode);
+    }
 
 
 
