@@ -1,21 +1,22 @@
 package com.hancomins.cson;
 
 
-import com.hancomins.cson.format.*;
-import com.hancomins.cson.format.cson.BinaryCSONParser;
-import com.hancomins.cson.format.cson.BinaryCSONWriter;
-import com.hancomins.cson.format.json.JSON5Writer;
+import com.hancomins.cson.container.*;
+import com.hancomins.cson.container.cson.BinaryCSONParser;
+import com.hancomins.cson.container.cson.BinaryCSONWriter;
+import com.hancomins.cson.container.json.JSON5Parser;
+import com.hancomins.cson.container.json.JSON5Writer;
+import com.hancomins.cson.options.*;
+import com.hancomins.cson.serializer.CSONSerializer;
 import com.hancomins.cson.util.DataConverter;
 import com.hancomins.cson.util.NoSynchronizedStringReader;
 import com.hancomins.cson.util.NullValue;
-import com.hancomins.cson.options.*;
-import com.hancomins.cson.format.json.JSON5Parser;
-import com.hancomins.cson.serializer.CSONSerializer;
 
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Array;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -23,18 +24,18 @@ import java.util.Map.Entry;
 public class CSONObject extends CSONElement implements Cloneable {
 
 
-	protected Map<String, java.lang.Object> dataMap = new LinkedHashMap<>();
+	protected Map<String, Object> dataMap = new LinkedHashMap<>();
 	private Map<String, CommentObject<String>> keyValueCommentMap;
 
 
 
 
-	public static CSONObject fromObject(java.lang.Object obj) {
+	public static CSONObject fromObject(Object obj) {
 		return CSONSerializer.toCSONObject(obj);
 	}
 
 	@SuppressWarnings("unused")
-	public static CSONObject fromObject(java.lang.Object obj, WritingOptions<?> writingOptions) {
+	public static CSONObject fromObject(Object obj, WritingOptions<?> writingOptions) {
 		CSONObject csonObject = CSONSerializer.toCSONObject(obj);
 		csonObject.setWritingOptions(writingOptions);
 		return csonObject;
@@ -56,7 +57,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(binaryCSON);
 		BinaryCSONParser parser = new BinaryCSONParser(CSONObject.KeyValueDataContainerFactory, CSONArray.ArrayDataContainerFactory);
 		try {
-			parser.parse(byteArrayInputStream, new CSONObject.CSONKeyValueDataContainer(this));
+			parser.parse(byteArrayInputStream, new CSONKeyValueDataContainer(this));
 		} catch (IOException e) {
 			throw new CSONException(e);
 		}
@@ -72,7 +73,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 
-	public Set<Entry<String, java.lang.Object>> entrySet() {
+	public Set<Entry<String, Object>> entrySet() {
 		return this.dataMap.entrySet();
 	}
 
@@ -87,10 +88,10 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 
-	public Map<String, java.lang.Object> toMap() {
-		Map<String, java.lang.Object> results = new HashMap<>();
-		for (Entry<String, java.lang.Object> entry : this.entrySet()) {
-			java.lang.Object value;
+	public Map<String, Object> toMap() {
+		Map<String, Object> results = new HashMap<>();
+		for (Entry<String, Object> entry : this.entrySet()) {
+			Object value;
 			if (entry.getValue() == null) {
 				value = null;
 			} else if (entry.getValue() instanceof CSONObject) {
@@ -185,17 +186,17 @@ public class CSONObject extends CSONElement implements Cloneable {
 		return dataMap.remove(key) != null;
 	}
 
-	private java.lang.Object getFromDataMap(String key) {
+	private Object getFromDataMap(String key) {
 		if(allowJsonPathKey && key.startsWith("$.")) {
 			key = key.substring(2);
 			return this.getCsonPath().get(key);
 		}
-		java.lang.Object obj = dataMap.get(key);
+		Object obj = dataMap.get(key);
 		copyHeadTailCommentToValueObject(key, obj);
 		return obj;
 	}
 
-	private void copyHeadTailCommentToValueObject(String key, java.lang.Object obj) {
+	private void copyHeadTailCommentToValueObject(String key, Object obj) {
 		if(keyValueCommentMap != null && obj instanceof CSONElement && !keyValueCommentMap.isEmpty()) {
 			CommentObject<String> commentObject = keyValueCommentMap.get(key);
 			if(commentObject == null) return;
@@ -207,7 +208,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 
-	private void putToDataMap(String key, java.lang.Object value) {
+	private void putToDataMap(String key, Object value) {
 		if(allowJsonPathKey && key.startsWith("$.")) {
 			key = key.substring(2);
 			this.getCsonPath().put(key, value);
@@ -217,14 +218,14 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 
-	public void putByParser(String key, java.lang.Object value) {
+	public void putByParser(String key, Object value) {
 		dataMap.put(key, value);
 	}
 
 
 
 
-	public CSONObject put(String key, java.lang.Object value) {
+	public CSONObject put(String key, Object value) {
 		if(value == null) {
 			putToDataMap(key, NullValue.Instance);
 			return this;
@@ -251,7 +252,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 			putToDataMap(key, csonArray);
 		} else if(value instanceof Collection) {
 			CSONArray csonArray = new CSONArray();
-			for(java.lang.Object obj : (Collection<?>)value) {
+			for(Object obj : (Collection<?>)value) {
 				csonArray.put(obj);
 			}
 			putToDataMap(key, csonArray);
@@ -278,21 +279,21 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public boolean isNull(String key) {
-		java.lang.Object obj = getFromDataMap(key);
+		Object obj = getFromDataMap(key);
 		return obj instanceof NullValue;
 	}
 
 
 
-	public java.lang.Object get(String key) {
-		java.lang.Object obj =  getFromDataMap(key);
+	public Object get(String key) {
+		Object obj =  getFromDataMap(key);
 		if(obj instanceof NullValue) return null;
 		else if(obj == null) throw new CSONIndexNotFoundException(ExceptionMessages.getCSONObjectKeyNotFound(key));
 		return obj;
 	}
 
     public <T extends Enum<T>> T getEnum(String key, Class<T> enumType) {
-		java.lang.Object obj = get(key);
+		Object obj = get(key);
 		T result =  DataConverter.toEnum(enumType, obj);
 		if(result == null) {
 			throw new CSONException(key, obj, enumType.getTypeName());
@@ -304,7 +305,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 	@SuppressWarnings("DuplicatedCode")
 	public Boolean getBoolean(String key) {
-		 java.lang.Object obj = get(key);
+		 Object obj = get(key);
 		if(obj instanceof Boolean) {
 			return (Boolean)obj;
 		} else if("true".equalsIgnoreCase(obj + "")) {
@@ -318,7 +319,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public byte getByte(String key) {
-		java.lang.Object number = get(key);
+		Object number = get(key);
         return DataConverter.toByte(number, (byte) 0, ((value, type) -> {
 			throw new CSONException(key, value, type.getTypeName());
 		}));
@@ -326,7 +327,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public byte[] getByteArray(String key) {
-		java.lang.Object obj = get(key);
+		Object obj = get(key);
 		byte[] byteArray = DataConverter.toByteArray(obj);
 		if(byteArray == null) {
 			throw new CSONException(key, obj, byte[].class.getTypeName());
@@ -336,7 +337,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public char getChar(String key) {
-		java.lang.Object number = get(key);
+		Object number = get(key);
 		return DataConverter.toChar(number, (char)0, (value, type) -> {
 			throw new CSONException(key, value, type.getTypeName());
 		});
@@ -345,7 +346,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public short getShort(String key) {
-		java.lang.Object number = get(key);
+		Object number = get(key);
 		return DataConverter.toShort(number, (value, type) -> {
 			throw new CSONException(key, value, type.getTypeName());
 		});
@@ -353,7 +354,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public int getInt(String key) {
-		java.lang.Object number = get(key);
+		Object number = get(key);
 		return DataConverter.toInteger(number, (value, type) -> {
 			throw new CSONException(key, value, type.getTypeName());
 		});
@@ -361,7 +362,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public float getFloat(String key) {
-		java.lang.Object number = get(key);
+		Object number = get(key);
 		return DataConverter.toFloat(number, (value, type) -> {
 			throw new CSONException(key, value, type.getTypeName());
 		});
@@ -369,7 +370,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public long getLong(String key) {
-		java.lang.Object number = get(key);
+		Object number = get(key);
 		return DataConverter.toLong(number, (value, type) -> {
 			throw new CSONException(key, value, type.getTypeName());
 		});
@@ -378,14 +379,14 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public double getDouble(String key) {
-		java.lang.Object number = get(key);
+		Object number = get(key);
 		return DataConverter.toDouble(number, (value, type) -> {
 			throw new CSONException(key, value, type.getTypeName());
 		});
 	}
 
 	public String getString(String key) {
-		java.lang.Object obj = get(key);
+		Object obj = get(key);
 		if(obj == null) {
 			return null;
 		}
@@ -395,7 +396,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 	@SuppressWarnings("DuplicatedCode")
     public CSONObject getCSONObject(String key) {
-		java.lang.Object obj = get(key);
+		Object obj = get(key);
 		if(obj == null) {
 			return null;
 		}
@@ -408,7 +409,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public CSONArray getCSONArray(String key) {
-		java.lang.Object obj = get(key);
+		Object obj = get(key);
 		CSONArray csonArray = DataConverter.toArray(obj, true);
 		if(csonArray == null) {
 			throw new CSONException(key, obj, CSONArray.class.getTypeName());
@@ -439,8 +440,8 @@ public class CSONObject extends CSONElement implements Cloneable {
 		}
 	}
 
-	public java.lang.Object opt(String key) {
-		java.lang.Object obj = getFromDataMap(key);
+	public Object opt(String key) {
+		Object obj = getFromDataMap(key);
 		if(obj instanceof NullValue) return null;
 		return obj;
 	}
@@ -450,7 +451,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	public boolean optBoolean(String key, boolean def) {
-		java.lang.Object obj = opt(key);
+		Object obj = opt(key);
 		return DataConverter.toBoolean(obj, def);
 	}
 
@@ -459,7 +460,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	public byte optByte(String key, byte def) {
-		java.lang.Object number = opt(key);
+		Object number = opt(key);
 		if(number == null) {
 			return def;
 		}
@@ -473,7 +474,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 	@SuppressWarnings("unused")
 	public byte[] optByteArray(String key,byte[] def) {
-		java.lang.Object obj = opt(key);
+		Object obj = opt(key);
 		if(obj == null) {
 			return def;
 		}
@@ -491,7 +492,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	public short optShort(String key, short def) {
-		java.lang.Object number = opt(key);
+		Object number = opt(key);
 		if(number == null) {
 			return def;
 		}
@@ -504,7 +505,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	public char optChar(String key, char def) {
-		java.lang.Object obj = opt(key);
+		Object obj = opt(key);
 		if(obj == null) {
 			return def;
 		}
@@ -519,7 +520,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	public int optInt(String key, int def) {
-		java.lang.Object number = opt(key);
+		Object number = opt(key);
 		if(number == null) {
 			return def;
 		}
@@ -533,7 +534,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	public float optFloat(String key, float def) {
-		java.lang.Object obj = opt(key);
+		Object obj = opt(key);
 		if(obj == null) {
 			return def;
 		}
@@ -545,7 +546,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	public long optLong(String key, long def) {
-		java.lang.Object number = opt(key);
+		Object number = opt(key);
 		if(number == null) {
 			return def;
 		}
@@ -557,7 +558,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	public double optDouble(String key, double def) {
-		java.lang.Object obj = opt(key);
+		Object obj = opt(key);
 		if(obj == null) {
 			return def;
 		}
@@ -569,7 +570,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	}
 
 	public String optString(String key,String def) {
-		java.lang.Object obj = opt(key);
+		Object obj = opt(key);
 		return obj == null ? def : DataConverter.toString(obj);
 	}
 
@@ -579,7 +580,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 	public CSONArray optCSONArray(String key, CSONArray def) {
 		@SuppressWarnings("DuplicatedCode")
-		java.lang.Object obj = opt(key);
+		Object obj = opt(key);
 		if(obj == null) {
 			return def;
 		}
@@ -592,7 +593,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 	public CSONArray optWrapCSONArray(String key) {
 		@SuppressWarnings("DuplicatedCode")
-		java.lang.Object object = opt(key);
+		Object object = opt(key);
 		if(object == null) {
 			return new CSONArray();
 		}
@@ -609,7 +610,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 	public CSONObject optCSONObject(String key, CSONObject def) {
 		@SuppressWarnings("DuplicatedCode")
-		java.lang.Object obj = opt(key);
+		Object obj = opt(key);
 		if(obj == null) {
 			return def;
 		}
@@ -668,7 +669,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 	public void merge(CSONObject csonObject) {
 		Set<String> keys = csonObject.keySet();
 		for(String key : keys) {
-			java.lang.Object value = csonObject.get(key);
+			Object value = csonObject.get(key);
 			if(value instanceof CSONObject) {
 				CSONObject childObject = optCSONObject(key);
 				if(childObject == null) {
@@ -698,7 +699,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 		CSONObject result = new CSONObject();
 		Set<String> keys = csonObject.keySet();
 		for(String key : keys) {
-			java.lang.Object value = csonObject.get(key);
+			Object value = csonObject.get(key);
 			if(value instanceof CSONObject) {
 				CSONObject childObject = optCSONObject(key);
 				if(childObject == null) {
@@ -729,7 +730,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 		CSONObject result = new CSONObject();
 		Set<String> keys = csonObject.keySet();
 		for(String key : keys) {
-			java.lang.Object value = csonObject.get(key);
+			Object value = csonObject.get(key);
 			if(value instanceof CSONObject) {
 				CSONObject childObject = optCSONObject(key);
 				if(childObject == null) {
@@ -930,7 +931,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 		dataMap.clear();
 	}
 
-	public boolean containsValue(java.lang.Object value) {
+	public boolean containsValue(Object value) {
 		boolean result = dataMap.containsValue(value);
 		if(value == null && !result) {
 			return dataMap.containsValue(NullValue.Instance);
@@ -938,8 +939,8 @@ public class CSONObject extends CSONElement implements Cloneable {
 		return result;
 	}
 
-	public boolean containsValueNoStrict(java.lang.Object value) {
-		Collection<java.lang.Object> values = dataMap.values();
+	public boolean containsValueNoStrict(Object value) {
+		Collection<Object> values = dataMap.values();
 		return containsNoStrict(values, value);
 
 	}
@@ -1014,9 +1015,9 @@ public class CSONObject extends CSONElement implements Cloneable {
 	@Override
 	public CSONObject clone() {
         CSONObject csonObject = new CSONObject();
-		for (Entry<String, java.lang.Object> entry : dataMap.entrySet()) {
+		for (Entry<String, Object> entry : dataMap.entrySet()) {
 			String key = entry.getKey();
-			java.lang.Object obj = entry.getValue();
+			Object obj = entry.getValue();
 			if (obj instanceof CSONArray) csonObject.put(key, ((CSONArray) obj).clone());
 			else if (obj instanceof CSONObject) csonObject.put(key, ((CSONObject) obj).clone());
 			else if (obj instanceof CharSequence) csonObject.put(key, ((CharSequence) obj).toString());
@@ -1038,13 +1039,13 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 
-	public Collection<java.lang.Object> values() {
+	public Collection<Object> values() {
 		return dataMap.values();
 	}
 
-	public Iterator<Entry<String, java.lang.Object>> iteratorEntry() {
-		return new Iterator<Entry<String, java.lang.Object>>() {
-			final Iterator<Entry<String, java.lang.Object>> entryIter = new ArrayList<>(dataMap.entrySet()).iterator();
+	public Iterator<Entry<String, Object>> iteratorEntry() {
+		return new Iterator<Entry<String, Object>>() {
+			final Iterator<Entry<String, Object>> entryIter = new ArrayList<>(dataMap.entrySet()).iterator();
 			String key = null;
 			@Override
 			public boolean hasNext() {
@@ -1052,9 +1053,9 @@ public class CSONObject extends CSONElement implements Cloneable {
 			}
 
 			@Override
-			public Entry<String, java.lang.Object> next() {
-				Entry<String, java.lang.Object> entry = entryIter.next();
-				java.lang.Object object = entry.getValue();
+			public Entry<String, Object> next() {
+				Entry<String, Object> entry = entryIter.next();
+				Object object = entry.getValue();
 				key = entry.getKey();
 				if(object == NullValue.Instance) {
 					entry.setValue(null);
@@ -1075,11 +1076,11 @@ public class CSONObject extends CSONElement implements Cloneable {
 
 
 	@Override
-	public Iterator<java.lang.Object> iterator() {
+	public Iterator<Object> iterator() {
 
 
-		return new Iterator<java.lang.Object>() {
-			final Iterator<Entry<String, java.lang.Object>> entryIterator = iteratorEntry();
+		return new Iterator<Object>() {
+			final Iterator<Entry<String, Object>> entryIterator = iteratorEntry();
 
 			@Override
 			public boolean hasNext() {
@@ -1087,7 +1088,7 @@ public class CSONObject extends CSONElement implements Cloneable {
 			}
 
 			@Override
-			public java.lang.Object next() {
+			public Object next() {
 				return entryIterator.next().getValue();
 			}
 

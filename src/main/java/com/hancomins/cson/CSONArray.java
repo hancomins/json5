@@ -1,27 +1,28 @@
 package com.hancomins.cson;
 
 
-
-import com.hancomins.cson.format.*;
-import com.hancomins.cson.format.cson.BinaryCSONParser;
-import com.hancomins.cson.format.cson.BinaryCSONWriter;
-import com.hancomins.cson.format.json.JSON5Parser;
-import com.hancomins.cson.format.json.JSON5Writer;
+import com.hancomins.cson.container.*;
+import com.hancomins.cson.container.cson.BinaryCSONParser;
+import com.hancomins.cson.container.cson.BinaryCSONWriter;
+import com.hancomins.cson.container.json.JSON5Parser;
+import com.hancomins.cson.container.json.JSON5Writer;
+import com.hancomins.cson.options.*;
 import com.hancomins.cson.serializer.CSONSerializer;
 import com.hancomins.cson.util.DataConverter;
 import com.hancomins.cson.util.NoSynchronizedStringReader;
 import com.hancomins.cson.util.NullValue;
-import com.hancomins.cson.options.*;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Array;
-import java.math.BigDecimal;
 import java.util.*;
 
 
-public class CSONArray extends CSONElement  implements Collection<java.lang.Object>, Cloneable {
+public class CSONArray extends CSONElement  implements Collection<Object>, Cloneable {
 
-	private ArrayList<java.lang.Object> list = new ArrayList<>();
+	private ArrayList<Object> list = new ArrayList<>();
 	private ArrayList<CommentObject<Integer>> commentObjectList = null;
 
 
@@ -152,7 +153,7 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 	}
 
 	@Override
-	public boolean contains(java.lang.Object o) {
+	public boolean contains(Object o) {
 		boolean result = list.contains(o);
 		if(!result && o == null) {
 			return list.contains(NullValue.Instance);
@@ -160,30 +161,30 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 		return result;
 	}
 
-	public boolean containsNoStrict(java.lang.Object value) {
+	public boolean containsNoStrict(Object value) {
 		return containsNoStrict(list, value);
 	}
 
 
 	@Override
-	public Iterator<java.lang.Object> iterator() {
+	public Iterator<Object> iterator() {
 		return list.iterator();
 	}
 
 	@Override
-	public java.lang.Object[] toArray() {
+	public Object[] toArray() {
 		return toList().toArray();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public java.lang.Object[] toArray(java.lang.Object[] a) {
+	public Object[] toArray(Object[] a) {
 		return toList().toArray(a);
 	}
 
-	public List<java.lang.Object> toList() {
-		List<java.lang.Object> results = new ArrayList<java.lang.Object>(this.list.size());
-		for (java.lang.Object element : this.list) {
+	public List<Object> toList() {
+		List<Object> results = new ArrayList<Object>(this.list.size());
+		for (Object element : this.list) {
 			if (element == null) {
 				results.add(null);
 			} else if (element instanceof CSONArray) {
@@ -274,7 +275,7 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 
 
 
-	protected void addAtJSONParsing(java.lang.Object value) {
+	protected void addAtJSONParsing(Object value) {
 		if(value instanceof String && CSONElement.isBase64String((String)value)) {
 			value = CSONElement.base64StringToByteArray((String)value);
 		}
@@ -290,15 +291,15 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 	}
 
 
-	public CSONArray put(java.lang.Object e) {
+	public CSONArray put(Object e) {
 		if(!add(e)) {
 			throw new CSONException("put error. can't put " + e.getClass() + " to CSONArray.");
 		}
 		return this;
 	}
 
-	public CSONArray put(java.lang.Object... e) {
-		for(java.lang.Object obj : e) {
+	public CSONArray put(Object... e) {
+		for(Object obj : e) {
 			if(!add(obj)) {
 				throw new CSONException("put error. can't put " + obj.getClass() + " to CSONArray.");
 			}
@@ -307,16 +308,16 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 	}
 
 	@SuppressWarnings("unused")
-	public CSONArray putAll(java.lang.Object e) {
+	public CSONArray putAll(Object e) {
 		if(e instanceof  Collection) {
-			for(java.lang.Object obj : (Collection<?>)e) {
+			for(Object obj : (Collection<?>)e) {
 				if(!add(obj)) {
 					throw new CSONException("putAll error. can't put " + obj.getClass() + " to CSONArray.");
 				}
 			}
 		} else if(e.getClass().isArray()) {
 			for(int i = 0, n = Array.getLength(e); i < n; ++i) {
-				java.lang.Object obj = Array.get(e, i);
+				Object obj = Array.get(e, i);
 				if(!add(obj)) {
 					throw new CSONException("putAll error. can't put " + obj.getClass() + " to CSONArray.");
 				}
@@ -329,9 +330,9 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 
 
 
-	public CSONArray set(int index, java.lang.Object e) {
+	public CSONArray set(int index, Object e) {
 		int size = list.size();
-		java.lang.Object value = convert(e);
+		Object value = convert(e);
 		if(index >= size) {
 			for(int i = size; i < index; i++) {
 				add(null);
@@ -344,7 +345,7 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 	}
 
 	public CSONArray setList(Collection<?> collection) {
-		for (java.lang.Object obj : collection) {
+		for (Object obj : collection) {
 			if(!add(obj)) {
 				throw new CSONException("new CSONArray(Collection) error. can't put " + obj.getClass() + " to CSONArray.");
 			}
@@ -354,7 +355,7 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 
 
 
-	private java.lang.Object convert(java.lang.Object e) {
+	private Object convert(Object e) {
 		if(e == null) {
 			return NullValue.Instance;
 		}
@@ -376,7 +377,7 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 			return array;
 		} else if(e instanceof  Collection) {
 			CSONArray array = new CSONArray();
-			for(java.lang.Object obj : (Collection<?>)e) {
+			for(Object obj : (Collection<?>)e) {
 				//noinspection UseBulkOperation
 				array.add(obj);
 			}
@@ -395,8 +396,8 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 
 
 	@Override
-	public boolean add(java.lang.Object e) {
-		java.lang.Object value = convert(e);
+	public boolean add(Object e) {
+		Object value = convert(e);
 		if(value == null) {
 			return false;
 		}
@@ -406,9 +407,9 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 
 
 	@SuppressWarnings("UnusedReturnValue")
-	public boolean addAll(java.lang.Object e) {
+	public boolean addAll(Object e) {
 		if(e instanceof  Collection) {
-			for(java.lang.Object obj : (Collection<?>)e) {
+			for(Object obj : (Collection<?>)e) {
 				if(!add(obj)) {
 					return false;
 				}
@@ -443,25 +444,25 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 
 
 	public boolean isNull(int index) {
-		java.lang.Object obj = list.get(index);
+		Object obj = list.get(index);
 		return obj == null || obj instanceof NullValue;
 	}
 
 
 
 
-	public java.lang.Object get(int index) {
+	public Object get(int index) {
 		if(index < 0 || index >= list.size()) {
 			throw new CSONIndexNotFoundException(ExceptionMessages.getCSONArrayIndexOutOfBounds(index, list.size()));
 		}
-		java.lang.Object obj = list.get(index);
+		Object obj = list.get(index);
 		if(obj instanceof NullValue) return null;
 		copyHeadTailCommentToValueObject(index, obj);
 
 		return obj;
 	}
 
-	private void copyHeadTailCommentToValueObject(int index, java.lang.Object obj) {
+	private void copyHeadTailCommentToValueObject(int index, Object obj) {
 		if(commentObjectList != null && obj instanceof CSONElement && !commentObjectList.isEmpty()) {
 			CommentObject<Integer> valueCommentObject = commentObjectList.get(index);
 			if(valueCommentObject != null) {
@@ -1227,7 +1228,7 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 				array.list.add(((CSONObject.CSONKeyValueDataContainer) value).csonObject);
 				return;
 			} else if(value instanceof ArrayDataContainer) {
-				array.list.add(((CSONArray.CSONArrayDataContainer) value).array);
+				array.list.add(((CSONArrayDataContainer) value).array);
 				return;
 			}
 			array.list.add(value);
@@ -1344,7 +1345,7 @@ public class CSONArray extends CSONElement  implements Collection<java.lang.Obje
 				} else if(value instanceof CSONObject) {
 					return new CSONObject.CSONKeyValueDataContainer((CSONObject)value);
 				} else if(value instanceof CSONArray) {
-					return new CSONArray.CSONArrayDataContainer((CSONArray)value);
+					return new CSONArrayDataContainer((CSONArray)value);
 				}
 				return value;
 			}

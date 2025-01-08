@@ -671,7 +671,7 @@ public class MockBigInteger extends Number implements Comparable<MockBigInteger>
             carry = product >>> 32;
         }
         if (carry == 0L) {
-            rmag = java.util.Arrays.copyOfRange(rmag, 1, rmag.length);
+            rmag = Arrays.copyOfRange(rmag, 1, rmag.length);
         } else {
             rmag[rstart] = (int)carry;
         }
@@ -715,7 +715,7 @@ public class MockBigInteger extends Number implements Comparable<MockBigInteger>
             rmag[0] = (int)carry;
         }
         if (carry == 0L)
-            rmag = java.util.Arrays.copyOfRange(rmag, 1, rmag.length);
+            rmag = Arrays.copyOfRange(rmag, 1, rmag.length);
         return new MockBigInteger(rmag, rsign);
     }
 
@@ -2290,7 +2290,7 @@ public class MockBigInteger extends Number implements Comparable<MockBigInteger>
 
         for (keep = 0; keep < vlen && val[keep] == 0; keep++)
             ;
-        return java.util.Arrays.copyOfRange(val, keep, vlen);
+        return Arrays.copyOfRange(val, keep, vlen);
     }
 
     private static int[] trustedStripLeadingZeroInts(int val[]) {
@@ -2299,7 +2299,7 @@ public class MockBigInteger extends Number implements Comparable<MockBigInteger>
 
         for (keep = 0; keep < vlen && val[keep] == 0; keep++)
             ;
-        return keep == 0 ? val : java.util.Arrays.copyOfRange(val, keep, vlen);
+        return keep == 0 ? val : Arrays.copyOfRange(val, keep, vlen);
     }
 
 

@@ -1,8 +1,8 @@
 package com.hancomins.cson;
 
 
-import com.hancomins.cson.format.FormatWriter;
-import com.hancomins.cson.format.cson.BinaryCSONDataType;
+import com.hancomins.cson.container.FormatWriter;
+import com.hancomins.cson.container.cson.BinaryCSONDataType;
 import com.hancomins.cson.options.ParsingOptions;
 import com.hancomins.cson.options.WritingOptions;
 import com.hancomins.cson.util.NullValue;
@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
-public abstract  class CSONElement implements Iterable<java.lang.Object>  {
+public abstract  class CSONElement implements Iterable<Object>  {
 
 	private ParsingOptions<?> parsingOptions = ParsingOptions.getDefaultParsingOptions();
 	private WritingOptions<?> writingOptions = WritingOptions.getDefaultWritingOptions();
@@ -189,8 +189,8 @@ public abstract  class CSONElement implements Iterable<java.lang.Object>  {
 
 
 
-	protected static boolean containsNoStrict(Collection<java.lang.Object> valueList, java.lang.Object value) {
-		for(java.lang.Object obj : valueList) {
+	protected static boolean containsNoStrict(Collection<Object> valueList, Object value) {
+		for(Object obj : valueList) {
 			boolean result = Objects.equals(obj, value);
 			if(result) return true;
 			else if(obj == NullValue.Instance || obj == null) {

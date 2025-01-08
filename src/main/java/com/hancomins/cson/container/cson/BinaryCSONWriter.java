@@ -1,12 +1,17 @@
-package com.hancomins.cson.format.cson;
+package com.hancomins.cson.container.cson;
 
 import com.hancomins.cson.CSONException;
 import com.hancomins.cson.CommentObject;
 import com.hancomins.cson.CommentPosition;
-import com.hancomins.cson.format.*;
+import com.hancomins.cson.container.BaseDataContainer;
+import com.hancomins.cson.container.DataIterator;
+import com.hancomins.cson.container.WriterBorn;
 import com.hancomins.cson.util.ArrayStack;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +32,7 @@ public class BinaryCSONWriter extends WriterBorn {
 
 	private List<CommentObject<?>> currentCommentList = null;
 	private final OutputStream outputStream_;
-	private final BinaryCSONWriter.DataOutputStream dataOutputStream;
+	private final DataOutputStream dataOutputStream;
 	private final ArrayStack<List<CommentObject<?>>> commentStack = new ArrayStack<>();
 
 	private boolean enableStringTable = true;
@@ -366,7 +371,7 @@ public class BinaryCSONWriter extends WriterBorn {
 		writeString(this.dataOutputStream, value);
 	}
 
-	private void writeString(BinaryCSONWriter.DataOutputStream dataOutputStream, String value)  {
+	private void writeString(DataOutputStream dataOutputStream, String value)  {
 		try {
 			byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
 			int length = bytes.length;
