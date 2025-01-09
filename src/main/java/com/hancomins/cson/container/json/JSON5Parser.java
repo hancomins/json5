@@ -11,16 +11,18 @@ import com.hancomins.cson.util.NullValue;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import static com.hancomins.cson.container.json.ParsingState.Open;
 
 
 public class JSON5Parser {
 
+    private static final LinkedBlockingDeque<JSON5Parser> POOL = new LinkedBlockingDeque<>();
 
     private ParsingState parsingState = Open;
     private final ValueBuffer valueBuffer;
-    private final ArrayStack<BaseDataContainer> BaseDataContainerStack = new ArrayStack<>();
+    private final ArrayStack<BaseDataContainer> baseDataContainerStack = new ArrayStack<>();
 
     private String currentKey = null;
     private CommentBuffer commentBuffer = null;
@@ -29,8 +31,24 @@ public class JSON5Parser {
 
     private BaseDataContainer currentContainer = null;
     private BaseDataContainer parentContainer = null;
-    private final KeyValueDataContainerFactory keyValueDataContainerFactory;
-    private final ArrayDataContainerFactory arrayDataContainerFactory;
+    private KeyValueDataContainerFactory keyValueDataContainerFactory;
+    private ArrayDataContainerFactory arrayDataContainerFactory;
+
+    private void reset() {
+        parsingState = Open;
+        valueBuffer.reset();
+        currentKey = null;
+        baseDataContainerStack.clear();
+        commentBuffer = null;
+        comment = null;
+        commentParsingState = CommentParsingState.None;
+        currentContainer = null;
+        parentContainer = null;
+        keyValueDataContainerFactory = null;
+        arrayDataContainerFactory = null;
+
+
+    }
 
 
     int line = 1;
@@ -44,7 +62,7 @@ public class JSON5Parser {
     private final boolean skipComments;
     private ReadCountReader readCountReader;
 
-    private JSON5Parser(JsonParsingOptions jsonOption, KeyValueDataContainerFactory keyValueDataContainerFactory, ArrayDataContainerFactory arrayDataContainerFactory) {
+    private JSON5Parser(JsonParsingOptions jsonOption) {
         this.allowUnquoted = jsonOption.isAllowUnquoted();
         this.allowComment = jsonOption.isAllowComments();
 
@@ -56,9 +74,9 @@ public class JSON5Parser {
         valueBuffer = new ValueBuffer(keyBuffer);
         valueBuffer.setAllowControlChar(jsonOption.isAllowControlCharacters());
         valueBuffer.setIgnoreControlChar(jsonOption.isIgnoreControlCharacters());
-        this.keyValueDataContainerFactory = keyValueDataContainerFactory;
-        this.arrayDataContainerFactory = arrayDataContainerFactory;
     }
+
+
 
 
 
@@ -72,8 +90,21 @@ public class JSON5Parser {
 
     @SuppressWarnings("UnusedReturnValue")
     public static BaseDataContainer parse(Reader reader, JsonParsingOptions jsonOption, BaseDataContainer rootContainer, KeyValueDataContainerFactory keyValueDataContainerFactory, ArrayDataContainerFactory arrayDataContainerFactory) {
-        JSON5Parser parser = new JSON5Parser(jsonOption, keyValueDataContainerFactory, arrayDataContainerFactory);
-        parser.doParse(reader, rootContainer);
+        JSON5Parser parser = POOL.poll();
+        if(parser == null) {
+            parser = new JSON5Parser(jsonOption);
+        }
+        try {
+            parser.keyValueDataContainerFactory = keyValueDataContainerFactory;
+            parser.arrayDataContainerFactory = arrayDataContainerFactory;
+            parser.doParse(reader, rootContainer);
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException ignored) {}
+            parser.reset();
+            POOL.offer(parser);
+        }
         return rootContainer;
     }
 
@@ -207,7 +238,7 @@ public class JSON5Parser {
                 }
                 parsingState = ParsingState.WaitKey;
                 currentContainer.setComment(headComment, CommentPosition.HEADER);
-                BaseDataContainerStack.push(rootContainer);
+                baseDataContainerStack.push(rootContainer);
                 break;
             case '[':
                 if(rootContainer == null) {
@@ -217,7 +248,7 @@ public class JSON5Parser {
                 }
                 currentContainer.setComment(headComment, CommentPosition.HEADER);
                 parsingState = ParsingState.WaitValue;
-                BaseDataContainerStack.push(rootContainer);
+                baseDataContainerStack.push(rootContainer);
                 break;
             case '/':
                 startParsingCommentMode();
@@ -388,7 +419,6 @@ public class JSON5Parser {
                     putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted);
                     parsingState = afterValue(currentContainer);
                     return true;
-
                 case '}':
                 case ']':
                     putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted);
@@ -557,7 +587,7 @@ public class JSON5Parser {
         if(currentContainer == rootContainer) {
             parsingState = ParsingState.Close;
         } else {
-            currentContainer = popContainer(BaseDataContainerStack);
+            currentContainer = popContainer(baseDataContainerStack);
             parsingState = afterValue(currentContainer);
         }
     }
@@ -599,7 +629,7 @@ public class JSON5Parser {
         commentParsingState = CommentParsingState.None;
         parentContainer = currentContainer;
         currentContainer = keyValueDataContainerFactory.create();
-        BaseDataContainerStack.push(currentContainer);
+        baseDataContainerStack.push(currentContainer);
         putContainerData(parentContainer, currentContainer, currentKey);
         parsingState = ParsingState.WaitKey;
         currentKey = null;
@@ -610,7 +640,7 @@ public class JSON5Parser {
         commentParsingState = CommentParsingState.None;
         parentContainer = currentContainer;
         currentContainer = arrayDataContainerFactory.create();
-        BaseDataContainerStack.push(currentContainer);
+        baseDataContainerStack.push(currentContainer);
         putContainerData(parentContainer, currentContainer, currentKey);
         currentKey = null;
     }

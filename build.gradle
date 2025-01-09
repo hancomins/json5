@@ -48,6 +48,8 @@ dependencies {
     testImplementation 'org.json:json:20240303'
 
 
+// https://mvnrepository.com/artifact/com.hancomins.cson.container.fastjson2/fastjson2
+    testImplementation 'com.hancomins.cson.container.fastjson2:fastjson2:2.0.53'
 
 
 

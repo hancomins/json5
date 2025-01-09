@@ -11,11 +11,8 @@ public class NoSynchronizedStringReader extends Reader {
         private int mark = 0;
 
 
-
-
-
         public NoSynchronizedStringReader(String s) {
-            strBuffer = s.toCharArray();
+            this.strBuffer = s.toCharArray();
             this.length = s.length();
         }
 
@@ -72,29 +69,15 @@ public class NoSynchronizedStringReader extends Reader {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         public long skip(long ns) throws IOException {
+            ensureOpen();
+            if (next >= length)
+                return 0;
 
-                ensureOpen();
-                if (next >= length)
-                    return 0;
-
-                long n = Math.min(length - next, ns);
-                n = Math.max(-next, n);
-                next += n;
-                return n;
+            long n = Math.min(length - next, ns);
+            n = Math.max(-next, n);
+            next += n;
+            return n;
         }
 
 
