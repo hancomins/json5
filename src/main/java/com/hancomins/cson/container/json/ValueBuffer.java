@@ -64,7 +64,7 @@ public class ValueBuffer {
 
 
 
-    private DoubtMode doubtMode = DoubtMode.None;
+    private DoubtMode doubtMode_ = DoubtMode.None;
     private char quoteChar = '\0';
 
 
@@ -88,7 +88,7 @@ public class ValueBuffer {
 
 
     public void setOnlyString(char quote) {
-        this.doubtMode = DoubtMode.String;
+        this.doubtMode_ = DoubtMode.String;
         quoteChar = quote;
     }
 
@@ -105,7 +105,7 @@ public class ValueBuffer {
     public ValueBuffer reset() {
 
         characterBuffer.reset();
-        doubtMode = DoubtMode.None;
+        doubtMode_ = DoubtMode.None;
         isSpecialChar = false;
         unicodeChar = false;
         unicodeExtend = false;
@@ -121,7 +121,7 @@ public class ValueBuffer {
 
 
     public void append(char c) {
-        switch (doubtMode) {
+        switch (doubtMode_) {
             case None:
                 appendFirstChar(c);
                 break;
@@ -158,32 +158,32 @@ public class ValueBuffer {
     private void appendFirstChar(char c) {
         switch (c) {
             case  '+':
-                doubtMode = DoubtMode.SignNumber;
+                doubtMode_ = DoubtMode.SignNumber;
                 characterBuffer.append(c);
                 break;
             case '-':
-                doubtMode = DoubtMode.SignNumber;
+                doubtMode_ = DoubtMode.SignNumber;
                 characterBuffer.append(c);
                 numberBuffer.append(c);
                 break;
             case '.':
-                doubtMode = DoubtMode.RealNumber;
+                doubtMode_ = DoubtMode.RealNumber;
                 characterBuffer.append(c);
                 numberBuffer.append('0');
                 numberBuffer.append('.');
                 break;
             case '0':
-                doubtMode = DoubtMode.ZeroStartNumber;
+                doubtMode_ = DoubtMode.ZeroStartNumber;
                 characterBuffer.append(c);
                 break;
             default:
                 if (c >= '1' && c <= '9') {
-                    doubtMode = DoubtMode.Number;
+                    doubtMode_ = DoubtMode.Number;
                     characterBuffer.append(c);
                     numberBuffer.append(c);
                 }
                 else {
-                    doubtMode = DoubtMode.String;
+                    doubtMode_ = DoubtMode.String;
                     appendChar_(c);
                 }
         }
@@ -193,25 +193,25 @@ public class ValueBuffer {
         if(c == '.') {
             characterBuffer.append(c);
             numberBuffer.append('0').append('.');
-            doubtMode = DoubtMode.RealNumber;
+            doubtMode_ = DoubtMode.RealNumber;
         } else if(c == '0') {
             characterBuffer.append(c);
         }
         else if(c == 'e' || c == 'E') {
             characterBuffer.append(c);
             numberBuffer.append('0').append(c);
-            doubtMode = DoubtMode.ExponentialNumberStart;
+            doubtMode_ = DoubtMode.ExponentialNumberStart;
         }
         else if(c == 'x' || c == 'X') {
-            doubtMode = DoubtMode.Hexadecimal;
+            doubtMode_ = DoubtMode.Hexadecimal;
             characterBuffer.append(c);
         }
         else if(c >= '1' && c <= '9') {
-            doubtMode = DoubtMode.Number;
+            doubtMode_ = DoubtMode.Number;
             characterBuffer.append(c);
             numberBuffer.append(c);
         } else {
-            doubtMode = DoubtMode.String;
+            doubtMode_ = DoubtMode.String;
             appendChar_(c);
         }
     }
@@ -221,33 +221,33 @@ public class ValueBuffer {
             characterBuffer.append(c);
             numberBuffer.append(c);
         } else {
-            doubtMode = DoubtMode.String;
+            doubtMode_ = DoubtMode.String;
             appendChar_(c);
         }
     }
 
     private void appendSignNumber(char c) {
         if(c == '.') {
-            doubtMode = DoubtMode.RealNumber;
+            doubtMode_ = DoubtMode.RealNumber;
             characterBuffer.append(c);
             numberBuffer.append('0').append('.');
         } else if(c == '0') {
-            doubtMode = DoubtMode.ZeroStartNumber;
+            doubtMode_ = DoubtMode.ZeroStartNumber;
             characterBuffer.append(c);
         }
         else if(c >= '1' && c <= '9') {
-            doubtMode = DoubtMode.Number;
+            doubtMode_ = DoubtMode.Number;
             characterBuffer.append(c);
             numberBuffer.append(c);
         } else {
-            doubtMode = DoubtMode.String;
+            doubtMode_ = DoubtMode.String;
             appendChar_(c);
         }
     }
 
     private void appendNumber(char c) {
         if(c == '.') {
-            doubtMode = DoubtMode.RealNumber;
+            doubtMode_ = DoubtMode.RealNumber;
             characterBuffer.append(c);
             numberBuffer.append(c);
         } else {
@@ -258,34 +258,34 @@ public class ValueBuffer {
 
     private void appendRealNumber(char c) {
         if(c == 'e' || c == 'E') {
-            doubtMode = DoubtMode.ExponentialNumberStart;
+            doubtMode_ = DoubtMode.ExponentialNumberStart;
             characterBuffer.append(c);
             numberBuffer.append(c);
         } else if(c >= '0' && c <= '9') {
             characterBuffer.append(c);
             numberBuffer.append(c);
         } else {
-            doubtMode = DoubtMode.String;
+            doubtMode_ = DoubtMode.String;
             appendChar_(c);
         }
     }
 
     private void appendExponentialNumberStart(char c) {
         if(c == '+') {
-            doubtMode = DoubtMode.ExponentialNumber;
+            doubtMode_ = DoubtMode.ExponentialNumber;
             characterBuffer.append(c);
 
         } else if(c == '-') {
             numberBuffer.append(c);
             characterBuffer.append(c);
-            doubtMode = DoubtMode.ExponentialNegativeNumber;
+            doubtMode_ = DoubtMode.ExponentialNegativeNumber;
         }
         else if(c >= '0' && c <= '9') {
-            doubtMode = DoubtMode.ExponentialNumber;
+            doubtMode_ = DoubtMode.ExponentialNumber;
             characterBuffer.append(c);
             numberBuffer.append(c);
         } else {
-            doubtMode = DoubtMode.String;
+            doubtMode_ = DoubtMode.String;
             appendChar_(c);
         }
     }
@@ -293,19 +293,19 @@ public class ValueBuffer {
     private void appendExponentialNumber(char c, boolean isNegative) {
         if(c >= '0' && c <= '9') {
             if(isNegative) {
-                doubtMode = DoubtMode.ExponentialNumber;
+                doubtMode_ = DoubtMode.ExponentialNumber;
             }
             characterBuffer.append(c);
             numberBuffer.append(c);
         } else {
-            doubtMode = DoubtMode.String;
+            doubtMode_ = DoubtMode.String;
             appendChar_(c);
         }
     }
 
     public Object parseValue() {
         try {
-            switch (doubtMode) {
+            switch (doubtMode_) {
                 case Number:
                     return parseInteger(numberBuffer);
                 case RealNumber:
@@ -336,6 +336,8 @@ public class ValueBuffer {
                         return Double.NEGATIVE_INFINITY;
                 }
             }
+
+
             return value;
         } finally {
             reset();
@@ -399,7 +401,7 @@ public class ValueBuffer {
         if(c == '\\' && !isSpecialChar) {
             isSpecialChar = true;
         } else if(isSpecialChar) {
-            doubtMode = DoubtMode.String;
+            doubtMode_ = DoubtMode.String;
             if(unicodeChar) {
                 readUnicode(c);
                 return;
@@ -431,7 +433,7 @@ public class ValueBuffer {
                     break;
                 default:
                     //if(c != '\n' && c != '\r') {
-                    characterBuffer.append(c);
+                        characterBuffer.append(c);
                     //}
                     isSpecialChar = false;
                     break;
@@ -520,7 +522,7 @@ public class ValueBuffer {
 
     @SuppressWarnings("unused")
     public String toTrimString() {
-        if(doubtMode == DoubtMode.Null) {
+        if(doubtMode_ == DoubtMode.Null) {
             return null;
         }
         return characterBuffer.toTrimString();

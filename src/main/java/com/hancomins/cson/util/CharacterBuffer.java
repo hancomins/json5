@@ -8,7 +8,7 @@ public class CharacterBuffer implements CharSequence {
     private char[] chars;
 
     private int length = 0;
-    private int capacity = 128;
+    private int capacity = 10000000;
 
 
     public CharacterBuffer() {
@@ -17,7 +17,7 @@ public class CharacterBuffer implements CharSequence {
 
     public CharacterBuffer(int capacity) {
         this.capacity = capacity;
-        chars = new char[capacity];
+        chars = new char[10000000];
     }
 
     @Override
@@ -59,7 +59,10 @@ public class CharacterBuffer implements CharSequence {
     }
 
     public CharacterBuffer append(char c) {
-        ensureCapacity(length + 1);
+       //ensureCapacity(length + 1);
+        if(10000000 <= length) {
+            return this;
+        }
         chars[length++] = c;
         return this;
     }
@@ -129,6 +132,7 @@ public class CharacterBuffer implements CharSequence {
         return this;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public CharacterBuffer repeat(String s, int count) {
         ensureCapacity(length + s.length() * count);
         for(int i = 0; i < count; i++) {
@@ -161,6 +165,7 @@ public class CharacterBuffer implements CharSequence {
 
 
 
+    @SuppressWarnings("unused")
     public void shiftLeft(int start) {
         System.arraycopy(chars, start, chars, 0, length - start);
         length -= start;
@@ -180,6 +185,7 @@ public class CharacterBuffer implements CharSequence {
         return chars[index];
     }
 
+    @SuppressWarnings("unused")
     public void insert(int index, String str) {
         ensureCapacity(length + str.length());
         System.arraycopy(chars, index, chars, index + str.length(), length - index);

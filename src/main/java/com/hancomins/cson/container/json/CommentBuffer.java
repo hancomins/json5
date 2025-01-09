@@ -42,6 +42,16 @@ public class CommentBuffer {
         return ParsingState.Comment;
     }
 
+    public void reset() {
+        if(commentBuffer != null) {
+            commentBuffer.reset();
+        }
+        isEnd = false;
+        commentType = CommentType.Wait;
+        commentParsingState = CommentParsingState.None;
+        lastState = null;
+    }
+
     public boolean isEnd() {
         return isEnd;
     }

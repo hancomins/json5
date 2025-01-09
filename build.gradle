@@ -46,6 +46,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
 
     testImplementation 'org.json:json:20240303'
+// https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
+    testImplementation 'com.alibaba.fastjson2:fastjson2:2.0.53'
+// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 
 
 
@@ -58,7 +62,7 @@ dependencies {
 test.onlyIf { !project.hasProperty("skipTests") }
 
 test {
-    //useJUnitPlatform()
+
 }
 
 

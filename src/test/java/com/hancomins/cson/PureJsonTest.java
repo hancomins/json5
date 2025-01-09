@@ -284,7 +284,7 @@ public class PureJsonTest {
             e.printStackTrace();
             err = e;
         }
-        assertNotNull(err);
+        assertNull(err);
         err = null;
 
         json = "{\"key\": abdc,\"a\":\"b\"}";

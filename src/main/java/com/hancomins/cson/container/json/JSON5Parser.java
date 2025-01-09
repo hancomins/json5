@@ -11,6 +11,7 @@ import com.hancomins.cson.util.NullValue;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import static com.hancomins.cson.container.json.ParsingState.Open;
 
@@ -18,9 +19,11 @@ import static com.hancomins.cson.container.json.ParsingState.Open;
 public class JSON5Parser {
 
 
+    private static final ConcurrentLinkedDeque<JSON5Parser> pool = new ConcurrentLinkedDeque<>();
+
     private ParsingState parsingState = Open;
     private final ValueBuffer valueBuffer;
-    private final ArrayStack<BaseDataContainer> BaseDataContainerStack = new ArrayStack<>();
+    private final ArrayStack<BaseDataContainer> baseDataContainerStack = new ArrayStack<>();
 
     private String currentKey = null;
     private CommentBuffer commentBuffer = null;
@@ -29,8 +32,8 @@ public class JSON5Parser {
 
     private BaseDataContainer currentContainer = null;
     private BaseDataContainer parentContainer = null;
-    private final KeyValueDataContainerFactory keyValueDataContainerFactory;
-    private final ArrayDataContainerFactory arrayDataContainerFactory;
+    private KeyValueDataContainerFactory keyValueDataContainerFactory;
+    private ArrayDataContainerFactory arrayDataContainerFactory;
 
 
     int line = 1;
@@ -44,7 +47,7 @@ public class JSON5Parser {
     private final boolean skipComments;
     private ReadCountReader readCountReader;
 
-    private JSON5Parser(JsonParsingOptions jsonOption, KeyValueDataContainerFactory keyValueDataContainerFactory, ArrayDataContainerFactory arrayDataContainerFactory) {
+    private JSON5Parser(JsonParsingOptions jsonOption) {
         this.allowUnquoted = jsonOption.isAllowUnquoted();
         this.allowComment = jsonOption.isAllowComments();
 
@@ -56,10 +59,28 @@ public class JSON5Parser {
         valueBuffer = new ValueBuffer(keyBuffer);
         valueBuffer.setAllowControlChar(jsonOption.isAllowControlCharacters());
         valueBuffer.setIgnoreControlChar(jsonOption.isIgnoreControlCharacters());
-        this.keyValueDataContainerFactory = keyValueDataContainerFactory;
-        this.arrayDataContainerFactory = arrayDataContainerFactory;
     }
 
+    public void reset() {
+        valueBuffer.reset();
+        if(commentBuffer != null) {
+            commentBuffer.reset();
+        }
+        parsingState = Open;
+        baseDataContainerStack.clear();
+        currentKey = null;
+        comment = null;
+        commentParsingState = CommentParsingState.None;
+
+        currentContainer = null;
+        parentContainer = null;
+        keyValueDataContainerFactory = null;
+        arrayDataContainerFactory = null;
+
+
+
+
+    }
 
 
     private BaseDataContainer rootContainer;
@@ -72,9 +93,24 @@ public class JSON5Parser {
 
     @SuppressWarnings("UnusedReturnValue")
     public static BaseDataContainer parse(Reader reader, JsonParsingOptions jsonOption, BaseDataContainer rootContainer, KeyValueDataContainerFactory keyValueDataContainerFactory, ArrayDataContainerFactory arrayDataContainerFactory) {
-        JSON5Parser parser = new JSON5Parser(jsonOption, keyValueDataContainerFactory, arrayDataContainerFactory);
-        parser.doParse(reader, rootContainer);
+        JSON5Parser parser = pool.poll();
+        if (parser == null) {
+            parser = new JSON5Parser(jsonOption);
+        }
+        try {
+            parser.setContainerFactory(keyValueDataContainerFactory, arrayDataContainerFactory);
+            parser.doParse(reader, rootContainer);
+        } finally {
+            parser.reset();
+            pool.offer(parser);
+        }
         return rootContainer;
+    }
+
+
+    private void setContainerFactory(KeyValueDataContainerFactory keyValueDataContainerFactory, ArrayDataContainerFactory arrayDataContainerFactory) {
+        this.keyValueDataContainerFactory = keyValueDataContainerFactory;
+        this.arrayDataContainerFactory = arrayDataContainerFactory;
     }
 
 
@@ -207,7 +243,7 @@ public class JSON5Parser {
                 }
                 parsingState = ParsingState.WaitKey;
                 currentContainer.setComment(headComment, CommentPosition.HEADER);
-                BaseDataContainerStack.push(rootContainer);
+                baseDataContainerStack.push(rootContainer);
                 break;
             case '[':
                 if(rootContainer == null) {
@@ -217,7 +253,7 @@ public class JSON5Parser {
                 }
                 currentContainer.setComment(headComment, CommentPosition.HEADER);
                 parsingState = ParsingState.WaitValue;
-                BaseDataContainerStack.push(rootContainer);
+                baseDataContainerStack.push(rootContainer);
                 break;
             case '/':
                 startParsingCommentMode();
@@ -557,7 +593,7 @@ public class JSON5Parser {
         if(currentContainer == rootContainer) {
             parsingState = ParsingState.Close;
         } else {
-            currentContainer = popContainer(BaseDataContainerStack);
+            currentContainer = popContainer(baseDataContainerStack);
             parsingState = afterValue(currentContainer);
         }
     }
@@ -599,7 +635,7 @@ public class JSON5Parser {
         commentParsingState = CommentParsingState.None;
         parentContainer = currentContainer;
         currentContainer = keyValueDataContainerFactory.create();
-        BaseDataContainerStack.push(currentContainer);
+        baseDataContainerStack.push(currentContainer);
         putContainerData(parentContainer, currentContainer, currentKey);
         parsingState = ParsingState.WaitKey;
         currentKey = null;
@@ -610,7 +646,7 @@ public class JSON5Parser {
         commentParsingState = CommentParsingState.None;
         parentContainer = currentContainer;
         currentContainer = arrayDataContainerFactory.create();
-        BaseDataContainerStack.push(currentContainer);
+        baseDataContainerStack.push(currentContainer);
         putContainerData(parentContainer, currentContainer, currentKey);
         currentKey = null;
     }
