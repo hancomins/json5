@@ -16,7 +16,7 @@ public class ValueBufferTest {
     @DisplayName("Null 값 파싱 테스트")
     public void nullTest() {
         ParsingOptions<?> json5Option = ParsingOptions.json5();
-        ValueBuffer state = new ValueBuffer(json5Option);
+        ValueBuffer state = new ValueBuffer();
         state.reset();
         state.append("null");
         Object object = state.parseValue();
@@ -29,7 +29,7 @@ public class ValueBufferTest {
     public void testBreakLine() {
         String value = "value5!\\\n\\tbreak line";
         ParsingOptions<?> json5Option = ParsingOptions.json5();
-        ValueBuffer state = new ValueBuffer(json5Option);
+        ValueBuffer state = new ValueBuffer();
         state.reset();
         state.append(value);
         assertEquals("value5!\n\tbreak line", state.toString());
@@ -42,7 +42,7 @@ public class ValueBufferTest {
     public void infinityParseTest() {
 
         ParsingOptions<?> json5Option = ParsingOptions.json5();
-        ValueBuffer state = new ValueBuffer(json5Option);
+        ValueBuffer state = new ValueBuffer();
         state.reset();
         state.append("Infinity");
         Object value = state.parseValue();
@@ -66,19 +66,6 @@ public class ValueBufferTest {
         value = state.parseValue();
         assertEquals(Double.NEGATIVE_INFINITY, value);
 
-        json5Option = ParsingOptions.json5().setAllowInfinity(false);
-        state = new ValueBuffer(json5Option);
-        state.reset();
-        state.append("+Infinity");
-        value = state.parseValue();
-        assertEquals("+Infinity", value);
-
-        json5Option = ParsingOptions.json5().setAllowInfinity(false).setIgnoreNonNumeric(false);
-        state = new ValueBuffer(json5Option);
-        state.reset();
-        state.append("+Infinity");
-        assertEquals("+Infinity", state.parseValue());
-
 
     }
 
@@ -89,7 +76,7 @@ public class ValueBufferTest {
 
         Object value;
         ParsingOptions<?> json5Option = ParsingOptions.json5();
-        ValueBuffer state = new ValueBuffer(json5Option);
+        ValueBuffer state = new ValueBuffer();
         state.reset();
         state.append("NaN");
         value = state.parseValue();
@@ -107,7 +94,7 @@ public class ValueBufferTest {
     @DisplayName( "숫자 파싱 테스트")
     public void numberParseTest() {
         ParsingOptions<?> json5Option = ParsingOptions.json5();
-        ValueBuffer state = new ValueBuffer(json5Option);
+        ValueBuffer state = new ValueBuffer();
 
 
         state.reset();
@@ -211,7 +198,7 @@ public class ValueBufferTest {
     @Test
     public void escapeChar() {
         ParsingOptions<?> json5Option = ParsingOptions.json5();
-        ValueBuffer state = new ValueBuffer(json5Option);
+        ValueBuffer state = new ValueBuffer();
 
         state.reset();
         state.setAllowControlChar(false);
@@ -245,7 +232,7 @@ public class ValueBufferTest {
     @DisplayName("지수 파싱 테스트")
     public void exponentExpressionTest() {
         ParsingOptions<?> json5Option = ParsingOptions.json5();
-        ValueBuffer state = new ValueBuffer(json5Option);
+        ValueBuffer state = new ValueBuffer();
 
         state.reset();
         state.append("123e1");
@@ -283,7 +270,7 @@ public class ValueBufferTest {
     @DisplayName("16진수 파싱 테스트")
     public void hexValueTest() {
         ParsingOptions<?> json5Option = ParsingOptions.json5();
-        ValueBuffer state = new ValueBuffer(json5Option);
+        ValueBuffer state = new ValueBuffer();
 
         state.reset();
         state.append("+0x123");

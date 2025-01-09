@@ -2,7 +2,6 @@ package com.hancomins.cson.container.json;
 
 import com.hancomins.cson.CSONException;
 import com.hancomins.cson.ExceptionMessages;
-import com.hancomins.cson.options.INumberConversionOption;
 import com.hancomins.cson.util.CharacterBuffer;
 import com.hancomins.cson.util.MockBigInteger;
 import com.hancomins.cson.util.NullValue;
@@ -65,12 +64,12 @@ public class ValueBuffer {
 
 
 
-    private DoubtMode doubtMode_ = DoubtMode.None;
+    private DoubtMode doubtMode = DoubtMode.None;
     private char quoteChar = '\0';
 
 
-    public ValueBuffer(INumberConversionOption INumberConversionOption) {
-        this(new CharacterBuffer(), INumberConversionOption);
+    public ValueBuffer() {
+        this(new CharacterBuffer());
     }
 
     ValueBuffer(CharacterBuffer characterBuffer) {
@@ -88,10 +87,9 @@ public class ValueBuffer {
 
 
 
-    public ValueBuffer setOnlyString(char quote) {
-        this.doubtMode_ = DoubtMode.String;
+    public void setOnlyString(char quote) {
+        this.doubtMode = DoubtMode.String;
         quoteChar = quote;
-        return this;
     }
 
 
@@ -104,21 +102,16 @@ public class ValueBuffer {
 
 
 
-
     public ValueBuffer reset() {
 
         characterBuffer.reset();
-        doubtMode_ = DoubtMode.None;
-
-
+        doubtMode = DoubtMode.None;
         isSpecialChar = false;
         unicodeChar = false;
         unicodeExtend = false;
         unicodeCharCount = 0;
         markStartUnicodeIndex = -1;
         endString = false;
-
-
         numberBuffer.reset();
         return this;
     }
@@ -128,190 +121,191 @@ public class ValueBuffer {
 
 
     public void append(char c) {
-        switch (doubtMode_) {
+        switch (doubtMode) {
             case None:
-                switch (c) {
-                    case  '+':
-                        if(!allowPositiveSign) {
-                            doubtMode_ = DoubtMode.String;
-                            appendChar_(c);
-                            break;
-                        }
-                        doubtMode_ = DoubtMode.SignNumber;
-                        characterBuffer.append(c);
-                        break;
-                    case '-':
-                        doubtMode_ = DoubtMode.SignNumber;
-                        characterBuffer.append(c);
-                        numberBuffer.append(c);
-                        break;
-                    case '.':
-                        if(!leadingZeroOmission) {
-                            doubtMode_ = DoubtMode.String;
-                            appendChar_(c);
-                            break;
-                        }
-                        doubtMode_ = DoubtMode.RealNumber;
-                        characterBuffer.append(c);
-                        numberBuffer.append('0');
-                        numberBuffer.append('.');
-                        break;
-                    case '0':
-                        doubtMode_ = DoubtMode.ZeroStartNumber;
-                        characterBuffer.append(c);
-                        break;
-                    default:
-                        if (c >= '1' && c <= '9') {
-                            doubtMode_ = DoubtMode.Number;
-                            characterBuffer.append(c);
-                            numberBuffer.append(c);
-                        }
-                        else {
-                            doubtMode_ = DoubtMode.String;
-                            appendChar_(c);
-                        }
-                }
+                appendFirstChar(c);
                 break;
             case ZeroStartNumber:
-                if(c == '.') {
-                    characterBuffer.append(c);
-                    numberBuffer.append('0').append('.');
-                    doubtMode_ = DoubtMode.RealNumber;
-                } else if(c == '0') {
-                    if(!leadingZeroOmission) {
-                        doubtMode_ = DoubtMode.String;
-                        appendChar_(c);
-                        break;
-                    }
-                    characterBuffer.append(c);
-                }
-                else if(c == 'e' || c == 'E') {
-                    characterBuffer.append(c);
-                    numberBuffer.append('0').append(c);
-                    doubtMode_ = DoubtMode.ExponentialNumberStart;
-                }
-                else if(c == 'x' || c == 'X') {
-                    if(!allowHexadecimal) {
-                        doubtMode_ = DoubtMode.String;
-                        appendChar_(c);
-                        break;
-                    }
-                    doubtMode_ = DoubtMode.Hexadecimal;
-                    characterBuffer.append(c);
-                }
-                else if(c >= '1' && c <= '9') {
-                    doubtMode_ = DoubtMode.Number;
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else {
-                    doubtMode_ = DoubtMode.String;
-                    appendChar_(c);
-                }
+                appendZeroNumberStart(c);
                 break;
             case Hexadecimal:
-                if(isHexadecimalChar(c)) {
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else {
-                    doubtMode_ = DoubtMode.String;
-                    appendChar_(c);
-                }
+               appendHexadecimal(c);
                 break;
             case SignNumber:
-                if(c == '.' && leadingZeroOmission) {
-                    doubtMode_ = DoubtMode.RealNumber;
-                    characterBuffer.append(c);
-                    numberBuffer.append('0').append('.');
-                } else if(c == '0') {
-                    doubtMode_ = DoubtMode.ZeroStartNumber;
-                    characterBuffer.append(c);
-                }
-                else if(c >= '1' && c <= '9') {
-                    doubtMode_ = DoubtMode.Number;
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else {
-                    doubtMode_ = DoubtMode.String;
-                    appendChar_(c);
-                }
+                appendSignNumber(c);
                 break;
             case RealNumber:
-                if(c == 'e' || c == 'E') {
-                    doubtMode_ = DoubtMode.ExponentialNumberStart;
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else if(c >= '0' && c <= '9') {
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else {
-                    doubtMode_ = DoubtMode.String;
-                    appendChar_(c);
-                }
+                appendRealNumber(c);
                 break;
             case Number:
-                if(c == '.') {
-                    doubtMode_ = DoubtMode.RealNumber;
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else //noinspection DuplicatedCode
-                    if(c == 'e' || c == 'E') {
-                    doubtMode_ = DoubtMode.ExponentialNumberStart;
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else if(c >= '0' && c <= '9') {
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else {
-                    doubtMode_ = DoubtMode.String;
-                    appendChar_(c);
-                }
+                appendNumber(c);
                 break;
             case ExponentialNumberStart:
-                if(c == '+') {
-                    doubtMode_ = DoubtMode.ExponentialNumber;
-                    characterBuffer.append(c);
-
-                } else if(c == '-') {
-                    numberBuffer.append(c);
-                    characterBuffer.append(c);
-                    doubtMode_ = DoubtMode.ExponentialNegativeNumber;
-                }
-                else if(c >= '0' && c <= '9') {
-                    doubtMode_ = DoubtMode.ExponentialNumber;
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else {
-                    doubtMode_ = DoubtMode.String;
-                    appendChar_(c);
-                }
+                appendExponentialNumberStart(c);
                 break;
             case ExponentialNegativeNumber:
-                if(c >= '0' && c <= '9') {
-                    doubtMode_ = DoubtMode.ExponentialNumber;
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else {
-                    doubtMode_ = DoubtMode.String;
-                    appendChar_(c);
-                }
+                appendExponentialNumber(c, true);
                 break;
             case ExponentialNumber:
-                if(c >= '0' && c <= '9') {
-                    characterBuffer.append(c);
-                    numberBuffer.append(c);
-                } else {
-                    doubtMode_ = DoubtMode.String;
-                    appendChar_(c);
-                }
+                appendExponentialNumber(c, false);
                 break;
             default:
                 appendChar_(c);
         }
     }
 
+
+    private void appendFirstChar(char c) {
+        switch (c) {
+            case  '+':
+                doubtMode = DoubtMode.SignNumber;
+                characterBuffer.append(c);
+                break;
+            case '-':
+                doubtMode = DoubtMode.SignNumber;
+                characterBuffer.append(c);
+                numberBuffer.append(c);
+                break;
+            case '.':
+                doubtMode = DoubtMode.RealNumber;
+                characterBuffer.append(c);
+                numberBuffer.append('0');
+                numberBuffer.append('.');
+                break;
+            case '0':
+                doubtMode = DoubtMode.ZeroStartNumber;
+                characterBuffer.append(c);
+                break;
+            default:
+                if (c >= '1' && c <= '9') {
+                    doubtMode = DoubtMode.Number;
+                    characterBuffer.append(c);
+                    numberBuffer.append(c);
+                }
+                else {
+                    doubtMode = DoubtMode.String;
+                    appendChar_(c);
+                }
+        }
+    }
+
+    private void appendZeroNumberStart(char c) {
+        if(c == '.') {
+            characterBuffer.append(c);
+            numberBuffer.append('0').append('.');
+            doubtMode = DoubtMode.RealNumber;
+        } else if(c == '0') {
+            characterBuffer.append(c);
+        }
+        else if(c == 'e' || c == 'E') {
+            characterBuffer.append(c);
+            numberBuffer.append('0').append(c);
+            doubtMode = DoubtMode.ExponentialNumberStart;
+        }
+        else if(c == 'x' || c == 'X') {
+            doubtMode = DoubtMode.Hexadecimal;
+            characterBuffer.append(c);
+        }
+        else if(c >= '1' && c <= '9') {
+            doubtMode = DoubtMode.Number;
+            characterBuffer.append(c);
+            numberBuffer.append(c);
+        } else {
+            doubtMode = DoubtMode.String;
+            appendChar_(c);
+        }
+    }
+
+    private void appendHexadecimal(char c) {
+        if(isHexadecimalChar(c)) {
+            characterBuffer.append(c);
+            numberBuffer.append(c);
+        } else {
+            doubtMode = DoubtMode.String;
+            appendChar_(c);
+        }
+    }
+
+    private void appendSignNumber(char c) {
+        if(c == '.') {
+            doubtMode = DoubtMode.RealNumber;
+            characterBuffer.append(c);
+            numberBuffer.append('0').append('.');
+        } else if(c == '0') {
+            doubtMode = DoubtMode.ZeroStartNumber;
+            characterBuffer.append(c);
+        }
+        else if(c >= '1' && c <= '9') {
+            doubtMode = DoubtMode.Number;
+            characterBuffer.append(c);
+            numberBuffer.append(c);
+        } else {
+            doubtMode = DoubtMode.String;
+            appendChar_(c);
+        }
+    }
+
+    private void appendNumber(char c) {
+        if(c == '.') {
+            doubtMode = DoubtMode.RealNumber;
+            characterBuffer.append(c);
+            numberBuffer.append(c);
+        } else {
+            appendRealNumber(c);
+        }
+
+    }
+
+    private void appendRealNumber(char c) {
+        if(c == 'e' || c == 'E') {
+            doubtMode = DoubtMode.ExponentialNumberStart;
+            characterBuffer.append(c);
+            numberBuffer.append(c);
+        } else if(c >= '0' && c <= '9') {
+            characterBuffer.append(c);
+            numberBuffer.append(c);
+        } else {
+            doubtMode = DoubtMode.String;
+            appendChar_(c);
+        }
+    }
+
+    private void appendExponentialNumberStart(char c) {
+        if(c == '+') {
+            doubtMode = DoubtMode.ExponentialNumber;
+            characterBuffer.append(c);
+
+        } else if(c == '-') {
+            numberBuffer.append(c);
+            characterBuffer.append(c);
+            doubtMode = DoubtMode.ExponentialNegativeNumber;
+        }
+        else if(c >= '0' && c <= '9') {
+            doubtMode = DoubtMode.ExponentialNumber;
+            characterBuffer.append(c);
+            numberBuffer.append(c);
+        } else {
+            doubtMode = DoubtMode.String;
+            appendChar_(c);
+        }
+    }
+
+    private void appendExponentialNumber(char c, boolean isNegative) {
+        if(c >= '0' && c <= '9') {
+            if(isNegative) {
+                doubtMode = DoubtMode.ExponentialNumber;
+            }
+            characterBuffer.append(c);
+            numberBuffer.append(c);
+        } else {
+            doubtMode = DoubtMode.String;
+            appendChar_(c);
+        }
+    }
+
     public Object parseValue() {
         try {
-            switch (doubtMode_) {
+            switch (doubtMode) {
                 case Number:
                     return parseInteger(numberBuffer);
                 case RealNumber:
@@ -326,31 +320,22 @@ public class ValueBuffer {
             String value = characterBuffer.toString();
             if(len < 10 ) {
                 String lowerCaseValue = value.toLowerCase();
-                if (lowerCaseValue.equals("true")) {
-                    return Boolean.TRUE;
-                } else if (lowerCaseValue.equals("false")) {
-                    return Boolean.FALSE;
-                } else if (lowerCaseValue.equals("null")) {
-                    return NullValue.Instance;
-                } else if (allowNaN && lowerCaseValue.equals("nan")) {
-                    return Double.NaN;
-                } else if (allowInfinity) {
-                    if (lowerCaseValue.equals("infinity")) {
+                switch (lowerCaseValue) {
+                    case "true":
+                        return Boolean.TRUE;
+                    case "false":
+                        return Boolean.FALSE;
+                    case "null":
+                        return NullValue.Instance;
+                    case "nan":
+                        return Double.NaN;
+                    case "infinity":
+                    case "+infinity":
                         return Double.POSITIVE_INFINITY;
-                    } else if (lowerCaseValue.equals("-infinity")) {
+                    case "-infinity":
                         return Double.NEGATIVE_INFINITY;
-                    } else if (allowPositiveSign && lowerCaseValue.equals("+infinity")) {
-                        return Double.POSITIVE_INFINITY;
-                    }
                 }
             }
-            if(onlyPrimitiveValue) {
-                //throw new NumberFormatException("Invalid number container VALUE: " + value);
-            }
-
-
-
-
             return value;
         } finally {
             reset();
@@ -414,7 +399,7 @@ public class ValueBuffer {
         if(c == '\\' && !isSpecialChar) {
             isSpecialChar = true;
         } else if(isSpecialChar) {
-            doubtMode_ = DoubtMode.String;
+            doubtMode = DoubtMode.String;
             if(unicodeChar) {
                 readUnicode(c);
                 return;
@@ -446,7 +431,7 @@ public class ValueBuffer {
                     break;
                 default:
                     //if(c != '\n' && c != '\r') {
-                        characterBuffer.append(c);
+                    characterBuffer.append(c);
                     //}
                     isSpecialChar = false;
                     break;
@@ -535,7 +520,7 @@ public class ValueBuffer {
 
     @SuppressWarnings("unused")
     public String toTrimString() {
-        if(doubtMode_ == DoubtMode.Null) {
+        if(doubtMode == DoubtMode.Null) {
             return null;
         }
         return characterBuffer.toTrimString();

@@ -38,6 +38,8 @@ public class JSON5Parser {
     private final boolean allowUnquoted;
     private final boolean allowComment;
 
+
+
     private final boolean ignoreTrailingData;
     private final boolean skipComments;
     private ReadCountReader readCountReader;
@@ -46,11 +48,12 @@ public class JSON5Parser {
         this.allowUnquoted = jsonOption.isAllowUnquoted();
         this.allowComment = jsonOption.isAllowComments();
 
+
         this.skipComments = jsonOption.isSkipComments();
         this.consecutiveCommas = jsonOption.isAllowConsecutiveCommas();
         CharacterBuffer keyBuffer = new CharacterBuffer(128);
         this.ignoreTrailingData = jsonOption.isIgnoreTrailingData();
-        valueBuffer = new ValueBuffer(keyBuffer, jsonOption);
+        valueBuffer = new ValueBuffer(keyBuffer);
         valueBuffer.setAllowControlChar(jsonOption.isAllowControlCharacters());
         valueBuffer.setIgnoreControlChar(jsonOption.isIgnoreControlCharacters());
         this.keyValueDataContainerFactory = keyValueDataContainerFactory;
@@ -374,7 +377,7 @@ public class JSON5Parser {
             c = (char)v;
             switch (c) {
                 case ',':
-                    putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted, ignoreNonNumeric);
+                    putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted);
                     parsingState = afterComma(currentContainer);
                     currentKey = null;
                     return true;
@@ -382,13 +385,13 @@ public class JSON5Parser {
                 case '\r':
                 case '\n':
                 case '\t':
-                    putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted, ignoreNonNumeric);
+                    putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted);
                     parsingState = afterValue(currentContainer);
                     return true;
 
                 case '}':
                 case ']':
-                    putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted, ignoreNonNumeric);
+                    putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted);
                     closeBaseDataContainer();
                     return true;
                 case '/':
@@ -460,7 +463,7 @@ public class JSON5Parser {
                     case InValueUnquoted:
                         //case Number:
                         // todo: currentKey 가 null 되어도 괜찮은지 check.
-                        putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted, ignoreNonNumeric);
+                        putValueInUnquoted(valueBuffer, currentContainer, currentKey, allowUnquoted);
                         commentBuffer.changeLastParsingState(afterValue(currentContainer));
                         break;
                     case InKeyUnquoted:
@@ -679,18 +682,14 @@ public class JSON5Parser {
      * @param currentContainer 현재 Container
      * @param key 키
      * @param allowUnquoted unquoted 허용 여부
-     * @param ignoreNonNumeric 숫자가 아닌 값 무시 여부
+
      */
-    private void putValueInUnquoted(ValueBuffer valueBuffer, BaseDataContainer currentContainer, String key, boolean allowUnquoted, boolean ignoreNonNumeric) {
+    private void putValueInUnquoted(ValueBuffer valueBuffer, BaseDataContainer currentContainer, String key, boolean allowUnquoted) {
         Object inValue = valueBuffer.parseValue();
         if(inValue instanceof String) {
             isJSON5 = true;
             if(!allowUnquoted) {
-                if(ignoreNonNumeric) {
-                    inValue = NullValue.Instance;
-                } else {
-                    throw new CSONParseException(ExceptionMessages.formatMessage(ExceptionMessages.NOT_ALLOWED_UNQUOTED_STRING), line, readCountReader.readCount);
-                }
+                throw new CSONParseException(ExceptionMessages.formatMessage(ExceptionMessages.NOT_ALLOWED_UNQUOTED_STRING), line, readCountReader.readCount);
             }
         }
         if(currentContainer instanceof KeyValueDataContainer) {

@@ -369,7 +369,7 @@ public class DataConverter {
 			}
 		}
 		else if(value instanceof String) {
-			ValueBuffer valueBuffer = new ValueBuffer(INumberConversionOption.DEFAULT_NUMBER_CONVERSION_OPTION);
+			ValueBuffer valueBuffer = new ValueBuffer();
 			valueBuffer.append((String)value);
 			Object numberValue = valueBuffer.parseValue();
 			if(numberValue instanceof Number) {
