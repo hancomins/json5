@@ -35,10 +35,10 @@ public class DefaultUse {
         JSON5Object json5Object = new JSON5Object();
         json5Object.put("string", "Hello\\nWorld");
         json5Object.put("string2", "Hello\\World");
-        JSON5Array JSON5Array = new JSON5Array();
-        JSON5Array.add("Hello\\nWorld");
-        JSON5Array.add("Hello\\Wor\"ld");
-        json5Object.put("array", JSON5Array);
+        JSON5Array json5Array = new JSON5Array();
+        json5Array.add("Hello\\nWorld");
+        json5Array.add("Hello\\Wor\"ld");
+        json5Object.put("array", json5Array);
         String jsonString = json5Object.toString(WritingOptions.jsonPretty().setUnprettyArray(true));
         System.out.println(jsonString);
         JSON5Object json5ObjetPure = new JSON5Object(jsonString);

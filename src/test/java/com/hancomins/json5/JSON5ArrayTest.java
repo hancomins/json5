@@ -10,15 +10,15 @@ public class JSON5ArrayTest {
 
     @Test
     public void set() {
-        JSON5Array JSON5Array = new JSON5Array();
-        JSON5Array.set(100, 123);
+        JSON5Array json5Array = new JSON5Array();
+        json5Array.set(100, 123);
         for(int i = 0; i < 100; i++) {
-            assertNull(JSON5Array.get(i));
+            assertNull(json5Array.get(i));
         }
-        assertEquals(123, JSON5Array.get(100));
-        assertEquals(101, JSON5Array.size());
+        assertEquals(123, json5Array.get(100));
+        assertEquals(101, json5Array.size());
 
-        JSON5Array.set(50, "hahaha");
+        json5Array.set(50, "hahaha");
 
 
 

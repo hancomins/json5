@@ -108,10 +108,10 @@ public class CommentParsingTest {
     @DisplayName("JSON5Array 내의 코멘트 파싱 테스트.1")
     public void parseCommentInArray1() {
         String json = "[/*comment*/ //this comment\n //코멘트1 \n /* 코멘트2\n*/ //코멘트3 \n  123123 /*   코멘트 값 값 값 */ // zzzz\n,]";
-        JSON5Array JSON5Array = new JSON5Array(json);
-        assertEquals("comment\nthis comment\n코멘트1 \n 코멘트2\n\n코멘트3 ", JSON5Array.getCommentForValue(0));
-        assertEquals("   코멘트 값 값 값 \n zzzz", JSON5Array.getCommentAfterValue(0));
-        assertEquals(123123, JSON5Array.getInt(0));
+        JSON5Array json5Array = new JSON5Array(json);
+        assertEquals("comment\nthis comment\n코멘트1 \n 코멘트2\n\n코멘트3 ", json5Array.getCommentForValue(0));
+        assertEquals("   코멘트 값 값 값 \n zzzz", json5Array.getCommentAfterValue(0));
+        assertEquals(123123, json5Array.getInt(0));
 
     }
 
@@ -119,10 +119,10 @@ public class CommentParsingTest {
     @DisplayName("JSON5Array 내의 코멘트 파싱 테스트.2")
     public void parseCommentInArray2() {
         String json = "[/*comment*/ //this comment\n //코멘트1 \n /* 코멘트2\n*/ //코멘트3 \n  [] /*   코멘트 값 값 값 */ // zzzz\n,]";
-        JSON5Array JSON5Array = new JSON5Array(json);
-        assertEquals("comment\nthis comment\n코멘트1 \n 코멘트2\n\n코멘트3 ", JSON5Array.getCommentForValue(0));
-        assertEquals("   코멘트 값 값 값 \n zzzz", JSON5Array.getCommentAfterValue(0));
-        assertTrue(JSON5Array.get(0) instanceof JSON5Array);
+        JSON5Array json5Array = new JSON5Array(json);
+        assertEquals("comment\nthis comment\n코멘트1 \n 코멘트2\n\n코멘트3 ", json5Array.getCommentForValue(0));
+        assertEquals("   코멘트 값 값 값 \n zzzz", json5Array.getCommentAfterValue(0));
+        assertTrue(json5Array.get(0) instanceof JSON5Array);
 
     }
 }
