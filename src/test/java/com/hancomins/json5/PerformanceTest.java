@@ -63,7 +63,7 @@ public class PerformanceTest {
             for (int i = 0; i < 10; i++) {
 
                 //JSONArray jsonArray = new JSONArray(json5);
-                //JSON5Array csonArray = new JSON5Array(json5);
+                //JSON5Array json5Array = new JSON5Array(json5);
 
                 //JSON5Object jj = new JSON5Object(sss);
 

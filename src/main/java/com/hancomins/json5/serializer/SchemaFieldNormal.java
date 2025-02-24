@@ -47,12 +47,12 @@ public class SchemaFieldNormal extends SchemaField {
     /*
 
     @Override
-    public Object newInstance(JSON5Element csonElement) {
+    public Object newInstance(JSON5Element json5Element) {
         String fieldName = getField().getName();
         /*if(type == Types.Object) {
             ObtainTypeValueInvoker rack = parentsTypeSchema.findObjectObrainorRack(fieldName);
             if(rack != null) {
-                rack.obtain(csonElement);
+                rack.obtain(json5Element);
 
             }
         }*/

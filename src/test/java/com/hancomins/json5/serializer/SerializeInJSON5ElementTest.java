@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SerializeInJSON5ElementTest {
      @JSON5Type(explicit = true)
-    public static class CSONClass {
+    public static class JSON5Class {
         @JSON5Value
         String name;
         @JSON5Value
@@ -22,26 +22,26 @@ public class SerializeInJSON5ElementTest {
     }
 
     @Test
-    public void testSerializeInCSONElement() throws Exception {
+    public void testSerializeInJSON5Element() throws Exception {
 
-        CSONClass csonClass = new CSONClass();
-        csonClass.name = "name";
-        csonClass.value = "value";
+        JSON5Class json5Class = new JSON5Class();
+        json5Class.name = "name";
+        json5Class.value = "value";
         long millis = System.currentTimeMillis();
-        csonClass.data = millis + "";
+        json5Class.data = millis + "";
         JSON5Object json5Object = new JSON5Object();
-        json5Object.put("csonClass", csonClass);
+        json5Object.put("json5Class", json5Class);
 
-        JSON5Object json5Object2 = JSON5Object.fromObject(csonClass);
+        JSON5Object json5Object2 = JSON5Object.fromObject(json5Class);
         System.out.println(json5Object2.toString());
 
         System.out.println(json5Object.toString());
 
-        assertEquals( "name", json5Object.getJSON5Object("csonClass").getString("name"));
-        assertEquals( "value", json5Object.getJSON5Object("csonClass").getString("value"));
-        assertEquals( millis + "", json5Object.getJSON5Object("csonClass").getJSON5Object("bundle").getString("value"));
+        assertEquals( "name", json5Object.getJSON5Object("json5Class").getString("name"));
+        assertEquals( "value", json5Object.getJSON5Object("json5Class").getString("value"));
+        assertEquals( millis + "", json5Object.getJSON5Object("json5Class").getJSON5Object("bundle").getString("value"));
 
-        CSONClass newObject = json5Object.getObject("csonClass", CSONClass.class);
+        JSON5Class newObject = json5Object.getObject("json5Class", JSON5Class.class);
 
         assertEquals( "name", newObject.name);
         assertEquals( "value", newObject.value);
@@ -49,7 +49,7 @@ public class SerializeInJSON5ElementTest {
 
 
         JSON5Array JSON5Array = new JSON5Array();
-        JSON5Array.add(csonClass);
+        JSON5Array.add(json5Class);
 
         System.out.println(JSON5Array.toString());
 
@@ -58,17 +58,17 @@ public class SerializeInJSON5ElementTest {
         assertEquals( millis + "", JSON5Array.getJSON5Object(0).getJSON5Object("bundle").getString("value"));
 
 
-        ArrayList<CSONClass> newArrayList = new ArrayList<>();
-        newArrayList.add(csonClass);
-        newArrayList.add(csonClass);
+        ArrayList<JSON5Class> newArrayList = new ArrayList<>();
+        newArrayList.add(json5Class);
+        newArrayList.add(json5Class);
 
-        json5Object.put("csonClassList", newArrayList);
+        json5Object.put("json5ClassList", newArrayList);
 
         System.out.println(json5Object.toString());
 
-        assertEquals( "name", json5Object.getJSON5Array("csonClassList").getJSON5Object(0).getString("name"));
-        assertEquals( "value", json5Object.getJSON5Array("csonClassList").getJSON5Object(0).getString("value"));
-        assertEquals( millis + "", json5Object.getJSON5Array("csonClassList").getJSON5Object(0).getJSON5Object("bundle").getString("value"));
+        assertEquals( "name", json5Object.getJSON5Array("json5ClassList").getJSON5Object(0).getString("name"));
+        assertEquals( "value", json5Object.getJSON5Array("json5ClassList").getJSON5Object(0).getString("value"));
+        assertEquals( millis + "", json5Object.getJSON5Array("json5ClassList").getJSON5Object(0).getJSON5Object("bundle").getString("value"));
 
     }
 
@@ -102,19 +102,19 @@ public class SerializeInJSON5ElementTest {
     }
 
     @Test
-    public void testGetObjectOfCSONClass() {
+    public void testGetObjectOfJSON5Class() {
         JSON5Object json5Object = new JSON5Object();
         JSON5Array JSON5Array = new JSON5Array();
         for(int i = 0; i < 10; i++) {
-            CSONClass csonClass = new CSONClass();
-            csonClass.name = "name" + i;
-            csonClass.value = "value" + i;
-            csonClass.data = i + "";
-            JSON5Array.put(csonClass);
+            JSON5Class json5Class = new JSON5Class();
+            json5Class.name = "name" + i;
+            json5Class.value = "value" + i;
+            json5Class.data = i + "";
+            JSON5Array.put(json5Class);
         }
         json5Object.put("list", JSON5Array);
         System.out.println(json5Object.toString());
-        List<CSONClass> list=  json5Object.getList("list", CSONClass.class);
+        List<JSON5Class> list=  json5Object.getList("list", JSON5Class.class);
         for(int i = 0; i < 10; i++) {
             assertEquals( "name" + i, list.get(i).name);
             assertEquals( "value" + i, list.get(i).value);

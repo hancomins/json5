@@ -105,7 +105,7 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		} else {*/
 			//new JSONParser(new JSONTokener(stringReader, (JsonParsingOptions)options)).parseArray(this);
 			//new JSON5ParserV((JsonParsingOptions) options).parsePureJSON(stringReader, this);
-			 JSON5Parser.parse(stringReader, (JsonParsingOptions) options, new CSONArrayDataContainer(this), JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
+			 JSON5Parser.parse(stringReader, (JsonParsingOptions) options, new JSON5ArrayDataContainer(this), JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
 
 		//}
 	}
@@ -121,11 +121,11 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		list.addAll(objects);
 	}
 
-	public JSON5Array(byte[] cson) {
+	public JSON5Array(byte[] json5) {
 		super(ElementType.Array);
 		BinaryCSONParser parser = new BinaryCSONParser(JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
         try {
-            parser.parse(new ByteArrayInputStream(cson), new CSONArrayDataContainer(this));
+            parser.parse(new ByteArrayInputStream(json5), new JSON5ArrayDataContainer(this));
         } catch (IOException e) {
 			// todo 메시지 추가해야한다.
 			throw new JSON5Exception(e);
@@ -789,7 +789,7 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		return JSON5Array;
 	}
 
-	public JSON5Array optWrapCSONArray(int index) {
+	public JSON5Array optWrapJSON5Array(int index) {
 		Object object = opt(index);
 		if(object == null) {
 			return new JSON5Array();
@@ -917,16 +917,16 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 	@SuppressWarnings("unused")
-	public CsonArrayEnumerator enumeration() {
-		return new CsonArrayEnumerator(this);
+	public JSON5ArrayEnumerator enumeration() {
+		return new JSON5ArrayEnumerator(this);
 	}
 
 
-	public static class CsonArrayEnumerator implements Enumeration<Object>  {
+	public static class JSON5ArrayEnumerator implements Enumeration<Object>  {
 		int index = 0;
 		JSON5Array array = null;
 
-		private CsonArrayEnumerator(JSON5Array array) {
+		private JSON5ArrayEnumerator(JSON5Array array) {
 			this.array = array;
 		}
 
@@ -1027,7 +1027,7 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	public byte[] toBytes() {
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 		BinaryCSONWriter writer = new BinaryCSONWriter(byteArrayOutputStream);
-		writer.write(new CSONArrayDataContainer(this));
+		writer.write(new JSON5ArrayDataContainer(this));
 		return byteArrayOutputStream.toByteArray();
 	}
 
@@ -1036,7 +1036,7 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 
 	@Override
 	protected void write(FormatWriter writer) {
-		writer.write(new CSONArrayDataContainer(this));
+		writer.write(new JSON5ArrayDataContainer(this));
 	}
 
 
@@ -1078,7 +1078,7 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 	/**
-	 * 다른 CSONArray와 병합한다.
+	 * 다른 JSON5Array와 병합한다.
 	 * @param JSON5Array 병합할 JSON5Array
 	 */
 	public void merge(JSON5Array JSON5Array) {
@@ -1210,25 +1210,25 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	static ArrayDataContainerFactory ArrayDataContainerFactory = new ArrayDataContainerFactory() {
 		@Override
 		public ArrayDataContainer create() {
-			return new CSONArrayDataContainer(new JSON5Array());
+			return new JSON5ArrayDataContainer(new JSON5Array());
 		}
 	};
 
-	static class CSONArrayDataContainer implements ArrayDataContainer  {
+	static class JSON5ArrayDataContainer implements ArrayDataContainer  {
 		final JSON5Array array;
 
-		protected CSONArrayDataContainer(JSON5Array array) {
+		protected JSON5ArrayDataContainer(JSON5Array array) {
 			this.array = array;
 		}
 
 
 		@Override
 		public void add(Object value) {
-			if(value instanceof JSON5Object.CSONKeyValueDataContainer) {
-				array.list.add(((JSON5Object.CSONKeyValueDataContainer) value).json5Object);
+			if(value instanceof JSON5Object.JSON5KeyValueDataContainer) {
+				array.list.add(((JSON5Object.JSON5KeyValueDataContainer) value).json5Object);
 				return;
 			} else if(value instanceof ArrayDataContainer) {
-				array.list.add(((CSONArrayDataContainer) value).array);
+				array.list.add(((JSON5ArrayDataContainer) value).array);
 				return;
 			}
 			array.list.add(value);
@@ -1343,9 +1343,9 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 				if(value instanceof NullValue) {
 					return null;
 				} else if(value instanceof JSON5Object) {
-					return new JSON5Object.CSONKeyValueDataContainer((JSON5Object)value);
+					return new JSON5Object.JSON5KeyValueDataContainer((JSON5Object)value);
 				} else if(value instanceof JSON5Array) {
-					return new CSONArrayDataContainer((JSON5Array)value);
+					return new JSON5ArrayDataContainer((JSON5Array)value);
 				}
 				return value;
 			}

@@ -178,7 +178,7 @@ public class JSON5Path {
         return optString(path, null);
     }
 
-    public JSON5Object optCSONObject(String path) {
+    public JSON5Object optJSON5Object(String path) {
         Object obj = get(path);
         if (obj instanceof JSON5Object) {
             return (JSON5Object) obj;
@@ -211,56 +211,56 @@ public class JSON5Path {
 
                 return childJSON5Array;
             } else {
-                JSON5Object childCsonObject = json5Object.optJSON5Object(name);
-                if(childCsonObject == null) {
-                    childCsonObject = new JSON5Object();
-                    childCsonObject.setAllowRawValue(JSON5Element.isAllowRawValue())
+                JSON5Object childJSON5Object = json5Object.optJSON5Object(name);
+                if(childJSON5Object == null) {
+                    childJSON5Object = new JSON5Object();
+                    childJSON5Object.setAllowRawValue(JSON5Element.isAllowRawValue())
                             .setUnknownObjectToString(JSON5Element.isUnknownObjectToString());
-                    json5Object.put(name, childCsonObject);
+                    json5Object.put(name, childJSON5Object);
                 }
-                return childCsonObject;
+                return childJSON5Object;
             }
         } else if(JSON5Element instanceof JSON5Array && pathItem.isInArray()) {
             JSON5Array JSON5Array = (JSON5Array) JSON5Element;
             int index = pathItem.getIndex();
             if(pathItem.isObject()) {
-                JSON5Object childCsonObject = JSON5Array.optJSON5Object(index);
-                if(childCsonObject == null) {
-                    childCsonObject = new JSON5Object();
-                    childCsonObject.setAllowRawValue(JSON5Element.isAllowRawValue())
+                JSON5Object childJSON5Object = JSON5Array.optJSON5Object(index);
+                if(childJSON5Object == null) {
+                    childJSON5Object = new JSON5Object();
+                    childJSON5Object.setAllowRawValue(JSON5Element.isAllowRawValue())
                             .setUnknownObjectToString(JSON5Element.isUnknownObjectToString());
-                    JSON5Array.set(index, childCsonObject);
+                    JSON5Array.set(index, childJSON5Object);
                     if(pathItem.isArrayValue()) {
                         JSON5Array childJSON5Array = new JSON5Array();
                         childJSON5Array.setAllowRawValue(JSON5Element.isAllowRawValue())
                                 .setUnknownObjectToString(JSON5Element.isUnknownObjectToString());
-                        childCsonObject.put(pathItem.getName(), childJSON5Array);
+                        childJSON5Object.put(pathItem.getName(), childJSON5Array);
                         return childJSON5Array;
                     }
-                    JSON5Object childAndChildCsonObject = new JSON5Object();
-                    childAndChildCsonObject.setAllowRawValue(JSON5Element.isAllowRawValue())
+                    JSON5Object childAndChildJSON5Object = new JSON5Object();
+                    childAndChildJSON5Object.setAllowRawValue(JSON5Element.isAllowRawValue())
                             .setUnknownObjectToString(JSON5Element.isUnknownObjectToString());
-                    childCsonObject.put(pathItem.getName(), childAndChildCsonObject);
-                    return childAndChildCsonObject;
+                    childJSON5Object.put(pathItem.getName(), childAndChildJSON5Object);
+                    return childAndChildJSON5Object;
                 } else  {
                     if(pathItem.isArrayValue()) {
-                        JSON5Array childChildJSON5Array = childCsonObject.optJSON5Array(pathItem.getName());
+                        JSON5Array childChildJSON5Array = childJSON5Object.optJSON5Array(pathItem.getName());
                         if (childChildJSON5Array == null) {
                             childChildJSON5Array = new JSON5Array();
                             childChildJSON5Array.setAllowRawValue(JSON5Element.isAllowRawValue())
                                     .setUnknownObjectToString(JSON5Element.isUnknownObjectToString());
-                            childCsonObject.put(pathItem.getName(), childChildJSON5Array);
+                            childJSON5Object.put(pathItem.getName(), childChildJSON5Array);
                         }
                         return childChildJSON5Array;
                     } else {
-                        JSON5Object childAndChildCsonObject = childCsonObject.optJSON5Object(pathItem.getName());
-                        if (childAndChildCsonObject == null) {
-                            childAndChildCsonObject = new JSON5Object();
-                            childAndChildCsonObject.setAllowRawValue(JSON5Element.isAllowRawValue())
+                        JSON5Object childAndChildJSON5Object = childJSON5Object.optJSON5Object(pathItem.getName());
+                        if (childAndChildJSON5Object == null) {
+                            childAndChildJSON5Object = new JSON5Object();
+                            childAndChildJSON5Object.setAllowRawValue(JSON5Element.isAllowRawValue())
                                     .setUnknownObjectToString(JSON5Element.isUnknownObjectToString());
-                            childCsonObject.put(pathItem.getName(), childAndChildCsonObject);
+                            childJSON5Object.put(pathItem.getName(), childAndChildJSON5Object);
                         }
-                        return childAndChildCsonObject;
+                        return childAndChildJSON5Object;
                     }
                 }
             }
@@ -288,14 +288,14 @@ public class JSON5Path {
         if(pathItem.isInArray()) {
             if(pathItem.isObject()) {
                 int index = pathItem.getIndex();
-                JSON5Object childCsonObject = ((JSON5Array) JSON5Element).optJSON5Object(index);
-                if(childCsonObject == null) {
-                    childCsonObject = new JSON5Object();
+                JSON5Object childJSON5Object = ((JSON5Array) JSON5Element).optJSON5Object(index);
+                if(childJSON5Object == null) {
+                    childJSON5Object = new JSON5Object();
                     JSON5Element.setAllowRawValue(JSON5Element.isAllowRawValue())
                             .setUnknownObjectToString(JSON5Element.isUnknownObjectToString());
-                    ((JSON5Array) JSON5Element).set(index, childCsonObject);
+                    ((JSON5Array) JSON5Element).set(index, childJSON5Object);
                 }
-                childCsonObject.put(pathItem.getName(), value);
+                childJSON5Object.put(pathItem.getName(), value);
             } else {
                 ((JSON5Array) JSON5Element).set(pathItem.getIndex(), value);
             }

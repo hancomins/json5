@@ -209,7 +209,7 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
             value = duplicatedSchemaValueAbs.onGetValue(parent);
             if(value != null && duplicatedSchemaValueAbs.getType() == Types.GenericType) {
                 Types inType = Types.of(value.getClass());
-                if(Types.isSingleType(inType) || Types.isCsonType(inType)) {
+                if(Types.isSingleType(inType) || Types.isJSON5Type(inType)) {
                     return value;
                 } else {
                     return JSON5Object.fromObject(value);
@@ -274,7 +274,7 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
         Object value = null;
         int index = this.allSchemaValueAbsList.size() - 1;
         boolean doContinue = true;
-        JSON5Element lastCSONElement = null;
+        JSON5Element lastJSON5Element = null;
         while(doContinue && index > -1) {
             SchemaValueAbs duplicatedSchemaValueAbs = this.allSchemaValueAbsList.get(index);
             if(type == Types.JSON5Element && duplicatedSchemaValueAbs.type != Types.JSON5Element) {
@@ -297,17 +297,17 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
             if(type != Types.JSON5Element && value != null) {
                 doContinue = false;
             } else if(value instanceof JSON5Element) {
-                if(lastCSONElement != null) {
-                    if(lastCSONElement instanceof  JSON5Object && value instanceof  JSON5Object) {
-                        ((JSON5Object) lastCSONElement).merge((JSON5Object) value);
-                        value = lastCSONElement;
+                if(lastJSON5Element != null) {
+                    if(lastJSON5Element instanceof  JSON5Object && value instanceof  JSON5Object) {
+                        ((JSON5Object) lastJSON5Element).merge((JSON5Object) value);
+                        value = lastJSON5Element;
                     }
-                    else if(lastCSONElement instanceof JSON5Array && value instanceof JSON5Array) {
-                        ((JSON5Array) lastCSONElement).merge((JSON5Array) value);
-                        value = lastCSONElement;
+                    else if(lastJSON5Element instanceof JSON5Array && value instanceof JSON5Array) {
+                        ((JSON5Array) lastJSON5Element).merge((JSON5Array) value);
+                        value = lastJSON5Element;
                     }
                 } else {
-                    lastCSONElement = (JSON5Element) value;
+                    lastJSON5Element = (JSON5Element) value;
                 }
             }
         }

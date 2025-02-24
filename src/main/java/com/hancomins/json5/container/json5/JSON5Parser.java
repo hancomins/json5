@@ -561,17 +561,17 @@ public class JSON5Parser {
     }
 
     private void setCommentToArrayDataContainer() {
-        ArrayDataContainer csonArray = (ArrayDataContainer)currentContainer;
-        int size = csonArray.size();
+        ArrayDataContainer json5Array = (ArrayDataContainer)currentContainer;
+        int size = json5Array.size();
         switch (commentParsingState) {
             case BeforeValue:
-                csonArray.setComment(size, comment, CommentPosition.BEFORE_VALUE);
+                json5Array.setComment(size, comment, CommentPosition.BEFORE_VALUE);
                 break;
             case AfterValue:
-                csonArray.setComment(size - 1, comment, CommentPosition.AFTER_VALUE);
+                json5Array.setComment(size - 1, comment, CommentPosition.AFTER_VALUE);
                 break;
             case Tail:
-                csonArray.setComment(comment, CommentPosition.FOOTER);
+                json5Array.setComment(comment, CommentPosition.FOOTER);
                 break;
         }
     }

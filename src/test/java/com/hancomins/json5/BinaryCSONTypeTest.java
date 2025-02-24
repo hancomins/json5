@@ -11,7 +11,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BinaryJSON5TypeTest {
+public class BinaryCSONTypeTest {
 
     @Test
     public void testNumberTypes() {
@@ -23,8 +23,8 @@ public class BinaryJSON5TypeTest {
         json5Object.put("short", Short.MAX_VALUE);
         json5Object.put("byte", (byte)128);
         json5Object.put("char", 'c');
-        byte[] csonBytes = json5Object.toBytes();
-        JSON5Object readObject = new JSON5Object(csonBytes);
+        byte[] json5Bytes = json5Object.toBytes();
+        JSON5Object readObject = new JSON5Object(json5Bytes);
         System.out.println(json5Object);
         assertEquals(json5Object, readObject);
         assertEquals(json5Object.getInt("int"), readObject.getInt("int"));
@@ -69,8 +69,8 @@ public class BinaryJSON5TypeTest {
             sb.append("a");
         }
         json5Object.put("5", sb.toString());
-        byte[] csonBytes = json5Object.toBytes();
-        JSON5Object readObject = new JSON5Object(csonBytes);
+        byte[] json5Bytes = json5Object.toBytes();
+        JSON5Object readObject = new JSON5Object(json5Bytes);
         assertEquals(json5Object, readObject);
         assertEquals(json5Object.get("1"), readObject.get("1"));
         assertInstanceOf(String.class, readObject.get("1"));
@@ -107,8 +107,8 @@ public class BinaryJSON5TypeTest {
             baos.write(1);
         }
         json5Object.put("4", baos.toByteArray());
-        byte[] csonBytes = json5Object.toBytes();
-        JSON5Object readObject = new JSON5Object(csonBytes);
+        byte[] json5Bytes = json5Object.toBytes();
+        JSON5Object readObject = new JSON5Object(json5Bytes);
         assertEquals(json5Object, readObject);
         assertArrayEquals((byte[])json5Object.get("1"), (byte[])readObject.get("1"));
         assertArrayEquals((byte[])json5Object.get("2"), (byte[])readObject.get("2"));
@@ -121,13 +121,13 @@ public class BinaryJSON5TypeTest {
 
 
     @Test
-    @DisplayName("CSONOBject")
+    @DisplayName("JSON5OBject")
     public void testSimpleKeyValue() {
         JSON5Object json5Object = new JSON5Object();
         json5Object.put("key", "value");
         json5Object.put("key2", 123L);
-        byte[] csonBytes = json5Object.toBytes();
-        JSON5Object readObject = new JSON5Object(csonBytes);
+        byte[] json5Bytes = json5Object.toBytes();
+        JSON5Object readObject = new JSON5Object(json5Bytes);
         System.out.println(json5Object);
         assertEquals(json5Object, readObject);
     }
@@ -137,11 +137,11 @@ public class BinaryJSON5TypeTest {
         JSON5Object json5Object = new JSON5Object();
         JSON5Object innerObject = new JSON5Object();
         json5Object.put("inner", innerObject);
-        JSON5Object originCsonObject = json5Object.clone();
-        byte[] csonBytes = json5Object.toBytes();
-        JSON5Object readObject = new JSON5Object(csonBytes);
+        JSON5Object originJSON5Object = json5Object.clone();
+        byte[] json5Bytes = json5Object.toBytes();
+        JSON5Object readObject = new JSON5Object(json5Bytes);
         System.out.println(json5Object);
-        assertEquals(originCsonObject, readObject);
+        assertEquals(originJSON5Object, readObject);
         assertEquals(json5Object, readObject);
     }
 
@@ -157,14 +157,14 @@ public class BinaryJSON5TypeTest {
         json5Object.put("key2", 123L);
 
 
-        JSON5Object originCsonObject = json5Object.clone();
+        JSON5Object originJSON5Object = json5Object.clone();
         System.out.println("       json5: " + json5Object);
-        System.out.println("origin json5: " + originCsonObject);
-        byte[] csonBytes = json5Object.toBytes();
-        System.out.println("csonBytes: " + csonBytes.length);
-        JSON5Object readObject = new JSON5Object(csonBytes);
+        System.out.println("origin json5: " + originJSON5Object);
+        byte[] json5Bytes = json5Object.toBytes();
+        System.out.println("json5Bytes: " + json5Bytes.length);
+        JSON5Object readObject = new JSON5Object(json5Bytes);
         System.out.println(readObject);
-        assertEquals(originCsonObject, readObject);
+        assertEquals(originJSON5Object, readObject);
         assertEquals(json5Object, readObject);
     }
 
@@ -174,8 +174,8 @@ public class BinaryJSON5TypeTest {
         JSON5Array innerArray = new JSON5Array();
         JSON5Array.add(innerArray);
         JSON5Array originJSON5Array = JSON5Array.clone();
-        byte[] csonBytes = JSON5Array.toBytes();
-        JSON5Array readArray = new JSON5Array(csonBytes);
+        byte[] json5Bytes = JSON5Array.toBytes();
+        JSON5Array readArray = new JSON5Array(json5Bytes);
         System.out.println(JSON5Array);
         assertEquals(originJSON5Array, readArray);
         assertEquals(JSON5Array, readArray);
@@ -192,13 +192,13 @@ public class BinaryJSON5TypeTest {
         innerArray.add("sfdsf");
         innerArray.add(new JSON5Object());
         json5Object.put("array", JSON5Array);
-        JSON5Object originCson = json5Object.clone();
+        JSON5Object originJSON5 = json5Object.clone();
 
 
-        byte[] csonBytes = json5Object.toBytes();
-        JSON5Object readArray = new JSON5Object(csonBytes);
+        byte[] json5Bytes = json5Object.toBytes();
+        JSON5Object readArray = new JSON5Object(json5Bytes);
         System.out.println(json5Object);
-        assertEquals(originCson, readArray);
+        assertEquals(originJSON5, readArray);
         assertEquals(json5Object, readArray);
 
     }
@@ -251,8 +251,8 @@ public class BinaryJSON5TypeTest {
     @Test
     public void cloneAndEqualsTest() throws  Exception {
         JSON5Object json5Object = makeCSOObject();
-        byte[] csonBytes = json5Object.toBytes();
-        JSON5Object readObject = new JSON5Object(csonBytes);
+        byte[] json5Bytes = json5Object.toBytes();
+        JSON5Object readObject = new JSON5Object(json5Bytes);
         System.out.println(json5Object);
         assertEquals(json5Object, readObject);
     }
@@ -327,29 +327,29 @@ public class BinaryJSON5TypeTest {
         System.out.println(json5Object.toString(JSON5WriterOption.json5()));
 
 
-        JSON5Object parseredCSONObject = new JSON5Object(json5Object.toBytes());
-        assertEquals("value", parseredCSONObject.get("key"));
-        assertEquals(" comment\n for key", parseredCSONObject.getCommentForKey("key"));
-        assertEquals(" comment after key ", parseredCSONObject.getCommentAfterKey("key"));
-        assertEquals(" comment for value ", parseredCSONObject.getCommentForValue("key"));
-        assertEquals(" comment after value ", parseredCSONObject.getCommentAfterValue("key"));
+        JSON5Object parseredJSON5Object = new JSON5Object(json5Object.toBytes());
+        assertEquals("value", parseredJSON5Object.get("key"));
+        assertEquals(" comment\n for key", parseredJSON5Object.getCommentForKey("key"));
+        assertEquals(" comment after key ", parseredJSON5Object.getCommentAfterKey("key"));
+        assertEquals(" comment for value ", parseredJSON5Object.getCommentForValue("key"));
+        assertEquals(" comment after value ", parseredJSON5Object.getCommentAfterValue("key"));
 
         // Verify comments for emptyObject
-        assertNotNull(parseredCSONObject.get("emptyObject"));
-        assertEquals(" for emptyObject", parseredCSONObject.getCommentForKey("emptyObject"));
-        assertEquals(" after emptyObject ", parseredCSONObject.getCommentAfterKey("emptyObject"));
-        assertEquals(" comment for emptyObject value ", parseredCSONObject.getCommentForValue("emptyObject"));
-        assertEquals(" comment after emptyObject value ", parseredCSONObject.getCommentAfterValue("emptyObject"));
+        assertNotNull(parseredJSON5Object.get("emptyObject"));
+        assertEquals(" for emptyObject", parseredJSON5Object.getCommentForKey("emptyObject"));
+        assertEquals(" after emptyObject ", parseredJSON5Object.getCommentAfterKey("emptyObject"));
+        assertEquals(" comment for emptyObject value ", parseredJSON5Object.getCommentForValue("emptyObject"));
+        assertEquals(" comment after emptyObject value ", parseredJSON5Object.getCommentAfterValue("emptyObject"));
 
         // Verify comments for emptyArray
-        assertNotNull(parseredCSONObject.get("emptyArray"));
-        assertEquals(" for emptyArray", parseredCSONObject.getCommentForKey("emptyArray"));
-        assertEquals(" after emptyArray ", parseredCSONObject.getCommentAfterKey("emptyArray"));
-        assertEquals(" comment for emptyArray value ", parseredCSONObject.getCommentForValue("emptyArray"));
-        assertEquals(" comment after emptyArray value ", parseredCSONObject.getCommentAfterValue("emptyArray"));
+        assertNotNull(parseredJSON5Object.get("emptyArray"));
+        assertEquals(" for emptyArray", parseredJSON5Object.getCommentForKey("emptyArray"));
+        assertEquals(" after emptyArray ", parseredJSON5Object.getCommentAfterKey("emptyArray"));
+        assertEquals(" comment for emptyArray value ", parseredJSON5Object.getCommentForValue("emptyArray"));
+        assertEquals(" comment after emptyArray value ", parseredJSON5Object.getCommentAfterValue("emptyArray"));
 
         // Verify comments for array values
-        JSON5Array parsedArray = parseredCSONObject.getJSON5Array("array");
+        JSON5Array parsedArray = parseredJSON5Object.getJSON5Array("array");
         assertEquals(" comment for array value 0 ", parsedArray.getCommentForValue(0));
         assertEquals(" comment after array value 0 ", parsedArray.getCommentAfterValue(0));
         assertEquals(" comment for array value 1 ", parsedArray.getCommentForValue(1));
@@ -358,7 +358,7 @@ public class BinaryJSON5TypeTest {
         assertEquals(" comment after array value 2 ", parsedArray.getCommentAfterValue(2));
 
         // Verify comments for object values
-        JSON5Object parsedObject = parseredCSONObject.getJSON5Object("object");
+        JSON5Object parsedObject = parseredJSON5Object.getJSON5Object("object");
         assertEquals(" for key1", parsedObject.getCommentForKey("key1"));
         assertEquals(" after key1 ", parsedObject.getCommentAfterKey("key1"));
         assertEquals(" comment for key1 value ", parsedObject.getCommentForValue("key1"));
@@ -374,29 +374,29 @@ public class BinaryJSON5TypeTest {
 
 
         System.out.println(json5Object.toString(JSON5WriterOption.prettyJson5()));
-        parseredCSONObject = new JSON5Object(json5Object.toBytes());
-        assertEquals("value", parseredCSONObject.get("key"));
-        assertEquals(" comment\n for key", parseredCSONObject.getCommentForKey("key"));
-        assertEquals(" comment after key ", parseredCSONObject.getCommentAfterKey("key"));
-        assertEquals(" comment for value ", parseredCSONObject.getCommentForValue("key"));
-        assertEquals(" comment after value ", parseredCSONObject.getCommentAfterValue("key"));
+        parseredJSON5Object = new JSON5Object(json5Object.toBytes());
+        assertEquals("value", parseredJSON5Object.get("key"));
+        assertEquals(" comment\n for key", parseredJSON5Object.getCommentForKey("key"));
+        assertEquals(" comment after key ", parseredJSON5Object.getCommentAfterKey("key"));
+        assertEquals(" comment for value ", parseredJSON5Object.getCommentForValue("key"));
+        assertEquals(" comment after value ", parseredJSON5Object.getCommentAfterValue("key"));
 
         // Verify comments for emptyObject
-        assertNotNull(parseredCSONObject.get("emptyObject"));
-        assertEquals(" for emptyObject", parseredCSONObject.getCommentForKey("emptyObject"));
-        assertEquals(" after emptyObject ", parseredCSONObject.getCommentAfterKey("emptyObject"));
-        assertEquals(" comment for emptyObject value ", parseredCSONObject.getCommentForValue("emptyObject"));
-        assertEquals(" comment after emptyObject value ", parseredCSONObject.getCommentAfterValue("emptyObject"));
+        assertNotNull(parseredJSON5Object.get("emptyObject"));
+        assertEquals(" for emptyObject", parseredJSON5Object.getCommentForKey("emptyObject"));
+        assertEquals(" after emptyObject ", parseredJSON5Object.getCommentAfterKey("emptyObject"));
+        assertEquals(" comment for emptyObject value ", parseredJSON5Object.getCommentForValue("emptyObject"));
+        assertEquals(" comment after emptyObject value ", parseredJSON5Object.getCommentAfterValue("emptyObject"));
 
         // Verify comments for emptyArray
-        assertNotNull(parseredCSONObject.get("emptyArray"));
-        assertEquals(" for emptyArray", parseredCSONObject.getCommentForKey("emptyArray"));
-        assertEquals(" after emptyArray ", parseredCSONObject.getCommentAfterKey("emptyArray"));
-        assertEquals(" comment for emptyArray value ", parseredCSONObject.getCommentForValue("emptyArray"));
-        assertEquals(" comment after emptyArray value ", parseredCSONObject.getCommentAfterValue("emptyArray"));
+        assertNotNull(parseredJSON5Object.get("emptyArray"));
+        assertEquals(" for emptyArray", parseredJSON5Object.getCommentForKey("emptyArray"));
+        assertEquals(" after emptyArray ", parseredJSON5Object.getCommentAfterKey("emptyArray"));
+        assertEquals(" comment for emptyArray value ", parseredJSON5Object.getCommentForValue("emptyArray"));
+        assertEquals(" comment after emptyArray value ", parseredJSON5Object.getCommentAfterValue("emptyArray"));
 
         // Verify comments for array values
-        parsedArray = parseredCSONObject.getJSON5Array("array");
+        parsedArray = parseredJSON5Object.getJSON5Array("array");
         assertEquals(" comment for array value 0 ", parsedArray.getCommentForValue(0));
         assertEquals(" comment after array value 0 ", parsedArray.getCommentAfterValue(0));
         assertEquals(" comment for array value 1 ", parsedArray.getCommentForValue(1));
@@ -405,7 +405,7 @@ public class BinaryJSON5TypeTest {
         assertEquals(" comment after array value 2 ", parsedArray.getCommentAfterValue(2));
 
         // Verify comments for object values
-        parsedObject = parseredCSONObject.getJSON5Object("object");
+        parsedObject = parseredJSON5Object.getJSON5Object("object");
         assertEquals(" for key1", parsedObject.getCommentForKey("key1"));
         assertEquals(" after key1 ", parsedObject.getCommentAfterKey("key1"));
         assertEquals(" comment for key1 value ", parsedObject.getCommentForValue("key1"));
@@ -420,8 +420,8 @@ public class BinaryJSON5TypeTest {
         assertEquals(" comment after key3 value ", parsedObject.getCommentAfterValue("key3"));
 
 
-        assertEquals("header comment", parseredCSONObject.getHeaderComment());
-        assertEquals("footer comment", parseredCSONObject.getFooterComment());
+        assertEquals("header comment", parseredJSON5Object.getHeaderComment());
+        assertEquals("footer comment", parseredJSON5Object.getFooterComment());
 
 
 
@@ -443,10 +443,10 @@ public class BinaryJSON5TypeTest {
         }
         String json = byteArrayOutputStream.toString();
         JSON5Object json5Object = new JSON5Object(json);
-        byte[] csonBytes = json5Object.toBytes();
+        byte[] json5Bytes = json5Object.toBytes();
         System.out.println("json5: " + json.getBytes().length);
-        System.out.println("json5: " + csonBytes.length);
-        System.out.println( 100 - ((float)csonBytes.length / json.getBytes().length) * 100 + "%");
+        System.out.println("json5: " + json5Bytes.length);
+        System.out.println( 100 - ((float)json5Bytes.length / json.getBytes().length) * 100 + "%");
 
         long start = System.currentTimeMillis();
         for(int i = 0 ; i < 10; i++) {
@@ -458,7 +458,7 @@ public class BinaryJSON5TypeTest {
 
         start = System.currentTimeMillis();
         for(int i = 0 ; i < 10; i++) {
-            JSON5Object json5Object1 =  new JSON5Object(csonBytes);
+            JSON5Object json5Object1 =  new JSON5Object(json5Bytes);
             json5Object1.toBytes();
         }
         System.out.println("json5: " + (System.currentTimeMillis() - start) + "ms");

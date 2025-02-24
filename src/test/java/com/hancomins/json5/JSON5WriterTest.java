@@ -86,29 +86,29 @@ public class JSON5WriterTest {
         System.out.println(json5Object.toString(JSON5WriterOption.json5()));
 
 
-        JSON5Object parseredCSONObject = new JSON5Object(json5Object.toString(JSON5WriterOption.json5()));
-        assertEquals("value", parseredCSONObject.get("key"));
-        assertEquals(" comment\n for key", parseredCSONObject.getCommentForKey("key"));
-        assertEquals(" comment after key ", parseredCSONObject.getCommentAfterKey("key"));
-        assertEquals(" comment for value ", parseredCSONObject.getCommentForValue("key"));
-        assertEquals(" comment after value ", parseredCSONObject.getCommentAfterValue("key"));
+        JSON5Object parseredJSON5Object = new JSON5Object(json5Object.toString(JSON5WriterOption.json5()));
+        assertEquals("value", parseredJSON5Object.get("key"));
+        assertEquals(" comment\n for key", parseredJSON5Object.getCommentForKey("key"));
+        assertEquals(" comment after key ", parseredJSON5Object.getCommentAfterKey("key"));
+        assertEquals(" comment for value ", parseredJSON5Object.getCommentForValue("key"));
+        assertEquals(" comment after value ", parseredJSON5Object.getCommentAfterValue("key"));
 
         // Verify comments for emptyObject
-        assertNotNull(parseredCSONObject.get("emptyObject"));
-        assertEquals(" for emptyObject", parseredCSONObject.getCommentForKey("emptyObject"));
-        assertEquals(" after emptyObject ", parseredCSONObject.getCommentAfterKey("emptyObject"));
-        assertEquals(" comment for emptyObject value ", parseredCSONObject.getCommentForValue("emptyObject"));
-        assertEquals(" comment after emptyObject value ", parseredCSONObject.getCommentAfterValue("emptyObject"));
+        assertNotNull(parseredJSON5Object.get("emptyObject"));
+        assertEquals(" for emptyObject", parseredJSON5Object.getCommentForKey("emptyObject"));
+        assertEquals(" after emptyObject ", parseredJSON5Object.getCommentAfterKey("emptyObject"));
+        assertEquals(" comment for emptyObject value ", parseredJSON5Object.getCommentForValue("emptyObject"));
+        assertEquals(" comment after emptyObject value ", parseredJSON5Object.getCommentAfterValue("emptyObject"));
 
         // Verify comments for emptyArray
-        assertNotNull(parseredCSONObject.get("emptyArray"));
-        assertEquals(" for emptyArray", parseredCSONObject.getCommentForKey("emptyArray"));
-        assertEquals(" after emptyArray ", parseredCSONObject.getCommentAfterKey("emptyArray"));
-        assertEquals(" comment for emptyArray value ", parseredCSONObject.getCommentForValue("emptyArray"));
-        assertEquals(" comment after emptyArray value ", parseredCSONObject.getCommentAfterValue("emptyArray"));
+        assertNotNull(parseredJSON5Object.get("emptyArray"));
+        assertEquals(" for emptyArray", parseredJSON5Object.getCommentForKey("emptyArray"));
+        assertEquals(" after emptyArray ", parseredJSON5Object.getCommentAfterKey("emptyArray"));
+        assertEquals(" comment for emptyArray value ", parseredJSON5Object.getCommentForValue("emptyArray"));
+        assertEquals(" comment after emptyArray value ", parseredJSON5Object.getCommentAfterValue("emptyArray"));
 
         // Verify comments for array values
-        JSON5Array parsedArray = parseredCSONObject.getJSON5Array("array");
+        JSON5Array parsedArray = parseredJSON5Object.getJSON5Array("array");
         assertEquals(" comment for array value 0 ", parsedArray.getCommentForValue(0));
         assertEquals(" comment after array value 0 ", parsedArray.getCommentAfterValue(0));
         assertEquals(" comment for array value 1 ", parsedArray.getCommentForValue(1));
@@ -117,7 +117,7 @@ public class JSON5WriterTest {
         assertEquals(" comment after array value 2 ", parsedArray.getCommentAfterValue(2));
 
         // Verify comments for object values
-        JSON5Object parsedObject = parseredCSONObject.getJSON5Object("object");
+        JSON5Object parsedObject = parseredJSON5Object.getJSON5Object("object");
         assertEquals(" for key1", parsedObject.getCommentForKey("key1"));
         assertEquals(" after key1 ", parsedObject.getCommentAfterKey("key1"));
         assertEquals(" comment for key1 value ", parsedObject.getCommentForValue("key1"));
@@ -133,29 +133,29 @@ public class JSON5WriterTest {
 
 
         System.out.println(json5Object.toString(JSON5WriterOption.prettyJson5()));
-        parseredCSONObject = new JSON5Object(json5Object.toString(JSON5WriterOption.prettyJson5()));
-        assertEquals("value", parseredCSONObject.get("key"));
-        assertEquals(" comment\n for key", parseredCSONObject.getCommentForKey("key"));
-        assertEquals(" comment after key ", parseredCSONObject.getCommentAfterKey("key"));
-        assertEquals(" comment for value ", parseredCSONObject.getCommentForValue("key"));
-        assertEquals(" comment after value ", parseredCSONObject.getCommentAfterValue("key"));
+        parseredJSON5Object = new JSON5Object(json5Object.toString(JSON5WriterOption.prettyJson5()));
+        assertEquals("value", parseredJSON5Object.get("key"));
+        assertEquals(" comment\n for key", parseredJSON5Object.getCommentForKey("key"));
+        assertEquals(" comment after key ", parseredJSON5Object.getCommentAfterKey("key"));
+        assertEquals(" comment for value ", parseredJSON5Object.getCommentForValue("key"));
+        assertEquals(" comment after value ", parseredJSON5Object.getCommentAfterValue("key"));
 
         // Verify comments for emptyObject
-        assertNotNull(parseredCSONObject.get("emptyObject"));
-        assertEquals(" for emptyObject", parseredCSONObject.getCommentForKey("emptyObject"));
-        assertEquals(" after emptyObject ", parseredCSONObject.getCommentAfterKey("emptyObject"));
-        assertEquals(" comment for emptyObject value ", parseredCSONObject.getCommentForValue("emptyObject"));
-        assertEquals(" comment after emptyObject value ", parseredCSONObject.getCommentAfterValue("emptyObject"));
+        assertNotNull(parseredJSON5Object.get("emptyObject"));
+        assertEquals(" for emptyObject", parseredJSON5Object.getCommentForKey("emptyObject"));
+        assertEquals(" after emptyObject ", parseredJSON5Object.getCommentAfterKey("emptyObject"));
+        assertEquals(" comment for emptyObject value ", parseredJSON5Object.getCommentForValue("emptyObject"));
+        assertEquals(" comment after emptyObject value ", parseredJSON5Object.getCommentAfterValue("emptyObject"));
 
         // Verify comments for emptyArray
-        assertNotNull(parseredCSONObject.get("emptyArray"));
-        assertEquals(" for emptyArray", parseredCSONObject.getCommentForKey("emptyArray"));
-        assertEquals(" after emptyArray ", parseredCSONObject.getCommentAfterKey("emptyArray"));
-        assertEquals(" comment for emptyArray value ", parseredCSONObject.getCommentForValue("emptyArray"));
-        assertEquals(" comment after emptyArray value ", parseredCSONObject.getCommentAfterValue("emptyArray"));
+        assertNotNull(parseredJSON5Object.get("emptyArray"));
+        assertEquals(" for emptyArray", parseredJSON5Object.getCommentForKey("emptyArray"));
+        assertEquals(" after emptyArray ", parseredJSON5Object.getCommentAfterKey("emptyArray"));
+        assertEquals(" comment for emptyArray value ", parseredJSON5Object.getCommentForValue("emptyArray"));
+        assertEquals(" comment after emptyArray value ", parseredJSON5Object.getCommentAfterValue("emptyArray"));
 
         // Verify comments for array values
-         parsedArray = parseredCSONObject.getJSON5Array("array");
+         parsedArray = parseredJSON5Object.getJSON5Array("array");
         assertEquals(" comment for array value 0 ", parsedArray.getCommentForValue(0));
         assertEquals(" comment after array value 0 ", parsedArray.getCommentAfterValue(0));
         assertEquals(" comment for array value 1 ", parsedArray.getCommentForValue(1));
@@ -164,7 +164,7 @@ public class JSON5WriterTest {
         assertEquals(" comment after array value 2 ", parsedArray.getCommentAfterValue(2));
 
         // Verify comments for object values
-         parsedObject = parseredCSONObject.getJSON5Object("object");
+         parsedObject = parseredJSON5Object.getJSON5Object("object");
         assertEquals(" for key1", parsedObject.getCommentForKey("key1"));
         assertEquals(" after key1 ", parsedObject.getCommentAfterKey("key1"));
         assertEquals(" comment for key1 value ", parsedObject.getCommentForValue("key1"));

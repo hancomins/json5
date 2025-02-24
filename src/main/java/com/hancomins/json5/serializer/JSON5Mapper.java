@@ -42,20 +42,20 @@ public class JSON5Mapper {
         SchemaObjectNode schemaRoot = typeSchema.getSchemaObjectNode();
 
         HashMap<Integer, Object> parentObjMap = new HashMap<>();
-        BaseDataContainer csonElement = keyValueDataContainerFactory.create();
+        BaseDataContainer json5Element = keyValueDataContainerFactory.create();
         String comment = typeSchema.getComment();
         String commentAfter = typeSchema.getCommentAfter();
         if(comment != null) {
-            csonElement.setComment(comment, CommentPosition.HEADER);
+            json5Element.setComment(comment, CommentPosition.HEADER);
         }
         if(commentAfter != null) {
-            csonElement.setComment(commentAfter, CommentPosition.FOOTER);
+            json5Element.setComment(commentAfter, CommentPosition.FOOTER);
         }
-        KeyValueDataContainer root = (KeyValueDataContainer) csonElement;
+        KeyValueDataContainer root = (KeyValueDataContainer) json5Element;
         ArrayDeque<ObjectSerializeDequeueItem> objectSerializeDequeueItems = new ArrayDeque<>();
         Iterator<Object> iter = schemaRoot.keySet().iterator();
         SchemaObjectNode schemaNode = schemaRoot;
-        ObjectSerializeDequeueItem currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, csonElement);
+        ObjectSerializeDequeueItem currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, json5Element);
         objectSerializeDequeueItems.add(currentObjectSerializeDequeueItem);
 
         while(iter.hasNext()) {
@@ -93,17 +93,17 @@ public class JSON5Mapper {
 
                 if(!schemaNode.isBranchNode() && nullCount > 0) {
                     if(key instanceof String) {
-                        ((KeyValueDataContainer)csonElement).put((String) key,null);
+                        ((KeyValueDataContainer)json5Element).put((String) key,null);
                     } else {
-                        assert csonElement instanceof ArrayDataContainer;
-                        ((ArrayDataContainer)csonElement).set((Integer) key,null);
+                        assert json5Element instanceof ArrayDataContainer;
+                        ((ArrayDataContainer)json5Element).set((Integer) key,null);
                     }
                     while (iter.hasNext())  {
                         iter.next();
                     }
                 } else {
                     if(key instanceof String) {
-                        KeyValueDataContainer currentObject = ((KeyValueDataContainer)csonElement);
+                        KeyValueDataContainer currentObject = ((KeyValueDataContainer)json5Element);
                         Object value = currentObject.get((String)key);
 
                         if (!(value instanceof BaseDataContainer)) {
@@ -111,24 +111,24 @@ public class JSON5Mapper {
                             currentObject.put((String) key, childElement);
                             currentObject.setComment((String) key, schemaNode.getComment(), CommentPosition.BEFORE_KEY);
                             currentObject.setComment((String) key, schemaNode.getAfterComment(), CommentPosition.AFTER_KEY);
-                            csonElement = childElement;
+                            json5Element = childElement;
                         }
 
                     } else {
-                        if(!(csonElement instanceof ArrayDataContainer)) {
-                            throw new JSON5SerializerException("Invalide path. '" + key + "' is not array index." +  "(csonElement is not ArrayDataContainer. csonElement=" + csonElement +  ")");
+                        if(!(json5Element instanceof ArrayDataContainer)) {
+                            throw new JSON5SerializerException("Invalide path. '" + key + "' is not array index." +  "(json5Element is not ArrayDataContainer. json5Element=" + json5Element +  ")");
                         }
-                        ArrayDataContainer currentObject = ((ArrayDataContainer)csonElement);
-                        ArrayDataContainer currentArray = ((ArrayDataContainer)csonElement);
+                        ArrayDataContainer currentObject = ((ArrayDataContainer)json5Element);
+                        ArrayDataContainer currentArray = ((ArrayDataContainer)json5Element);
                         BaseDataContainer childElement = (BaseDataContainer) currentArray.get((Integer) key);
                         if(childElement == null) {
                             childElement = (schemaNode instanceof SchemaArrayNode) ? arrayDataContainerFactory.create() : keyValueDataContainerFactory.create();
                             currentObject.set((int) key, childElement);
-                            csonElement = childElement;
+                            json5Element = childElement;
 
                         }
                     }
-                    objectSerializeDequeueItems.add(new ObjectSerializeDequeueItem(iter, schemaNode, csonElement));
+                    objectSerializeDequeueItems.add(new ObjectSerializeDequeueItem(iter, schemaNode, json5Element));
                 }
             }
             else if(node instanceof SchemaFieldNormal || SchemaMethod.isSchemaMethodGetter(node)) {
@@ -136,7 +136,7 @@ public class JSON5Mapper {
                 Object parent = obtainParentObjects(parentObjMap, schemaValueAbs, rootObject);
                 if(parent != null) {
                     Object value = schemaValueAbs.getValue(parent);
-                    putValueInBaseDataContainer(csonElement, schemaValueAbs, key, value);
+                    putValueInBaseDataContainer(json5Element, schemaValueAbs, key, value);
                 }
             } else if(node instanceof ISchemaMapValue) {
                 SchemaValueAbs schemaMap = (SchemaValueAbs)node;
@@ -146,9 +146,9 @@ public class JSON5Mapper {
                     if(value != null) {
                         @SuppressWarnings("unchecked")
                         KeyValueDataContainer json5Object = mapObjectToKeyValueDataContainer((Map<String, ?>) value, ((ISchemaMapValue)schemaMap).getElementType());
-                        putValueInBaseDataContainer(csonElement, schemaMap, key, json5Object);
+                        putValueInBaseDataContainer(json5Element, schemaMap, key, json5Object);
                     } else {
-                        putValueInBaseDataContainer(csonElement, schemaMap, key, null);
+                        putValueInBaseDataContainer(json5Element, schemaMap, key, null);
                     }
                 }
 
@@ -159,10 +159,10 @@ public class JSON5Mapper {
                 if(parent != null) {
                     Object value = ISchemaArrayValue.getValue(parent);
                     if(value != null) {
-                        ArrayDataContainer csonArray = collectionObjectToJSON5ArrayKnownSchema((Collection<?>)value, ISchemaArrayValue);
-                        putValueInBaseDataContainer(csonElement, ISchemaArrayValue, key, csonArray);
+                        ArrayDataContainer json5Array = collectionObjectToJSON5ArrayKnownSchema((Collection<?>)value, ISchemaArrayValue);
+                        putValueInBaseDataContainer(json5Element, ISchemaArrayValue, key, json5Array);
                     } else {
-                        putValueInBaseDataContainer(csonElement, ISchemaArrayValue, key, null);
+                        putValueInBaseDataContainer(json5Element, ISchemaArrayValue, key, null);
                     }
                 }
             }
@@ -170,7 +170,7 @@ public class JSON5Mapper {
                 ObjectSerializeDequeueItem objectSerializeDequeueItem = objectSerializeDequeueItems.getFirst();
                 iter = objectSerializeDequeueItem.keyIterator;
                 schemaNode = (SchemaObjectNode) objectSerializeDequeueItem.ISchemaNode;
-                csonElement = objectSerializeDequeueItem.resultElement;
+                json5Element = objectSerializeDequeueItem.resultElement;
                 if(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
                     objectSerializeDequeueItems.removeFirst();
                 }
@@ -180,19 +180,19 @@ public class JSON5Mapper {
     }
 
 
-    private void putValueInBaseDataContainer(BaseDataContainer csonElement, ISchemaValue ISchemaValueAbs, Object key, Object value) {
+    private void putValueInBaseDataContainer(BaseDataContainer json5Element, ISchemaValue ISchemaValueAbs, Object key, Object value) {
         if(key instanceof String) {
-            ((KeyValueDataContainer) csonElement).put((String) key, value);
-            ((KeyValueDataContainer) csonElement).setComment((String) key, ISchemaValueAbs.getComment(), CommentPosition.BEFORE_KEY);
-            ((KeyValueDataContainer) csonElement).setComment((String) key, ISchemaValueAbs.getAfterComment(), CommentPosition.AFTER_KEY);
+            ((KeyValueDataContainer) json5Element).put((String) key, value);
+            ((KeyValueDataContainer) json5Element).setComment((String) key, ISchemaValueAbs.getComment(), CommentPosition.BEFORE_KEY);
+            ((KeyValueDataContainer) json5Element).setComment((String) key, ISchemaValueAbs.getAfterComment(), CommentPosition.AFTER_KEY);
         }
         else {
-            if(!(csonElement instanceof ArrayDataContainer)) {
-                throw new JSON5SerializerException("Invalide path. '" + key + "' is not array index." +  "(csonElement is not ArrayDataContainer. csonElement=" + csonElement +  ")");
+            if(!(json5Element instanceof ArrayDataContainer)) {
+                throw new JSON5SerializerException("Invalide path. '" + key + "' is not array index." +  "(json5Element is not ArrayDataContainer. json5Element=" + json5Element +  ")");
             }
-            ((ArrayDataContainer)csonElement).set((int)key, value);
-            ((ArrayDataContainer)csonElement).setComment((int)key, ISchemaValueAbs.getComment(), CommentPosition.BEFORE_VALUE);
-            ((ArrayDataContainer)csonElement).setComment((int)key, ISchemaValueAbs.getAfterComment(), CommentPosition.AFTER_VALUE);
+            ((ArrayDataContainer)json5Element).set((int)key, value);
+            ((ArrayDataContainer)json5Element).setComment((int)key, ISchemaValueAbs.getComment(), CommentPosition.BEFORE_VALUE);
+            ((ArrayDataContainer)json5Element).setComment((int)key, ISchemaValueAbs.getAfterComment(), CommentPosition.AFTER_VALUE);
         }
     }
 
@@ -206,16 +206,16 @@ public class JSON5Mapper {
 
 
 
-    public <T> List<T> csonArrayToList(ArrayDataContainer array, Class<T> valueType) {
-        return csonArrayToList(array, valueType, null, false, null);
+    public <T> List<T> json5ArrayToList(ArrayDataContainer array, Class<T> valueType) {
+        return json5ArrayToList(array, valueType, null, false, null);
     }
 
-    public <T> List<T> csonArrayToList(ArrayDataContainer array, Class<T> valueType, boolean ignoreError) {
-        return csonArrayToList(array, valueType, null, ignoreError, null);
+    public <T> List<T> json5ArrayToList(ArrayDataContainer array, Class<T> valueType, boolean ignoreError) {
+        return json5ArrayToList(array, valueType, null, ignoreError, null);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> List<T> csonArrayToList(ArrayDataContainer csonArray, Class<T> valueType, WritingOptions writingOptions, boolean ignoreError, T defaultValue) {
+    public <T> List<T> json5ArrayToList(ArrayDataContainer json5Array, Class<T> valueType, WritingOptions writingOptions, boolean ignoreError, T defaultValue) {
         Types types = Types.of(valueType);
         if(valueType.isPrimitive()) {
             if(ignoreError) {
@@ -239,8 +239,8 @@ public class JSON5Mapper {
             throw new JSON5SerializerException("valueType is Array type. ArrayType cannot be used. valueType=" + valueType.getName());
         }
         ArrayList<T> result = new ArrayList<T>();
-        for(int i = 0, n = csonArray.size(); i < n; ++i) {
-            Object value = csonArray.get(i);
+        for(int i = 0, n = json5Array.size(); i < n; ++i) {
+            Object value = json5Array.get(i);
             if(value == null) {
                 result.add(defaultValue);
             }
@@ -277,7 +277,7 @@ public class JSON5Mapper {
                 }
             } else if(valueType == String.class) {
                 if(writingOptions != null && value instanceof BaseDataContainer) {
-                    JSON5Element JSON5Element = toCSONElement(value);
+                    JSON5Element JSON5Element = toJSON5Element(value);
                     result.add((T)(JSON5Element.toString(  writingOptions)));
                 } else {
                     result.add((T) value.toString());
@@ -316,8 +316,8 @@ public class JSON5Mapper {
                 }
             }
             if(value instanceof Collection<?>) {
-                ArrayDataContainer csonArray = collectionObjectToArrayDataContainer((Collection<?>)value, null);
-                json5Object.put(key, csonArray);
+                ArrayDataContainer json5Array = collectionObjectToArrayDataContainer((Collection<?>)value, null);
+                json5Object.put(key, json5Array);
             } else if(value instanceof Map<?, ?>) {
                 @SuppressWarnings("unchecked")
                 KeyValueDataContainer childObject = mapObjectToKeyValueDataContainer((Map<String, ?>)value, null);
@@ -347,37 +347,37 @@ public class JSON5Mapper {
 
 
     private ArrayDataContainer collectionObjectToArrayDataContainer(Collection<?> collection, Class<?> valueType) {
-        ArrayDataContainer csonArray = arrayDataContainerFactory.create();
+        ArrayDataContainer json5Array = arrayDataContainerFactory.create();
         Types types = valueType == null ? null : Types.of(valueType);
         for(Object object : collection) {
             if(object instanceof Collection<?>) {
                 ArrayDataContainer childArray = collectionObjectToArrayDataContainer((Collection<?>)object, null);
-                csonArray.add(childArray);
+                json5Array.add(childArray);
             } else if(object instanceof Map<?, ?>) {
                 @SuppressWarnings("unchecked")
                 KeyValueDataContainer childObject = mapObjectToKeyValueDataContainer((Map<String, ?>)object, null);
-                csonArray.add(childObject);
+                json5Array.add(childObject);
             } else if(types == Types.Object) {
                 KeyValueDataContainer childObject = toKeyValueDataContainer(object);
-                csonArray.add(childObject);
+                json5Array.add(childObject);
             }
             else {
-                csonArray.add(object);
+                json5Array.add(object);
             }
         }
-        return csonArray;
+        return json5Array;
 
     }
 
 
 
     private ArrayDataContainer collectionObjectToJSON5ArrayKnownSchema(Collection<?> collection, ISchemaArrayValue ISchemaArrayValue) {
-        ArrayDataContainer resultCsonArray  = arrayDataContainerFactory.create();
-        ArrayDataContainer csonArray = resultCsonArray;
+        ArrayDataContainer resultJSON5Array  = arrayDataContainerFactory.create();
+        ArrayDataContainer json5Array = resultJSON5Array;
         Iterator<?> iter = collection.iterator();
         TypeSchema objectValueTypeSchema = ISchemaArrayValue.getObjectValueTypeElement();
         Deque<ArraySerializeDequeueItem> arraySerializeDequeueItems = new ArrayDeque<>();
-        ArraySerializeDequeueItem currentArraySerializeDequeueItem = new ArraySerializeDequeueItem(iter, csonArray);
+        ArraySerializeDequeueItem currentArraySerializeDequeueItem = new ArraySerializeDequeueItem(iter, json5Array);
         arraySerializeDequeueItems.add(currentArraySerializeDequeueItem);
         boolean isGeneric = ISchemaArrayValue.isGenericTypeValue();
         boolean isAbstractObject = ISchemaArrayValue.getEndpointValueType() == Types.AbstractObject;
@@ -385,34 +385,34 @@ public class JSON5Mapper {
             Object object = iter.next();
             if(object instanceof Collection<?>) {
                 ArrayDataContainer childArray = arrayDataContainerFactory.create();
-                csonArray.add(childArray);
-                csonArray = childArray;
+                json5Array.add(childArray);
+                json5Array = childArray;
                 iter = ((Collection<?>)object).iterator();
-                currentArraySerializeDequeueItem = new ArraySerializeDequeueItem(iter, csonArray);
+                currentArraySerializeDequeueItem = new ArraySerializeDequeueItem(iter, json5Array);
                 arraySerializeDequeueItems.add(currentArraySerializeDequeueItem);
             } else if(objectValueTypeSchema == null) {
                 if(isGeneric || isAbstractObject) {
                     object = object == null ? null :  toKeyValueDataContainer(object);
                 }
-                csonArray.add(object);
+                json5Array.add(object);
             } else {
                 if(object == null)  {
-                    csonArray.add(null);
+                    json5Array.add(null);
                 } else {
                     KeyValueDataContainer childObject = serializeTypeElement(objectValueTypeSchema, object);
-                    csonArray.add(childObject);
+                    json5Array.add(childObject);
                 }
             }
             while(!iter.hasNext() && !arraySerializeDequeueItems.isEmpty()) {
                 ArraySerializeDequeueItem arraySerializeDequeueItem = arraySerializeDequeueItems.getFirst();
                 iter = arraySerializeDequeueItem.iterator;
-                csonArray = arraySerializeDequeueItem.csonArray;
+                json5Array = arraySerializeDequeueItem.json5Array;
                 if(!iter.hasNext() && !arraySerializeDequeueItems.isEmpty()) {
                     arraySerializeDequeueItems.removeFirst();
                 }
             }
         }
-        return resultCsonArray;
+        return resultJSON5Array;
 
     }
 
@@ -464,19 +464,19 @@ public class JSON5Mapper {
         Map finalTarget = target;
         if(onObtainTypeValue != null) {
             json5Object.keySet().forEach(key -> {
-                Object childInCsonObject = json5Object.get(key);
-                if(childInCsonObject == null) {
+                Object childInJSON5Object = json5Object.get(key);
+                if(childInJSON5Object == null) {
                     finalTarget.put(key, null);
                     return;
                 }
-                Object targetChild = onObtainTypeValue.obtain(childInCsonObject);
+                Object targetChild = onObtainTypeValue.obtain(childInJSON5Object);
                 if(targetChild == null) {
                     finalTarget.put(key, null);
                     return;
                 }
                 Types targetChildTypes = Types.of(targetChild.getClass());
-                if(childInCsonObject instanceof KeyValueDataContainer && !Types.isSingleType(targetChildTypes)) {
-                    fromKeyValueDataContainer((KeyValueDataContainer) childInCsonObject, targetChild);
+                if(childInJSON5Object instanceof KeyValueDataContainer && !Types.isSingleType(targetChildTypes)) {
+                    fromKeyValueDataContainer((KeyValueDataContainer) childInJSON5Object, targetChild);
                 }
                 finalTarget.put(key, targetChild);
 
@@ -531,9 +531,9 @@ public class JSON5Mapper {
     }
 
 
-    private BaseDataContainer getChildElement(SchemaElementNode schemaElementNode,BaseDataContainer csonElement, Object key) {
+    private BaseDataContainer getChildElement(SchemaElementNode schemaElementNode,BaseDataContainer json5Element, Object key) {
         if(key instanceof String) {
-            KeyValueDataContainer json5Object = (KeyValueDataContainer)csonElement;
+            KeyValueDataContainer json5Object = (KeyValueDataContainer)json5Element;
             Object value = json5Object.get((String) key);
             if(schemaElementNode instanceof  SchemaArrayNode && value instanceof ArrayDataContainer) {
                 return (ArrayDataContainer) value;
@@ -542,8 +542,8 @@ public class JSON5Mapper {
             }
             return null;
         } else {
-            ArrayDataContainer csonArray = (ArrayDataContainer) csonElement;
-            Object value = csonArray.get((int) key);
+            ArrayDataContainer json5Array = (ArrayDataContainer) json5Element;
+            Object value = json5Array.get((int) key);
             if(schemaElementNode instanceof SchemaArrayNode &&  value instanceof ArrayDataContainer) {
                 return (ArrayDataContainer) value;
             } else if(value instanceof KeyValueDataContainer) {
@@ -558,7 +558,7 @@ public class JSON5Mapper {
         TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(targetObject.getClass());
         SchemaObjectNode schemaRoot = typeSchema.getSchemaObjectNode();
         HashMap<Integer, Object> parentObjMap = new HashMap<>();
-        BaseDataContainer csonElement = json5Object;
+        BaseDataContainer json5Element = json5Object;
         ArrayDeque<ObjectSerializeDequeueItem> objectSerializeDequeueItems = new ArrayDeque<>();
         Iterator<Object> iter = schemaRoot.keySet().iterator();
         SchemaObjectNode schemaNode = schemaRoot;
@@ -567,12 +567,12 @@ public class JSON5Mapper {
         while(iter.hasNext()) {
             Object key = iter.next();
             ISchemaNode node = schemaNode.get(key);
-            BaseDataContainer parentsCSON = csonElement;
+            BaseDataContainer parentsJSON5 = json5Element;
             if(node instanceof SchemaElementNode) {
                 boolean nullValue = false;
-                BaseDataContainer childElement = getChildElement((SchemaElementNode) node, csonElement, key);
+                BaseDataContainer childElement = getChildElement((SchemaElementNode) node, json5Element, key);
                 if(key instanceof String) {
-                    KeyValueDataContainer parentObject = (KeyValueDataContainer) csonElement;
+                    KeyValueDataContainer parentObject = (KeyValueDataContainer) json5Element;
                     if(childElement == null && parentObject != null) {
                         Object v = parentObject.get((String) key);
                         if(v == null || v == NullValue.Instance) {
@@ -582,8 +582,8 @@ public class JSON5Mapper {
                         }
                     }
                 } else {
-                    assert csonElement instanceof ArrayDataContainer;
-                    ArrayDataContainer parentArray = (ArrayDataContainer)csonElement;
+                    assert json5Element instanceof ArrayDataContainer;
+                    ArrayDataContainer parentArray = (ArrayDataContainer)json5Element;
                     int index = (Integer)key;
                     if(childElement == null) {
                         if(parentArray.size() <= index) {
@@ -599,29 +599,29 @@ public class JSON5Mapper {
                     }
                 }
 
-                csonElement = childElement;
+                json5Element = childElement;
                 schemaNode = (SchemaObjectNode)node;
                 List<SchemaValueAbs> parentSchemaFieldList = schemaNode.getParentSchemaFieldList();
                 for(SchemaValueAbs parentSchemaField : parentSchemaFieldList) {
-                    getOrCreateParentObject(parentSchemaField, parentObjMap, targetObject, nullValue, parentsCSON, json5Object);
+                    getOrCreateParentObject(parentSchemaField, parentObjMap, targetObject, nullValue, parentsJSON5, json5Object);
                 }
                 iter = schemaNode.keySet().iterator();
-                currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, csonElement);
+                currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, json5Element);
                 objectSerializeDequeueItems.add(currentObjectSerializeDequeueItem);
             }
             else if(node instanceof SchemaValueAbs && ((SchemaValueAbs)node).types() != Types.Object) {
                 SchemaValueAbs schemaField = (SchemaValueAbs) node;
                 SchemaValueAbs parentField = schemaField.getParentField();
-                if(csonElement != null) {
-                    Object obj = getOrCreateParentObject(parentField, parentObjMap, targetObject, parentsCSON, json5Object);
-                    setValueTargetFromKeyValueDataContainers(obj, schemaField, csonElement, key, json5Object);
+                if(json5Element != null) {
+                    Object obj = getOrCreateParentObject(parentField, parentObjMap, targetObject, parentsJSON5, json5Object);
+                    setValueTargetFromKeyValueDataContainers(obj, schemaField, json5Element, key, json5Object);
                 }
             }
             while(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
                 ObjectSerializeDequeueItem objectSerializeDequeueItem = objectSerializeDequeueItems.getFirst();
                 iter = objectSerializeDequeueItem.keyIterator;
                 schemaNode = (SchemaObjectNode) objectSerializeDequeueItem.ISchemaNode;
-                csonElement = objectSerializeDequeueItem.resultElement;
+                json5Element = objectSerializeDequeueItem.resultElement;
                 if(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
                     objectSerializeDequeueItems.removeFirst();
                 }
@@ -630,11 +630,11 @@ public class JSON5Mapper {
         return targetObject;
     }
 
-    private Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, BaseDataContainer csonElement, KeyValueDataContainer rootCSON) {
-        return getOrCreateParentObject(parentSchemaField, parentObjMap, root, false, csonElement, rootCSON);
+    private Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, BaseDataContainer json5Element, KeyValueDataContainer rootJSON5) {
+        return getOrCreateParentObject(parentSchemaField, parentObjMap, root, false, json5Element, rootJSON5);
     }
 
-    private Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, boolean setNull, BaseDataContainer csonElement, KeyValueDataContainer rootCSON) {
+    private Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, boolean setNull, BaseDataContainer json5Element, KeyValueDataContainer rootJSON5) {
         if(parentSchemaField == null) return root;
 
         int id = parentSchemaField.getId();
@@ -661,8 +661,8 @@ public class JSON5Mapper {
                     // TODO 앞으로 제네릭 또는 interface 나 추상 클래스로만 사용 가능하도록 변경할 것.
                     ObtainTypeValueInvoker obtainTypeValueInvoker = ((ObtainTypeValueInvokerGetter)schemaField).getObtainTypeValueInvoker();
                     if(obtainTypeValueInvoker != null) {
-                        OnObtainTypeValue onObtainTypeValue = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parent, rootCSON);
-                        child = onObtainTypeValue.obtain(csonElement);
+                        OnObtainTypeValue onObtainTypeValue = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parent, rootJSON5);
+                        child = onObtainTypeValue.obtain(json5Element);
                     }
                 }
                 if(child == null) {
@@ -678,10 +678,10 @@ public class JSON5Mapper {
     }
 
 
-    private void setValueTargetFromKeyValueDataContainers(Object parents, SchemaValueAbs schemaField, BaseDataContainer cson, Object key, KeyValueDataContainer root) {
+    private void setValueTargetFromKeyValueDataContainers(Object parents, SchemaValueAbs schemaField, BaseDataContainer json5, Object key, KeyValueDataContainer root) {
         List<SchemaValueAbs> schemaValueAbsList = schemaField.getAllSchemaValueList();
         for(SchemaValueAbs schemaValueAbs : schemaValueAbsList) {
-            setValueTargetFromKeyValueDataContainer(parents, schemaValueAbs, cson, key,root);
+            setValueTargetFromKeyValueDataContainer(parents, schemaValueAbs, json5, key,root);
         }
     }
 
@@ -703,20 +703,20 @@ public class JSON5Mapper {
                 return null;
             }
         }
-        if(Types.isSingleType(valueType) || Types.isCsonType(valueType)) {
+        if(Types.isSingleType(valueType) || Types.isJSON5Type(valueType)) {
             return DataConverter.convertValue(valueClas, realValue);
         } else if(Types.Object == valueType) {
-            KeyValueDataContainer csonObj = realValue instanceof KeyValueDataContainer ? (KeyValueDataContainer) realValue : null;
-            if(csonObj != null) {
-                fromKeyValueDataContainer(csonObj, value);
+            KeyValueDataContainer json5Obj = realValue instanceof KeyValueDataContainer ? (KeyValueDataContainer) realValue : null;
+            if(json5Obj != null) {
+                fromKeyValueDataContainer(json5Obj, value);
                 return value;
             }
         }
         return null;
     }
 
-    private void setValueTargetFromKeyValueDataContainer(Object parents, SchemaValueAbs schemaField,final BaseDataContainer cson, Object key, KeyValueDataContainer root) {
-        boolean isArrayType = cson instanceof ArrayDataContainer;
+    private void setValueTargetFromKeyValueDataContainer(Object parents, SchemaValueAbs schemaField,final BaseDataContainer json5, Object key, KeyValueDataContainer root) {
+        boolean isArrayType = json5 instanceof ArrayDataContainer;
 
         /*Object value = isArrayType ? ((ArrayDataContainer) json5).opt((int)key) : ((KeyValueDataContainer)json5).opt((String)key);
         //todo null 값에 대하여 어떻게 할 것인지 고민해봐야함.
@@ -731,10 +731,10 @@ public class JSON5Mapper {
         }*/
         Types valueType = schemaField.getType();
         if(Types.isSingleType(valueType)) {
-            Object valueObj = optFrom(cson, key, valueType);
+            Object valueObj = optFrom(json5, key, valueType);
             schemaField.setValue(parents, valueObj);
         } else if((Types.AbstractObject == valueType || Types.GenericType == valueType) && schemaField instanceof ObtainTypeValueInvokerGetter) {
-            Object val = optFrom(cson, key, valueType);
+            Object val = optFrom(json5, key, valueType);
 
             Object obj = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parents, root).obtain(val) ;//on == null ? null : onObtainTypeValue.obtain(json5 instanceof KeyValueDataContainer ? (KeyValueDataContainer) json5 : null);
             if(obj == null) {
@@ -746,9 +746,9 @@ public class JSON5Mapper {
         else if(Types.Collection == valueType) {
             Object value;
             if(isArrayType) {
-                value = ((ArrayDataContainer) cson).get((int)key);
+                value = ((ArrayDataContainer) json5).get((int)key);
             } else {
-                value = ((KeyValueDataContainer)cson).get((String)key);
+                value = ((KeyValueDataContainer)json5).get((String)key);
             }
             if(value instanceof ArrayDataContainer) {
                 OnObtainTypeValue onObtainTypeValue = null;
@@ -756,8 +756,8 @@ public class JSON5Mapper {
                 if(isGenericOrAbsType) {
                     onObtainTypeValue = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parents, root);
                 }
-                csonArrayToCollectionObject((ArrayDataContainer)value, (ISchemaArrayValue)schemaField, parents, onObtainTypeValue);
-            } else if(isNull(cson,key)) {
+                json5ArrayToCollectionObject((ArrayDataContainer)value, (ISchemaArrayValue)schemaField, parents, onObtainTypeValue);
+            } else if(isNull(json5,key)) {
                 try {
                     schemaField.setValue(parents, null);
                 } catch (Exception ignored) {}
@@ -765,24 +765,24 @@ public class JSON5Mapper {
         } else if(Types.Object == valueType) {
             Object value;
             if(isArrayType) {
-                value = ((ArrayDataContainer) cson).get((int)key);
+                value = ((ArrayDataContainer) json5).get((int)key);
             } else {
-                value = ((KeyValueDataContainer)cson).get((String)key);
+                value = ((KeyValueDataContainer)json5).get((String)key);
             }
 
             if(value instanceof KeyValueDataContainer) {
                 Object target = schemaField.newInstance();
                 fromKeyValueDataContainer((KeyValueDataContainer) value, target);
                 schemaField.setValue(parents, target);
-            } else if(isNull(cson,key)) {
+            } else if(isNull(json5,key)) {
                 schemaField.setValue(parents, null);
             }
         } else if(Types.Map == valueType) {
             Object value;
             if(isArrayType) {
-                value = ((ArrayDataContainer) cson).get((int)key);
+                value = ((ArrayDataContainer) json5).get((int)key);
             } else {
-                value = ((KeyValueDataContainer)cson).get((String)key);
+                value = ((KeyValueDataContainer)json5).get((String)key);
             }
 
             if(value instanceof KeyValueDataContainer) {
@@ -795,12 +795,12 @@ public class JSON5Mapper {
                 }
                 fromKeyValueDataContainerToMap((Map<?, ?>) target, (KeyValueDataContainer)value, type, onObtainTypeValue);
                 schemaField.setValue(parents, target);
-            } else if(isNull(cson,key)) {
+            } else if(isNull(json5,key)) {
                 schemaField.setValue(parents, null);
             }
         } else if(Types.JSON5Array == valueType || Types.JSON5Element == valueType || Types.JSON5Object == valueType) {
-            Object value = optValue(cson, key);
-            JSON5Element JSON5Element = toCSONElement(value);
+            Object value = optValue(json5, key);
+            JSON5Element JSON5Element = toJSON5Element(value);
             schemaField.setValue(parents, JSON5Element);
         }
         else {
@@ -810,23 +810,23 @@ public class JSON5Mapper {
         }
     }
 
-    private static JSON5Element toCSONElement(Object object) {
+    private static JSON5Element toJSON5Element(Object object) {
         if(object instanceof KeyValueDataContainer) {
-            return toCSONObject((KeyValueDataContainer)object);
+            return toJSON5Object((KeyValueDataContainer)object);
         } else if(object instanceof ArrayDataContainer) {
-            return toCSONArray((ArrayDataContainer)object);
+            return toJSON5Array((ArrayDataContainer)object);
         }
         return null;
     }
 
-    private static JSON5Array toCSONArray(ArrayDataContainer arrayDataContainer) {
+    private static JSON5Array toJSON5Array(ArrayDataContainer arrayDataContainer) {
         JSON5Array JSON5Array = new JSON5Array();
         for(int i = 0, n = arrayDataContainer.size(); i < n; ++i) {
             Object value = arrayDataContainer.get(i);
             if(value instanceof KeyValueDataContainer) {
-                JSON5Array.add(toCSONObject((KeyValueDataContainer)value));
+                JSON5Array.add(toJSON5Object((KeyValueDataContainer)value));
             } else if(value instanceof ArrayDataContainer) {
-                JSON5Array.add(toCSONArray((ArrayDataContainer)value));
+                JSON5Array.add(toJSON5Array((ArrayDataContainer)value));
             } else {
                 JSON5Array.add(value);
             }
@@ -834,14 +834,14 @@ public class JSON5Mapper {
         return JSON5Array;
     }
 
-    private static JSON5Object toCSONObject(KeyValueDataContainer keyValueDataContainer) {
+    private static JSON5Object toJSON5Object(KeyValueDataContainer keyValueDataContainer) {
         JSON5Object json5Object = new JSON5Object();
         for(String key : keyValueDataContainer.keySet()) {
             Object value = keyValueDataContainer.get(key);
             if(value instanceof KeyValueDataContainer) {
-                json5Object.put(key, toCSONObject((KeyValueDataContainer)value));
+                json5Object.put(key, toJSON5Object((KeyValueDataContainer)value));
             } else if(value instanceof ArrayDataContainer) {
-                json5Object.put(key, toCSONArray((ArrayDataContainer)value));
+                json5Object.put(key, toJSON5Array((ArrayDataContainer)value));
             } else {
                 json5Object.put(key, value);
             }
@@ -849,23 +849,23 @@ public class JSON5Mapper {
         return json5Object;
     }
 
-    private static Object optValue(BaseDataContainer cson, Object key) {
+    private static Object optValue(BaseDataContainer json5, Object key) {
         Object value = null;
-        if(key instanceof String && cson instanceof KeyValueDataContainer) {
-            value = ((KeyValueDataContainer)cson).get((String)key);
-        } else if(cson instanceof ArrayDataContainer) {
-            value = ((ArrayDataContainer)cson).get((int)key);
+        if(key instanceof String && json5 instanceof KeyValueDataContainer) {
+            value = ((KeyValueDataContainer)json5).get((String)key);
+        } else if(json5 instanceof ArrayDataContainer) {
+            value = ((ArrayDataContainer)json5).get((int)key);
         }
         return value;
     }
 
-    private static ArrayDataContainer optArrayDataContainer(BaseDataContainer cson, Object key) {
-        Object value = optValue(cson, key);
+    private static ArrayDataContainer optArrayDataContainer(BaseDataContainer json5, Object key) {
+        Object value = optValue(json5, key);
         return value instanceof ArrayDataContainer ? (ArrayDataContainer)value : null;
     }
 
-    private static KeyValueDataContainer optKeyValueDataContainer(BaseDataContainer cson, Object key) {
-        Object value = optValue(cson, key);
+    private static KeyValueDataContainer optKeyValueDataContainer(BaseDataContainer json5, Object key) {
+        Object value = optValue(json5, key);
         return value instanceof KeyValueDataContainer ? (KeyValueDataContainer)value : null;
     }
 
@@ -880,16 +880,16 @@ public class JSON5Mapper {
                 throw new JSON5SerializerException("To deserialize a generic, abstract or interface type you must have a @ObtainTypeValue annotated method. target=" + obtainTypeValueInvokerGetter.targetPath());
             }
             try {
-                Object cson;
+                Object json5;
                 if(json5ObjectOrValue instanceof KeyValueDataContainer) {
-                    cson = json5ObjectOrValue;
+                    json5 = json5ObjectOrValue;
                 } else  {
-                    cson =  keyValueDataContainerFactory.create();
-                    ((KeyValueDataContainer)cson).put("$value",  root);
+                    json5 =  keyValueDataContainerFactory.create();
+                    ((KeyValueDataContainer)json5).put("$value",  root);
                 }
 
 
-                Object obj = invoker.obtain(parents, toCSONObject((KeyValueDataContainer)cson), toCSONObject(root));
+                Object obj = invoker.obtain(parents, toJSON5Object((KeyValueDataContainer)json5), toJSON5Object(root));
                 if (obj != null && invoker.isDeserializeAfter()) {
                     obj = dynamicCasting(obj, json5ObjectOrValue);
                 }
@@ -905,12 +905,12 @@ public class JSON5Mapper {
 
 
 
-    private static boolean isNull(BaseDataContainer csonElement, Object key) {
+    private static boolean isNull(BaseDataContainer json5Element, Object key) {
         Object value;
-        if(key instanceof String && csonElement instanceof KeyValueDataContainer) {
-            value = ((KeyValueDataContainer)csonElement).get((String) key);
-        } else if(csonElement instanceof ArrayDataContainer) {
-            value = ((ArrayDataContainer)csonElement).get((int) key);
+        if(key instanceof String && json5Element instanceof KeyValueDataContainer) {
+            value = ((KeyValueDataContainer)json5Element).get((String) key);
+        } else if(json5Element instanceof ArrayDataContainer) {
+            value = ((ArrayDataContainer)json5Element).get((int) key);
         } else {
             return false;
         }
@@ -920,28 +920,28 @@ public class JSON5Mapper {
 
 
 
-    private ArrayDataContainer optValueInArrayDataContainer(ArrayDataContainer csonArray, int index) {
-        Object value = csonArray.get(index);
+    private ArrayDataContainer optValueInArrayDataContainer(ArrayDataContainer json5Array, int index) {
+        Object value = json5Array.get(index);
         return value instanceof ArrayDataContainer ? (ArrayDataContainer)value : null;
     }
 
 
-    private Object optValueInArrayDataContainer(ArrayDataContainer csonArray, int index, ISchemaArrayValue ISchemaArrayValue) {
+    private Object optValueInArrayDataContainer(ArrayDataContainer json5Array, int index, ISchemaArrayValue ISchemaArrayValue) {
         Types types = ISchemaArrayValue.getEndpointValueType();
         if(types == Types.Object) {
-            Object value = csonArray.get(index);
+            Object value = json5Array.get(index);
             if(value instanceof KeyValueDataContainer) {
                 Object target = ISchemaArrayValue.getObjectValueTypeElement().newInstance();
                 fromKeyValueDataContainer((KeyValueDataContainer) value, target);
                 return target;
             }
         }
-        return optFrom(csonArray, index, types);
+        return optFrom(json5Array, index, types);
     }
 
 
     @SuppressWarnings({"rawtypes", "ReassignedVariable", "unchecked"})
-    private void csonArrayToCollectionObject(ArrayDataContainer csonArray, ISchemaArrayValue ISchemaArrayValue, Object parent, OnObtainTypeValue onObtainTypeValue) {
+    private void json5ArrayToCollectionObject(ArrayDataContainer json5Array, ISchemaArrayValue ISchemaArrayValue, Object parent, OnObtainTypeValue onObtainTypeValue) {
         List<CollectionItems> collectionItems = ISchemaArrayValue.getCollectionItems();
         int collectionItemIndex = 0;
         final int collectionItemSize = collectionItems.size();
@@ -950,22 +950,22 @@ public class JSON5Mapper {
         }
         CollectionItems collectionItem = collectionItems.get(collectionItemIndex);
         ArrayList<ArraySerializeDequeueItem> arraySerializeDequeueItems = new ArrayList<>();
-        ArraySerializeDequeueItem objectItem = new ArraySerializeDequeueItem(csonArray,collectionItem.newInstance());
+        ArraySerializeDequeueItem objectItem = new ArraySerializeDequeueItem(json5Array,collectionItem.newInstance());
         int end = objectItem.getEndIndex();
         arraySerializeDequeueItems.add(objectItem);
 
         for(int index = 0; index <= end; ++index) {
             objectItem.setArrayIndex(index);
             if(collectionItem.isGeneric() || collectionItem.isAbstractType()) {
-                KeyValueDataContainer json5Object =  optKeyValueDataContainer(objectItem.csonArray,index);
+                KeyValueDataContainer json5Object =  optKeyValueDataContainer(objectItem.json5Array,index);
                 Object object = onObtainTypeValue.obtain(json5Object);
                 objectItem.collectionObject.add(object);
             }
             else if (collectionItem.getValueClass() != null) {
-                Object value = optValueInArrayDataContainer(objectItem.csonArray, index, ISchemaArrayValue);
+                Object value = optValueInArrayDataContainer(objectItem.json5Array, index, ISchemaArrayValue);
                 objectItem.collectionObject.add(value);
             } else {
-                ArrayDataContainer inArray = optValueInArrayDataContainer(objectItem.csonArray, index);
+                ArrayDataContainer inArray = optValueInArrayDataContainer(objectItem.json5Array, index);
                 if (inArray == null) {
                     objectItem.collectionObject.add(null);
                 } else {
@@ -1000,19 +1000,19 @@ public class JSON5Mapper {
     @SuppressWarnings("rawtypes")
     private class ArraySerializeDequeueItem {
         Iterator<?> iterator;
-        ArrayDataContainer csonArray;
+        ArrayDataContainer json5Array;
 
         Collection collectionObject;
         int index = 0;
         int arraySize = 0;
-        private ArraySerializeDequeueItem(Iterator<?> iterator,ArrayDataContainer csonArray) {
+        private ArraySerializeDequeueItem(Iterator<?> iterator,ArrayDataContainer json5Array) {
             this.iterator = iterator;
-            this.csonArray = csonArray;
+            this.json5Array = json5Array;
         }
 
-        private ArraySerializeDequeueItem(ArrayDataContainer csonArray, Collection collection) {
-            this.csonArray = csonArray;
-            this.arraySize = csonArray.size();
+        private ArraySerializeDequeueItem(ArrayDataContainer json5Array, Collection collection) {
+            this.json5Array = json5Array;
+            this.arraySize = json5Array.size();
             this.collectionObject = collection;
         }
 

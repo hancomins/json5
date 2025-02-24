@@ -9,12 +9,12 @@ public class JSONWriterTest {
     public void testWriteSimple() {
 
         JSON5Object json5Object = new JSON5Object();
-        JSON5Array csonArray = new JSON5Array();
-        csonArray.add("a");
-        csonArray.add("b");
-        csonArray.add("c");
-        csonArray.add(new JSON5Object().put("ok", "123").put("array", new JSON5Array().put("a").put("11")));
-        json5Object.put("array", csonArray);
+        JSON5Array json5Array = new JSON5Array();
+        json5Array.add("a");
+        json5Array.add("b");
+        json5Array.add("c");
+        json5Array.add(new JSON5Object().put("ok", "123").put("array", new JSON5Array().put("a").put("11")));
+        json5Object.put("array", json5Array);
         //json5Object.setCommentAfterValue("array", "comment after array");
 
         json5Object.put("emptyArray", new JSON5Array());
@@ -32,23 +32,23 @@ public class JSONWriterTest {
     }
 
     @Test
-    public void testWriteCommentInCSONArray() {
+    public void testWriteCommentInJSON5Array() {
 
 
-        JSON5Array csonArray = new JSON5Array();
-        csonArray.put(0);
-        csonArray.put(new JSON5Object());
-        csonArray.put(1);
-        csonArray.put(new JSON5Array());
-        csonArray.setCommentForValue(0, "comment before a value at index 0");
-        csonArray.setCommentAfterValue(0, "comment after a value at index 0");
-        csonArray.setCommentForValue(1, "comment before a value at index 1");
-        csonArray.setCommentAfterValue(1, "comment after a value at index 1");
-        csonArray.setCommentForValue(3, "comment before a value at index 3");
-        csonArray.setCommentAfterValue(3, "comment after a value at index 3");
+        JSON5Array json5Array = new JSON5Array();
+        json5Array.put(0);
+        json5Array.put(new JSON5Object());
+        json5Array.put(1);
+        json5Array.put(new JSON5Array());
+        json5Array.setCommentForValue(0, "comment before a value at index 0");
+        json5Array.setCommentAfterValue(0, "comment after a value at index 0");
+        json5Array.setCommentForValue(1, "comment before a value at index 1");
+        json5Array.setCommentAfterValue(1, "comment after a value at index 1");
+        json5Array.setCommentForValue(3, "comment before a value at index 3");
+        json5Array.setCommentAfterValue(3, "comment after a value at index 3");
 
         JSONWriter jsonWriter = new JSONWriter(WritingOptions.json5().setUnprettyArray(false));
-        JSONWriter.writeJSONElement(csonArray, jsonWriter);
+        JSONWriter.writeJSONElement(json5Array, jsonWriter);
         System.out.println(jsonWriter.toString());
 
     }

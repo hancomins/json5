@@ -174,33 +174,33 @@ public class Utils {
         return null;
     }
 
-    static Object optFrom(JSON5Element cson, Object key, Types valueType) {
-        boolean isArrayType = cson instanceof JSON5Array;
-        if(isArrayType && ((JSON5Array)cson).isNull((int)key)) {
+    static Object optFrom(JSON5Element json5, Object key, Types valueType) {
+        boolean isArrayType = json5 instanceof JSON5Array;
+        if(isArrayType && ((JSON5Array)json5).isNull((int)key)) {
             return null;
-        } else if(!isArrayType && ((JSON5Object)cson).isNull((String)key)) {
+        } else if(!isArrayType && ((JSON5Object)json5).isNull((String)key)) {
             return null;
         }
         if(Types.Boolean == valueType) {
-            return isArrayType ? ((JSON5Array) cson).optBoolean((int)key) : ((JSON5Object)cson).optBoolean((String)key);
+            return isArrayType ? ((JSON5Array) json5).optBoolean((int)key) : ((JSON5Object)json5).optBoolean((String)key);
         } else if(Types.Byte == valueType) {
-            return  isArrayType ? ((JSON5Array) cson).optByte((int)key) : ((JSON5Object)cson).optByte((String)key);
+            return  isArrayType ? ((JSON5Array) json5).optByte((int)key) : ((JSON5Object)json5).optByte((String)key);
         } else if(Types.Character == valueType) {
-            return  isArrayType ? ((JSON5Array) cson).optChar((int)key, '\0') : ((JSON5Object)cson).optChar((String)key, '\0');
+            return  isArrayType ? ((JSON5Array) json5).optChar((int)key, '\0') : ((JSON5Object)json5).optChar((String)key, '\0');
         } else if(Types.Short == valueType) {
-            return  isArrayType ? ((JSON5Array) cson).optShort((int)key) : ((JSON5Object)cson).optShort((String)key);
+            return  isArrayType ? ((JSON5Array) json5).optShort((int)key) : ((JSON5Object)json5).optShort((String)key);
         } else if(Types.Integer == valueType) {
-            return  isArrayType ? ((JSON5Array) cson).optInt((int)key) : ((JSON5Object)cson).optInt((String)key);
+            return  isArrayType ? ((JSON5Array) json5).optInt((int)key) : ((JSON5Object)json5).optInt((String)key);
         } else if(Types.Float == valueType) {
-            return  isArrayType ? ((JSON5Array) cson).optFloat((int)key) : ((JSON5Object)cson).optFloat((String)key);
+            return  isArrayType ? ((JSON5Array) json5).optFloat((int)key) : ((JSON5Object)json5).optFloat((String)key);
         } else if(Types.Double == valueType) {
-            return  isArrayType ? ((JSON5Array) cson).optDouble((int)key) : ((JSON5Object)cson).optDouble((String)key);
+            return  isArrayType ? ((JSON5Array) json5).optDouble((int)key) : ((JSON5Object)json5).optDouble((String)key);
         } else if(Types.String == valueType) {
-            return  isArrayType ? ((JSON5Array) cson).optString((int)key) : ((JSON5Object)cson).optString((String)key);
+            return  isArrayType ? ((JSON5Array) json5).optString((int)key) : ((JSON5Object)json5).optString((String)key);
         }  else if(Types.ByteArray == valueType) {
-            return  isArrayType ? ((JSON5Array) cson).optByteArray((int)key) : ((JSON5Object)cson).optByteArray((String)key);
+            return  isArrayType ? ((JSON5Array) json5).optByteArray((int)key) : ((JSON5Object)json5).optByteArray((String)key);
         } else {
-            return  isArrayType ? ((JSON5Array) cson).opt((int)key) : ((JSON5Object)cson).opt((String)key);
+            return  isArrayType ? ((JSON5Array) json5).opt((int)key) : ((JSON5Object)json5).opt((String)key);
         }
     }
 

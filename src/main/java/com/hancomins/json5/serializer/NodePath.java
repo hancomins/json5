@@ -18,7 +18,7 @@ public class NodePath {
 
 
     public static SchemaObjectNode makeSchema(TypeSchema targetTypeSchema, SchemaValueAbs parentFieldRack) {
-        List<SchemaValueAbs> fieldRacks = searchAllCSONValueFields(targetTypeSchema, targetTypeSchema.getType());
+        List<SchemaValueAbs> fieldRacks = searchAllJSON5ValueFields(targetTypeSchema, targetTypeSchema.getType());
         SchemaObjectNode objectNode = new SchemaObjectNode().setBranchNode(false);
 
         for(SchemaValueAbs fieldRack : fieldRacks) {
@@ -46,7 +46,7 @@ public class NodePath {
     }
 
 
-    private static List<SchemaValueAbs> searchAllCSONValueFields(TypeSchema typeSchema, Class<?> clazz) {
+    private static List<SchemaValueAbs> searchAllJSON5ValueFields(TypeSchema typeSchema, Class<?> clazz) {
         //Set<String> fieldPaths = new HashSet<>();
         List<SchemaValueAbs> results = new ArrayList<>();
         findSchemaByAncestors(typeSchema, results, clazz);
@@ -62,13 +62,13 @@ public class NodePath {
     private static void findSchemaByAncestors(TypeSchema typeSchema, List<SchemaValueAbs> results, Class<?> currentClass) {
         List<Field> fields = ReflectionUtils.getAllInheritedFields(currentClass);
         List<Method> methods = ReflectionUtils.getAllInheritedMethods(currentClass);
-        findCsonValueFields(typeSchema, results, fields);
-        findCsonGetterSetterMethods(typeSchema, results, methods);
+        findJSON5ValueFields(typeSchema, results, fields);
+        findJSON5GetterSetterMethods(typeSchema, results, methods);
 
     }
 
 
-    private static void findCsonGetterSetterMethods(TypeSchema typeSchema, List<SchemaValueAbs> results, List<Method> methods) {
+    private static void findJSON5GetterSetterMethods(TypeSchema typeSchema, List<SchemaValueAbs> results, List<Method> methods) {
         if(methods != null) {
             for(Method method : methods) {
                 SchemaMethod methodRack = (SchemaMethod)SchemaValueAbs.of(typeSchema,method);
@@ -79,7 +79,7 @@ public class NodePath {
         }
     }
 
-    private static void findCsonValueFields(TypeSchema typeSchema, List<SchemaValueAbs> results, List<Field> fields) {
+    private static void findJSON5ValueFields(TypeSchema typeSchema, List<SchemaValueAbs> results, List<Field> fields) {
         if(fields != null) {
             for (Field field : fields) {
                 SchemaValueAbs fieldRack = SchemaValueAbs.of(typeSchema, field);

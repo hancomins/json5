@@ -38,7 +38,7 @@ enum Types {
         return type == Byte || type == Short || type == Integer || type == Long || type == Float || type == Double || type == Boolean || type == Character || type == String || type == ByteArray || type == BigDecimal || type == BigInteger;
     }
 
-    static boolean isCsonType(Types type) {
+    static boolean isJSON5Type(Types type) {
         return type == JSON5Element || type == JSON5Object || type == JSON5Array;
     }
 

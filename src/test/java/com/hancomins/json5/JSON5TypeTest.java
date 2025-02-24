@@ -44,8 +44,8 @@ public class JSON5TypeTest {
 
         JSON5Object json5Object = new JSON5Object(new JSON5Object(jsonObject.toString()).toString(WritingOptions.json()));
         Set<String> originalKeySet = jsonObject.keySet();
-        Set<String> csonKeySet =json5Object.keySet();
-        assertEquals(originalKeySet, csonKeySet);
+        Set<String> json5KeySet =json5Object.keySet();
+        assertEquals(originalKeySet, json5KeySet);
         for(String oriKey : originalKeySet) {
             if(oriKey.startsWith("A")) continue;
             assertEquals(jsonObject.get(oriKey),json5Object.get(oriKey) );
@@ -95,8 +95,8 @@ public class JSON5TypeTest {
 
         JSON5Object json5Object = new JSON5Object(new JSON5Object(jsonObject.toString()).toBytes());
         Set<String> originalKeySet = jsonObject.keySet();
-        Set<String> csonKeySet =json5Object.keySet();
-        assertEquals(originalKeySet, csonKeySet);
+        Set<String> json5KeySet =json5Object.keySet();
+        assertEquals(originalKeySet, json5KeySet);
         for(String oriKey : originalKeySet) {
             if(oriKey.startsWith("A")) continue;
             assertEquals(Integer.getInteger(jsonObject.get(oriKey)  + "") ,Integer.getInteger( json5Object.get(oriKey) + ""));

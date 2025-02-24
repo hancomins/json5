@@ -14,11 +14,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class TypeSchema {
 
 
-    protected static final TypeSchema CSON_OBJECT;
+    protected static final TypeSchema JSON5_OBJECT;
 
     static {
         try {
-            CSON_OBJECT = new TypeSchema(JSON5Object.class, JSON5Object.class.getConstructor());
+            JSON5_OBJECT = new TypeSchema(JSON5Object.class, JSON5Object.class.getConstructor());
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -63,18 +63,18 @@ class TypeSchema {
         }
         Class<?>[] interfaces = type.getInterfaces();
         if(interfaces != null && interfaces.length > 0) {
-            Class<?> foundCsonInterface = null;
+            Class<?> foundJSON5Interface = null;
             for(Class<?> interfaceClass : interfaces) {
                 if(interfaceClass.getAnnotation(JSON5Type.class) != null) {
-                    if(foundCsonInterface != null) {
+                    if(foundJSON5Interface != null) {
                         String allInterfaceNames = Arrays.stream(interfaces).map(Class::getName).reduce((a, b) -> a + ", " + b).orElse("");
                         throw new JSON5SerializerException("Anonymous class " + type.getName() + "(implements  " + allInterfaceNames + "), implements multiple @JSON5Type interfaces.  Only one @JSON5Type interface is allowed.");
                     }
-                    foundCsonInterface = interfaceClass;
+                    foundJSON5Interface = interfaceClass;
                 }
             }
-            if(foundCsonInterface != null) {
-                return foundCsonInterface;
+            if(foundJSON5Interface != null) {
+                return foundJSON5Interface;
             }
         }
         return type;
@@ -86,12 +86,12 @@ class TypeSchema {
         type = findNoAnonymousClass(type);
 
         if(JSON5Object.class.isAssignableFrom(type)) {
-            return CSON_OBJECT;
+            return JSON5_OBJECT;
         }
         if(JSON5Array.class.isAssignableFrom(type)) {
             return JSON5_ARRAY;
         }
-        checkCSONAnnotation(type);
+        checkJSON5Annotation(type);
         Constructor<?> constructor = null;
         try {
             constructor = type.getDeclaredConstructor();
@@ -182,7 +182,7 @@ class TypeSchema {
      * @param type 탐색할 클래스
      * @return
      */
-    private static boolean isCSONAnnotated(Class<?> type) {
+    private static boolean isJSON5Annotated(Class<?> type) {
         AtomicBoolean result = new AtomicBoolean(false);
         ReflectionUtils.searchSuperClassAndInterfaces(type, (superClass) -> {
             JSON5Type a = superClass.getAnnotation(JSON5Type.class);
@@ -201,7 +201,7 @@ class TypeSchema {
         return genericTypeNames;
     }
 
-    private static boolean isCSONAnnotatedOfInterface(Class<?> type) {
+    private static boolean isJSON5AnnotatedOfInterface(Class<?> type) {
         Class<?>[] interfaces = type.getInterfaces();
         if(interfaces == null) {
             return false;
@@ -212,7 +212,7 @@ class TypeSchema {
             if(a != null) {
                 return true;
             }
-            if(isCSONAnnotated(interfaceClass)) {
+            if(isJSON5Annotated(interfaceClass)) {
                 return true;
             }
 
@@ -221,10 +221,10 @@ class TypeSchema {
     }
 
 
-    private static void checkCSONAnnotation(Class<?> type) {
+    private static void checkJSON5Annotation(Class<?> type) {
          Annotation a = type.getAnnotation(JSON5Type.class);
          if(a == null) {
-             if(isCSONAnnotated(type) || isCSONAnnotatedOfInterface(type)) {
+             if(isJSON5Annotated(type) || isJSON5AnnotatedOfInterface(type)) {
                  return;
              }
              if(type.isAnonymousClass()) {

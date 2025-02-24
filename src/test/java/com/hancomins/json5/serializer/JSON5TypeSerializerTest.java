@@ -155,9 +155,9 @@ public class JSON5TypeSerializerTest {
             LinkedList<Deque<String>> linkedList = testClassA.strArraySet.get(i);
             JSON5Array JSON5Array = json5Object.getJSON5Array("strArraySet").getJSON5Array(i);
             assertEquals(linkedList.size(), JSON5Array.size());
-            Iterator<Object> csonArrayIter = JSON5Array.iterator();
+            Iterator<Object> json5ArrayIter = JSON5Array.iterator();
             for(Deque<String> deque : linkedList) {
-                JSON5Array array2 = (JSON5Array)csonArrayIter.next();
+                JSON5Array array2 = (JSON5Array)json5ArrayIter.next();
                 assertEquals(deque.size(), array2.size());
                 Iterator<Object> array2Iter = array2.iterator();
                 for(String str : deque) {
@@ -186,9 +186,9 @@ public class JSON5TypeSerializerTest {
             ArrayList<TestClassB> testBInTestBArray = iter.next();
             JSON5Array JSON5Array = json5Object.getJSON5Array("testBInTestBArray").getJSON5Array(i);
             assertEquals(testBInTestBArray.size(), JSON5Array.size());
-            Iterator<Object> csonArrayIter = JSON5Array.iterator();
+            Iterator<Object> json5ArrayIter = JSON5Array.iterator();
             for(TestClassB testClassB : testBInTestBArray) {
-                JSON5Object json5Object1 = (JSON5Object)csonArrayIter.next();
+                JSON5Object json5Object1 = (JSON5Object)json5ArrayIter.next();
                 assertEquals(testClassB.name, json5Object1.get("name"));
                 if(testClassB.testC == null) {
                     assertNull(json5Object1.get("testC"));
@@ -928,13 +928,13 @@ public class JSON5TypeSerializerTest {
 
        // Option 2. Can be used even without a default constructor.
        //Users parsedUsers = new Users();
-       //JSON5Serializer.fromCSONObject(json5Object, parsedUsers);
+       //JSON5Serializer.fromJSON5Object(json5Object, parsedUsers);
 
 
    }
 
     @JSON5Type(explicit = true)
-    public static class CSONElementInClass {
+    public static class JSON5ElementInClass {
         @JSON5Value
         private ArrayList<JSON5Array> JSON5ArrayInList = new ArrayList<>();
 
@@ -967,12 +967,12 @@ public class JSON5TypeSerializerTest {
        List<JSON5Object> json5ObjectInArrayBySetter = null;
 
        @JSON5ValueSetter("json5ObjectInArrayBySetter")
-       public void setCsonObjectInList(List<JSON5Object> json5ObjectInArray) {
+       public void setJSON5ObjectInList(List<JSON5Object> json5ObjectInArray) {
            this.json5ObjectInArrayBySetter = json5ObjectInArray;
        }
 
        @JSON5ValueGetter("json5ObjectInArrayBySetter")
-       public List<JSON5Object> getCsonObjectInList() {
+       public List<JSON5Object> getJSON5ObjectInList() {
            if(this.json5ObjectInArrayBySetter == null) {
                 this.json5ObjectInArrayBySetter = new ArrayList<>();
                 this.json5ObjectInArrayBySetter.add(new JSON5Object().put("random",Math.random() + ""));
@@ -983,34 +983,34 @@ public class JSON5TypeSerializerTest {
     }
 
     @Test
-    public void csonElementInClassTest() {
-        CSONElementInClass csonElementInClass = new CSONElementInClass();
+    public void json5ElementInClassTest() {
+        JSON5ElementInClass json5ElementInClass = new JSON5ElementInClass();
 
-        csonElementInClass.JSON5ArrayInList.add(new JSON5Array().put(new JSON5Object().put("name1", "name1")));
+        json5ElementInClass.JSON5ArrayInList.add(new JSON5Array().put(new JSON5Object().put("name1", "name1")));
 
-        csonElementInClass.json5ObjectInMap.put("name2", new JSON5Object().put("name2", "name2"));
-        //csonElementInClass.consObjectBySetterGetter = new JSON5Object().put("1234", "5678");
+        json5ElementInClass.json5ObjectInMap.put("name2", new JSON5Object().put("name2", "name2"));
+        //json5ElementInClass.consObjectBySetterGetter = new JSON5Object().put("1234", "5678");
 
-        csonElementInClass.json5Object.put("name", "name");
-        csonElementInClass.json5ObjectInArray.put("name3", "name3");
-        JSON5Object json5Object = JSON5Serializer.toJSON5Object(csonElementInClass);
+        json5ElementInClass.json5Object.put("name", "name");
+        json5ElementInClass.json5ObjectInArray.put("name3", "name3");
+        JSON5Object json5Object = JSON5Serializer.toJSON5Object(json5ElementInClass);
         System.out.println(json5Object.toString(WritingOptions.json5()));
 
         assertEquals(json5Object.getJSON5Array("consObjectBySetterGetter"), new JSON5Array().put(1,2));
 
 
-        CSONElementInClass parsedCSONObject = JSON5Object.toObject(new JSON5Object(json5Object.toString()), CSONElementInClass.class);
+        JSON5ElementInClass parsedJSON5Object = JSON5Object.toObject(new JSON5Object(json5Object.toString()), JSON5ElementInClass.class);
 
-        assertEquals(csonElementInClass.json5Object,  parsedCSONObject.json5Object);
+        assertEquals(json5ElementInClass.json5Object,  parsedJSON5Object.json5Object);
 
 
-        assertEquals(json5Object.toString(), JSON5Object.fromObject(parsedCSONObject).toString());
+        assertEquals(json5Object.toString(), JSON5Object.fromObject(parsedJSON5Object).toString());
 
 
         json5Object.optJSON5Array("consObjectBySetterGetter").put(1,2);
-        parsedCSONObject = JSON5Object.toObject(new JSON5Object(json5Object.toString()), CSONElementInClass.class);
+        parsedJSON5Object = JSON5Object.toObject(new JSON5Object(json5Object.toString()), JSON5ElementInClass.class);
 
-        assertEquals( new JSON5Array().put(1,2,1,2),parsedCSONObject.consObjectBySetterGetter);
+        assertEquals( new JSON5Array().put(1,2,1,2),parsedJSON5Object.consObjectBySetterGetter);
 
     }
 
@@ -1147,8 +1147,8 @@ public class JSON5TypeSerializerTest {
         }
 
         @ObtainTypeValue(fieldNames =  {"intMaps"})
-        public int getIntValue(JSON5Object csonElement, JSON5Object value) {
-            return csonElement.getInt("$value");
+        public int getIntValue(JSON5Object json5Element, JSON5Object value) {
+            return json5Element.getInt("$value");
 
         }
         @ObtainTypeValue(fieldNames = {"Maps", "values"}, setterMethodNames = {"setOK","setOKMap", "setOKList"})
@@ -1378,7 +1378,7 @@ public class JSON5TypeSerializerTest {
         private T valueEnum4 = null;
 
         @ObtainTypeValue(fieldNames = {"valueEnum4"}, deserializeAfter = false)
-        public T getValueEnum4(JSON5Object csonElement, JSON5Object root) {
+        public T getValueEnum4(JSON5Object json5Element, JSON5Object root) {
             return (T) ValueEnum.VALUE4;
         }
 
@@ -1446,7 +1446,7 @@ public class JSON5TypeSerializerTest {
         private static String staticValue = "staticValue";
 
         @ObtainTypeValue(fieldNames = {"i1i","i1iList", "i1iMap" }, setterMethodNames = {"setI1inMethod", "setI1iListInSetter", "setI1iMapInSetter"}, deserializeAfter = true)
-        public I1 getI1(JSON5Object csonElement, JSON5Object root) {
+        public I1 getI1(JSON5Object json5Element, JSON5Object root) {
             return new I1Impl();
         }
 

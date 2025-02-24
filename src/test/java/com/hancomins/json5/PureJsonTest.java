@@ -80,21 +80,21 @@ public class PureJsonTest {
                 "  ]";
 
 
-        JSON5Array csonArraryOrigin = new JSON5Array(testJSON);
-        JSON5Array csonArrary = new JSON5Array(testJSON);
+        JSON5Array json5ArraryOrigin = new JSON5Array(testJSON);
+        JSON5Array json5Arrary = new JSON5Array(testJSON);
 
-        assertEquals(csonArraryOrigin.toString(), csonArrary.toString());
+        assertEquals(json5ArraryOrigin.toString(), json5Arrary.toString());
 
-        System.out.println(csonArraryOrigin.toString());
+        System.out.println(json5ArraryOrigin.toString());
 
     }
 
     @Test
     public void NumberConversion() {
         String testJSON = "[" +Long.MIN_VALUE  + ", -0" + ", 10.11]";
-        JSON5Array csonArraryOrigin = new JSON5Array(testJSON);
+        JSON5Array json5ArraryOrigin = new JSON5Array(testJSON);
 
-        System.out.println(csonArraryOrigin.toString());
+        System.out.println(json5ArraryOrigin.toString());
 
 
     }

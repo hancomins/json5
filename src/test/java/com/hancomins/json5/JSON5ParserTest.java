@@ -158,7 +158,7 @@ public class JSON5ParserTest  {
     }
 
     @Test
-    public void testCSONArray() {
+    public void testJSON5Array() {
         String array = "[1,2,3.3,4,5.5]";
         JSON5Array JSON5Array = new JSON5Array(array, ParsingOptions.json5());
         assertEquals(1, JSON5Array.getInt(0));
@@ -382,7 +382,7 @@ public class JSON5ParserTest  {
         final int testCaseInCycle = 10000;
         final int preheatCycle = 50;
         final int cycle = 20 + preheatCycle;
-        boolean csonTest = false;
+        boolean json5Test = false;
         long totalCount = 0;
         long totalTime = 0;
         int preheatCount = preheatCycle;
@@ -392,7 +392,7 @@ public class JSON5ParserTest  {
 
             long time = 0;
 
-            if(csonTest) {
+            if(json5Test) {
                 start = System.currentTimeMillis();
                 for (int i = 0; i < testCaseInCycle; i++) {
                     JSON5Object json5Object1 = new JSON5Object(testData, ParsingOptions.json5());

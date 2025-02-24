@@ -59,8 +59,8 @@ public abstract  class JSON5Element implements Iterable<Object>  {
 	}
 
 	@SuppressWarnings({"unchecked", "unused"})
-	public <T extends JSON5Element> T setAllowCSONPathKey(boolean allowCSONPathKey) {
-		this.allowJsonPathKey = allowCSONPathKey;
+	public <T extends JSON5Element> T setAllowJSON5PathKey(boolean allowJSON5PathKey) {
+		this.allowJsonPathKey = allowJSON5PathKey;
 		return (T)this;
 	}
 
@@ -122,7 +122,7 @@ public abstract  class JSON5Element implements Iterable<Object>  {
 	}
 
 
-	protected final JSON5Path getCsonPath() {
+	protected final JSON5Path getJSON5Path() {
 		if(json5Path == null) {
 			json5Path = new JSON5Path(this);
 		}
@@ -217,12 +217,12 @@ public abstract  class JSON5Element implements Iterable<Object>  {
 		return false;
 	}
 
-	public boolean equalsIgnoreTypes(Object csonElement) {
-		if(csonElement instanceof JSON5Element) {
-			return JSON5Elements.equalsIgnoreTypes(this, (JSON5Element)csonElement);
+	public boolean equalsIgnoreTypes(Object json5Element) {
+		if(json5Element instanceof JSON5Element) {
+			return JSON5Elements.equalsIgnoreTypes(this, (JSON5Element)json5Element);
 		}
-		else if(csonElement instanceof String) {
-			return this.toString().equals(csonElement);
+		else if(json5Element instanceof String) {
+			return this.toString().equals(json5Element);
 		}
 		return false;
 	}

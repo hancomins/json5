@@ -54,8 +54,8 @@ public class JSON5TypeDeserializerTest {
 
 
 
-        JSON5Object cson = JSON5Serializer.toJSON5Object(testObj);
-        TestListInListInListClass resultObj = JSON5Serializer.fromJSON5Object(cson, new TestListInListInListClass());
+        JSON5Object json5 = JSON5Serializer.toJSON5Object(testObj);
+        TestListInListInListClass resultObj = JSON5Serializer.fromJSON5Object(json5, new TestListInListInListClass());
         assertEquals(testObj.list.size(), resultObj.list.size());
 
         for(int i = 0; i < testObj.list.size(); ++i) {
@@ -146,12 +146,12 @@ public class JSON5TypeDeserializerTest {
 
 
 
-        JSON5Object cson = JSON5Serializer.toJSON5Object(testClass);
-        TestClass newClass = (TestClass) JSON5Serializer.fromJSON5Object(cson, new TestClass());
+        JSON5Object json5 = JSON5Serializer.toJSON5Object(testClass);
+        TestClass newClass = (TestClass) JSON5Serializer.fromJSON5Object(json5, new TestClass());
         assertEquals(testClass.name, newClass.name);
         assertEquals(testClass.age, newClass.age);
         assertEquals(testClass.isMale, newClass.isMale);
-        assertNull(cson.get("nullValue"));
+        assertNull(json5.get("nullValue"));
         assertEquals(testClass.nullValue, newClass.nullValue);
 
         assertEquals(testClass.childrenNames.size(), newClass.childrenNames.size());
@@ -302,9 +302,9 @@ public class JSON5TypeDeserializerTest {
         home.houseTypeEx.buildingName = "Dreamplus Tower";
         home.houseTypeEx2 = new HouseTypeEx();
 
-        JSON5Object cson = JSON5Serializer.toJSON5Object(home);
-        System.out.println(cson.toString(WritingOptions.json5()));
-        Home resultHome = JSON5Serializer.fromJSON5Object(cson, new Home());
+        JSON5Object json5 = JSON5Serializer.toJSON5Object(home);
+        System.out.println(json5.toString(WritingOptions.json5()));
+        Home resultHome = JSON5Serializer.fromJSON5Object(json5, new Home());
         assertEquals(home.address.city, resultHome.address.city);
         assertEquals(home.address.street, resultHome.address.street);
         assertEquals(home.address.zipcode, resultHome.address.zipcode);
@@ -354,12 +354,12 @@ public class JSON5TypeDeserializerTest {
                 simpleObjectInArray.transportationFacilities.add(houseType);
             }
         }
-        JSON5Object cson = JSON5Serializer.toJSON5Object(simpleObjectInArray);
-        System.out.println(cson.toString(WritingOptions.json5()));
-        System.out.println(JSON5Serializer.toJSON5Object(JSON5Serializer.fromJSON5Object(cson, new SimpleObjectInArray())).toString(WritingOptions.json5()));
+        JSON5Object json5 = JSON5Serializer.toJSON5Object(simpleObjectInArray);
+        System.out.println(json5.toString(WritingOptions.json5()));
+        System.out.println(JSON5Serializer.toJSON5Object(JSON5Serializer.fromJSON5Object(json5, new SimpleObjectInArray())).toString(WritingOptions.json5()));
 
 
-        assertEquals(cson.toString(WritingOptions.json5()), JSON5Serializer.toJSON5Object(JSON5Serializer.fromJSON5Object(cson, new SimpleObjectInArray())).toString(WritingOptions.json5()));
+        assertEquals(json5.toString(WritingOptions.json5()), JSON5Serializer.toJSON5Object(JSON5Serializer.fromJSON5Object(json5, new SimpleObjectInArray())).toString(WritingOptions.json5()));
 
 
     }
@@ -379,10 +379,10 @@ public class JSON5TypeDeserializerTest {
         ArrayItemKey arrayItemKey = new ArrayItemKey();
         arrayItemKey.key = "test";
 
-        JSON5Object cson = JSON5Serializer.toJSON5Object(arrayItemKey);
-        System.out.println(cson);
+        JSON5Object json5 = JSON5Serializer.toJSON5Object(arrayItemKey);
+        System.out.println(json5);
 
-        ArrayItemKey result =  JSON5Serializer.fromJSON5Object(cson, new ArrayItemKey());
+        ArrayItemKey result =  JSON5Serializer.fromJSON5Object(json5, new ArrayItemKey());
         assertEquals(arrayItemKey.key, result.key);
         assertNull(result.nullValue);
     }

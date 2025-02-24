@@ -592,7 +592,7 @@ public class JSON5Serializer {
                 SchemaValueAbs parentField = schemaField.getParentField();
                 if(JSON5Element != null) {
                     Object obj = getOrCreateParentObject(parentField, parentObjMap, targetObject, parentsJSON5, json5Object);
-                    setValueTargetFromCSONObjects(obj, schemaField, JSON5Element, key, json5Object);
+                    setValueTargetFromJSON5Objects(obj, schemaField, JSON5Element, key, json5Object);
                 }
             }
             while(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
@@ -608,11 +608,11 @@ public class JSON5Serializer {
         return targetObject;
     }
 
-    private static Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, JSON5Element JSON5Element, JSON5Object rootCSON) {
-        return getOrCreateParentObject(parentSchemaField, parentObjMap, root, false, JSON5Element, rootCSON);
+    private static Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, JSON5Element JSON5Element, JSON5Object rootJSON5) {
+        return getOrCreateParentObject(parentSchemaField, parentObjMap, root, false, JSON5Element, rootJSON5);
     }
 
-    private static Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, boolean setNull, JSON5Element json5Element, JSON5Object rootCSON) {
+    private static Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, boolean setNull, JSON5Element json5Element, JSON5Object rootJSON5) {
         if(parentSchemaField == null) return root;
 
         int id = parentSchemaField.getId();
@@ -639,7 +639,7 @@ public class JSON5Serializer {
                     // TODO 앞으로 제네릭 또는 interface 나 추상 클래스로만 사용 가능하도록 변경할 것.
                     ObtainTypeValueInvoker obtainTypeValueInvoker = ((ObtainTypeValueInvokerGetter)schemaField).getObtainTypeValueInvoker();
                     if(obtainTypeValueInvoker != null) {
-                        OnObtainTypeValue onObtainTypeValue = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parent, rootCSON);
+                        OnObtainTypeValue onObtainTypeValue = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parent, rootJSON5);
                         child = onObtainTypeValue.obtain(json5Element);
                     }
                 }
@@ -656,10 +656,10 @@ public class JSON5Serializer {
     }
 
 
-    private static void setValueTargetFromCSONObjects(Object parents, SchemaValueAbs schemaField, JSON5Element cson, Object key, JSON5Object root) {
+    private static void setValueTargetFromJSON5Objects(Object parents, SchemaValueAbs schemaField, JSON5Element json5, Object key, JSON5Object root) {
         List<SchemaValueAbs> schemaValueAbsList = schemaField.getAllSchemaValueList();
         for(SchemaValueAbs schemaValueAbs : schemaValueAbsList) {
-            setValueTargetFromCSONObject(parents, schemaValueAbs, cson, key,root);
+            setValueTargetFromJSON5Object(parents, schemaValueAbs, json5, key,root);
         }
     }
 
@@ -681,20 +681,20 @@ public class JSON5Serializer {
                 return null;
             }
         }
-        if(Types.isSingleType(valueType) || Types.isCsonType(valueType)) {
+        if(Types.isSingleType(valueType) || Types.isJSON5Type(valueType)) {
             return DataConverter.convertValue(valueClas, realValue);
         } else if(Types.Object == valueType) {
-            JSON5Object csonObj = realValue instanceof JSON5Object ? (JSON5Object) realValue : null;
-            if(csonObj != null) {
-                fromJSON5Object(csonObj, value);
+            JSON5Object json5Obj = realValue instanceof JSON5Object ? (JSON5Object) realValue : null;
+            if(json5Obj != null) {
+                fromJSON5Object(json5Obj, value);
                 return value;
             }
         }
         return null;
     }
 
-    private static void setValueTargetFromCSONObject(Object parents, SchemaValueAbs schemaField, final JSON5Element cson, Object key, JSON5Object root) {
-        boolean isArrayType = cson instanceof JSON5Array;
+    private static void setValueTargetFromJSON5Object(Object parents, SchemaValueAbs schemaField, final JSON5Element json5, Object key, JSON5Object root) {
+        boolean isArrayType = json5 instanceof JSON5Array;
 
         /*Object value = isArrayType ? ((JSON5Array) json5).opt((int)key) : ((JSON5Object)json5).opt((String)key);
         //todo null 값에 대하여 어떻게 할 것인지 고민해봐야함.
@@ -709,10 +709,10 @@ public class JSON5Serializer {
         }*/
         Types valueType = schemaField.getType();
         if(Types.isSingleType(valueType)) {
-            Object valueObj = Utils.optFrom(cson, key, valueType);
+            Object valueObj = Utils.optFrom(json5, key, valueType);
             schemaField.setValue(parents, valueObj);
         } else if((Types.AbstractObject == valueType || Types.GenericType == valueType) && schemaField instanceof ObtainTypeValueInvokerGetter) {
-            Object val = Utils.optFrom(cson, key, valueType);
+            Object val = Utils.optFrom(json5, key, valueType);
 
             Object obj = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parents, root).obtain(val) ;//on == null ? null : onObtainTypeValue.obtain(json5 instanceof JSON5Object ? (JSON5Object) json5 : null);
             if(obj == null) {
@@ -722,7 +722,7 @@ public class JSON5Serializer {
             schemaField.setValue(parents, obj);
         }
         else if(Types.Collection == valueType) {
-            JSON5Array JSON5Array = isArrayType ? ((JSON5Array) cson).optJSON5Array((int)key) : ((JSON5Object)cson).optJSON5Array((String)key);
+            JSON5Array JSON5Array = isArrayType ? ((JSON5Array) json5).optJSON5Array((int)key) : ((JSON5Object)json5).optJSON5Array((String)key);
             if(JSON5Array != null) {
                 OnObtainTypeValue onObtainTypeValue = null;
                 boolean isGenericOrAbsType = ((ISchemaArrayValue)schemaField).isGenericTypeValue() || ((ISchemaArrayValue)schemaField).isAbstractType();
@@ -730,23 +730,23 @@ public class JSON5Serializer {
                     onObtainTypeValue = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parents, root);
                 }
                 json5ArrayToCollectionObject(JSON5Array, (ISchemaArrayValue)schemaField, parents, onObtainTypeValue);
-            } else if(isArrayType ? ((JSON5Array) cson).isNull((int)key) : ((JSON5Object)cson).isNull((String)key)) {
+            } else if(isArrayType ? ((JSON5Array) json5).isNull((int)key) : ((JSON5Object)json5).isNull((String)key)) {
                 try {
                     schemaField.setValue(parents, null);
                 } catch (Exception ignored) {}
             }
         } else if(Types.Object == valueType) {
-            JSON5Object csonObj = isArrayType ? ((JSON5Array) cson).optJSON5Object((int)key) : ((JSON5Object)cson).optJSON5Object((String)key);
-            if(csonObj != null) {
+            JSON5Object json5Obj = isArrayType ? ((JSON5Array) json5).optJSON5Object((int)key) : ((JSON5Object)json5).optJSON5Object((String)key);
+            if(json5Obj != null) {
                 Object target = schemaField.newInstance();
-                fromJSON5Object(csonObj, target);
+                fromJSON5Object(json5Obj, target);
                 schemaField.setValue(parents, target);
-            } else if(isArrayType ? ((JSON5Array) cson).isNull((int)key) : ((JSON5Object)cson).isNull((String)key)) {
+            } else if(isArrayType ? ((JSON5Array) json5).isNull((int)key) : ((JSON5Object)json5).isNull((String)key)) {
                 schemaField.setValue(parents, null);
             }
         } else if(Types.Map == valueType) {
-            JSON5Object csonObj = isArrayType ? ((JSON5Array) cson).optJSON5Object((int)key) : ((JSON5Object)cson).optJSON5Object((String)key);
-            if(csonObj != null) {
+            JSON5Object json5Obj = isArrayType ? ((JSON5Array) json5).optJSON5Object((int)key) : ((JSON5Object)json5).optJSON5Object((String)key);
+            if(json5Obj != null) {
                 Object target = schemaField.newInstance();
                 Class<?> type = ((ISchemaMapValue)schemaField).getElementType();
                 boolean isGenericOrAbstract = ((ISchemaMapValue)schemaField).isGenericValue() || ((ISchemaMapValue)schemaField).isAbstractType();
@@ -754,19 +754,19 @@ public class JSON5Serializer {
                 if(isGenericOrAbstract) {
                     onObtainTypeValue = makeOnObtainTypeValue( (ObtainTypeValueInvokerGetter)schemaField, parents, root);
                 }
-                fromJSON5ObjectToMap((Map<?, ?>) target, csonObj, type, onObtainTypeValue);
+                fromJSON5ObjectToMap((Map<?, ?>) target, json5Obj, type, onObtainTypeValue);
                 schemaField.setValue(parents, target);
-            } else if(isArrayType ? ((JSON5Array) cson).isNull((int)key) : ((JSON5Object)cson).isNull((String)key)) {
+            } else if(isArrayType ? ((JSON5Array) json5).isNull((int)key) : ((JSON5Object)json5).isNull((String)key)) {
                 schemaField.setValue(parents, null);
             }
         } else if(Types.JSON5Object == valueType) {
-            JSON5Object value = isArrayType ? ((JSON5Array) cson).optJSON5Object((int)key) : ((JSON5Object)cson).optJSON5Object((String)key);
+            JSON5Object value = isArrayType ? ((JSON5Array) json5).optJSON5Object((int)key) : ((JSON5Object)json5).optJSON5Object((String)key);
             schemaField.setValue(parents, value);
         } else if(Types.JSON5Array == valueType) {
-            JSON5Array value = isArrayType ? ((JSON5Array) cson).optJSON5Array((int)key) : ((JSON5Object)cson).optJSON5Array((String)key);
+            JSON5Array value = isArrayType ? ((JSON5Array) json5).optJSON5Array((int)key) : ((JSON5Object)json5).optJSON5Array((String)key);
             schemaField.setValue(parents, value);
         } else if(Types.JSON5Element == valueType) {
-            Object value = isArrayType ? ((JSON5Array) cson).opt((int)key) : ((JSON5Object)cson).opt((String)key);
+            Object value = isArrayType ? ((JSON5Array) json5).opt((int)key) : ((JSON5Object)json5).opt((String)key);
             if(value instanceof JSON5Element) {
                 schemaField.setValue(parents, value);
             } else {

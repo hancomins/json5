@@ -21,11 +21,11 @@ public class DefaultUse {
 
         byte[] bytes = json5Object.toBytes();
 
-        JSON5Object parsedCsonObject = new JSON5Object(bytes);
-        assertEquals(json5Object.get("number"), parsedCsonObject.get("number"));
-        assertEquals((short)1000, parsedCsonObject.get("number"));
+        JSON5Object parsedJSON5Object = new JSON5Object(bytes);
+        assertEquals(json5Object.get("number"), parsedJSON5Object.get("number"));
+        assertEquals((short)1000, parsedJSON5Object.get("number"));
 
-        assertEquals(10000000000L, parsedCsonObject.getLong("bigNumber"));
+        assertEquals(10000000000L, parsedJSON5Object.getLong("bigNumber"));
 
 
     }
@@ -41,10 +41,10 @@ public class DefaultUse {
         json5Object.put("array", JSON5Array);
         String jsonString = json5Object.toString(WritingOptions.jsonPretty().setUnprettyArray(true));
         System.out.println(jsonString);
-        JSON5Object csonObjetPure = new JSON5Object(jsonString);
+        JSON5Object json5ObjetPure = new JSON5Object(jsonString);
         JSON5Object json5ObjectJson = new JSON5Object(jsonString);
         assertEquals("Hello\\World",json5ObjectJson.get("string2"));
-        assertEquals(jsonString, csonObjetPure.toString(WritingOptions.jsonPretty().setUnprettyArray(true)));
+        assertEquals(jsonString, json5ObjetPure.toString(WritingOptions.jsonPretty().setUnprettyArray(true)));
         assertEquals(jsonString, json5ObjectJson.toString(WritingOptions.jsonPretty().setUnprettyArray(true)));
         json5ObjectJson.put("string3", "Hello/World");
         json5ObjectJson = new JSON5Object(json5ObjectJson.toString());

@@ -52,12 +52,12 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 
-	public JSON5Object(byte[] binaryCSON) {
+	public JSON5Object(byte[] binaryJSON5) {
 		super(ElementType.Object);
-		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(binaryCSON);
+		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(binaryJSON5);
 		BinaryCSONParser parser = new BinaryCSONParser(JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
 		try {
-			parser.parse(byteArrayInputStream, new CSONKeyValueDataContainer(this));
+			parser.parse(byteArrayInputStream, new JSON5KeyValueDataContainer(this));
 		} catch (IOException e) {
 			throw new JSON5Exception(e);
 		}
@@ -65,9 +65,9 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 
-	public JSON5Object(byte[] binaryCSON, int offset, int length) {
+	public JSON5Object(byte[] binaryJSON5, int offset, int length) {
 		super(ElementType.Object);
-		JSON5Object json5Object = (JSON5Object) BinaryCSONParser.parse(binaryCSON, offset, length);
+		JSON5Object json5Object = (JSON5Object) BinaryCSONParser.parse(binaryJSON5, offset, length);
 		this.dataMap = json5Object.dataMap;
 	}
 
@@ -82,7 +82,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	public boolean has(String key) {
 		if(allowJsonPathKey && key.startsWith("$.")) {
 			key = key.substring(2);
-			return this.getCsonPath().has(key);
+			return this.getJSON5Path().has(key);
 		}
 		return dataMap.containsKey(key);
 	}
@@ -158,7 +158,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 			//new( (JsonParsingOptions)options).parsePureJSON(stringReader, this);
 
-		JSON5Parser.parse(stringReader, (JsonParsingOptions) options, new CSONKeyValueDataContainer(this), JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
+		JSON5Parser.parse(stringReader, (JsonParsingOptions) options, new JSON5KeyValueDataContainer(this), JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
 
 
 
@@ -181,7 +181,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	public boolean remove(String key) {
 		if(allowJsonPathKey && key.startsWith("$.")) {
 			key = key.substring(2);
-			return this.getCsonPath().remove(key);
+			return this.getJSON5Path().remove(key);
 		}
 		return dataMap.remove(key) != null;
 	}
@@ -189,7 +189,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	private Object getFromDataMap(String key) {
 		if(allowJsonPathKey && key.startsWith("$.")) {
 			key = key.substring(2);
-			return this.getCsonPath().get(key);
+			return this.getJSON5Path().get(key);
 		}
 		Object obj = dataMap.get(key);
 		copyHeadTailCommentToValueObject(key, obj);
@@ -211,7 +211,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	private void putToDataMap(String key, Object value) {
 		if(allowJsonPathKey && key.startsWith("$.")) {
 			key = key.substring(2);
-			this.getCsonPath().put(key, value);
+			this.getJSON5Path().put(key, value);
 			return;
 		}
 		dataMap.put(key, value);
@@ -591,7 +591,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 		return JSON5Array;
 	}
 
-	public JSON5Array optWrapCSONArray(String key) {
+	public JSON5Array optWrapJSON5Array(String key) {
 		@SuppressWarnings("DuplicatedCode")
 		Object object = opt(key);
 		if(object == null) {
@@ -663,7 +663,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 	/**
-	 * 다른 CSONObject를 병합한다.
+	 * 다른 JSON5Object를 병합한다.
 	 * @param json5Object 병합할 JSON5Object
 	 */
 	public void merge(JSON5Object json5Object) {
@@ -855,11 +855,11 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 	/**
-	 * @deprecated use optWrapCSONArray instead of this method @see optWrapCSONArray
+	 * @deprecated use optWrapJSON5Array instead of this method @see optWrapJSON5Array
 	 */
 	@Deprecated
 	public JSON5Array optWrapArrayf(String key) {
-		return optWrapCSONArray(key);
+		return optWrapJSON5Array(key);
 	}
 
 	/**
@@ -890,7 +890,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 	/**
-	 * @deprecated use optCSONObject instead of this method @see optCSONObject
+	 * @deprecated use optJSON5Object instead of this method @see optJSON5Object
 	 */
 	@Deprecated
 	public JSON5Object optObject(String key) {
@@ -898,7 +898,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	}
 
 	/**
-	 * @deprecated use optCSONObject instead of this method @see optCSONObject
+	 * @deprecated use optJSON5Object instead of this method @see optJSON5Object
 	 */
 	@Deprecated
 	@SuppressWarnings("unused")
@@ -951,7 +951,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	public byte[] toBytes() {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		BinaryCSONWriter writer = new BinaryCSONWriter(outputStream);
-		writer.write(new CSONKeyValueDataContainer(this));
+		writer.write(new JSON5KeyValueDataContainer(this));
 		return outputStream.toByteArray();
 
 	}
@@ -960,7 +960,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 	@Override
 	protected void write(FormatWriter writer) {
-		writer.write(new CSONKeyValueDataContainer(this));
+		writer.write(new JSON5KeyValueDataContainer(this));
 
 		/*Iterator<Entry<String, Object>> iter = dataMap.entrySet().iterator();
 		boolean isComment = writer.isComment() && keyValueCommentMap != null;
@@ -1101,26 +1101,26 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 
-	final static KeyValueDataContainerFactory KeyValueDataContainerFactory = () -> new CSONKeyValueDataContainer(new JSON5Object());
+	final static KeyValueDataContainerFactory KeyValueDataContainerFactory = () -> new JSON5KeyValueDataContainer(new JSON5Object());
 
 
-	static class CSONKeyValueDataContainer implements KeyValueDataContainer {
+	static class JSON5KeyValueDataContainer implements KeyValueDataContainer {
 
 		final JSON5Object json5Object;
 		private String lastKey;
 
-		CSONKeyValueDataContainer(JSON5Object json5Object) {
+		JSON5KeyValueDataContainer(JSON5Object json5Object) {
 			this.json5Object = json5Object;
 		}
 
 		@Override
 		public void put(String key, Object value) {
 			lastKey = key;
-			if(value instanceof CSONKeyValueDataContainer) {
-				json5Object.put(key, ((CSONKeyValueDataContainer) value).json5Object);
+			if(value instanceof JSON5KeyValueDataContainer) {
+				json5Object.put(key, ((JSON5KeyValueDataContainer) value).json5Object);
 				return;
 			} else if(value instanceof ArrayDataContainer) {
-				json5Object.put(key, ((JSON5Array.CSONArrayDataContainer) value).array);
+				json5Object.put(key, ((JSON5Array.JSON5ArrayDataContainer) value).array);
 				return;
 			}
 			json5Object.dataMap.put(key, value);
@@ -1258,9 +1258,9 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 			if(value instanceof NullValue) {
 				entry.setValue(null);
 			} else if(value instanceof JSON5Object) {
-				entry.setValue(new CSONKeyValueDataContainer((JSON5Object)value));
+				entry.setValue(new JSON5KeyValueDataContainer((JSON5Object)value));
 			} else if(value instanceof JSON5Array) {
-				entry.setValue(new JSON5Array.CSONArrayDataContainer((JSON5Array)value));
+				entry.setValue(new JSON5Array.JSON5ArrayDataContainer((JSON5Array)value));
 			} else {
 				entry.setValue(value);
 			}

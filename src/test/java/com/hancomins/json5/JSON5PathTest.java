@@ -168,8 +168,8 @@ public class JSON5PathTest {
     }
 
     @Test
-    public void optCSONObject() {
-        assertEquals(new JSON5Object().put("j", "10").put("k", "11").put("l", "12").toString(), jsonPath.optCSONObject("b.e.h[4]").toString());
+    public void optJSON5Object() {
+        assertEquals(new JSON5Object().put("j", "10").put("k", "11").put("l", "12").toString(), jsonPath.optJSON5Object("b.e.h[4]").toString());
     }
 
     @Test
@@ -197,7 +197,7 @@ public class JSON5PathTest {
     @Test
     public void putObjectTest() {
         JSON5Object json5Object = new JSON5Object();
-        JSON5Path JSON5Path =  json5Object.getCsonPath();
+        JSON5Path JSON5Path =  json5Object.getJSON5Path();
         JSON5Path.put("path1.path2.path3", "100");
         assertEquals(100, json5Object.getJSON5Object("path1").getJSON5Object("path2").getInt("path3"));
         assertEquals("100", json5Object.getJSON5Object("path1").getJSON5Object("path2").getString("path3"));
@@ -206,7 +206,7 @@ public class JSON5PathTest {
     @Test
     public void putArrayOrObjectMixedTest() {
         JSON5Object json5Object = new JSON5Object();
-        JSON5Path JSON5Path =  json5Object.getCsonPath();
+        JSON5Path JSON5Path =  json5Object.getJSON5Path();
         JSON5Path.put("path1[0].path2[1][2]path3[3]", "100");
         assertEquals(100, json5Object.getJSON5Array("path1").getJSON5Object(0).getJSON5Array("path2").getJSON5Array(1).getJSON5Object(2).getJSON5Array("path3").getInteger(3));
     }
@@ -215,7 +215,7 @@ public class JSON5PathTest {
     @Test
     public void putArrayOrObjectMixedTest2() {
         JSON5Object json5Object = new JSON5Object();
-        JSON5Path json5Path =  json5Object.getCsonPath();
+        JSON5Path json5Path =  json5Object.getJSON5Path();
         json5Path.put("path1[0].path2[1][2]path3", "100");
         System.out.println(json5Object.toString(WritingOptions.json().setPretty(true)));
         assertEquals(100, json5Object.getJSON5Array("path1").getJSON5Object(0).getJSON5Array("path2").getJSON5Array(1).getJSON5Object(2).getInt("path3"));
@@ -224,7 +224,7 @@ public class JSON5PathTest {
     @Test
     public void putArrayOrObjectMixedTest3() {
         JSON5Object json5Object = new JSON5Object();
-        JSON5Path json5Path =  json5Object.getCsonPath();
+        JSON5Path json5Path =  json5Object.getJSON5Path();
         json5Path.put("path1[0].path2[1][2].path3.path4", "100");
         System.out.println(json5Object.toString(WritingOptions.json().setPretty(true)));
         assertEquals(100, json5Object.getJSON5Array("path1").getJSON5Object(0).getJSON5Array("path2").getJSON5Array(1).getJSON5Object(2).getJSON5Object("path3").getInt("path4"));
@@ -241,7 +241,7 @@ public class JSON5PathTest {
     @Test
     public void putArrayTest() {
         JSON5Array JSON5Array = new JSON5Array();
-        JSON5Path json5Path =  JSON5Array.getCsonPath();
+        JSON5Path json5Path =  JSON5Array.getJSON5Path();
         json5Path.put("[0][1][2][3]", "100");
         assertEquals(100, JSON5Array.getJSON5Array(0).getJSON5Array(1).getJSON5Array(2).getInteger(3));
         assertEquals("100", JSON5Array.getJSON5Array(0).getJSON5Array(1).getJSON5Array(2).getString(3));

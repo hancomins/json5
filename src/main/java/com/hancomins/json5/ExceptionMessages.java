@@ -20,7 +20,7 @@ public class ExceptionMessages {
 
     private static final String[] OBJECT_VALUE_CONVERT_ERROR = {"JSON5Object['%s'] value is '%s' and cannot be converted to a %s type.", "JSON5Object['%s'] 값이 '%s'이며 %s 타입으로 변환할 수 없습니다."};
     private static final String[] ARRAY_VALUE_CONVERT_ERROR = {"JSON5Array[%d] value is '%s' and cannot be converted to a %s type.", "JSON5Array[%d] 값이 '%s'이며 %s 타입으로 변환할 수 없습니다."};
-    private static final String[] ARRAY_INDEX_OUT_OF_BOUNDS = {"JSON5Array[%d] is out of bounds. The size of the JSON5Array is %d.", "JSON5Array[%d]가 범위를 벗어났습니다. CSONArray의 크기는 %d입니다."};
+    private static final String[] ARRAY_INDEX_OUT_OF_BOUNDS = {"JSON5Array[%d] is out of bounds. The size of the JSON5Array is %d.", "JSON5Array[%d]가 범위를 벗어났습니다. JSON5Array의 크기는 %d입니다."};
     private static final String[] OBJECT_KEY_NOT_FOUND = {"JSON5Object['%s'] is not found.", "JSON5Object['%s']가 없습니다."};
     private static final String[] CTRL_CHAR_NOT_ALLOWED = {"Control character(%s) is not allowed.", "제어 문자(%s)가 허용되지 않습니다."};
 

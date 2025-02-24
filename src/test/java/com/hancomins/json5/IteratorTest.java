@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("IteratorTest (성공)")
 public class IteratorTest {
     @Test
-    public void csonArrayIteratorTest() {
+    public void json5ArrayIteratorTest() {
         ArrayList<Object> list = new ArrayList<>();
         // make random value in list
         ThreadLocalRandom random = ThreadLocalRandom.current();
