@@ -1,4 +1,4 @@
-# cson introduction
+# JSON5Type introduction
   - JAVA 1.8 or higher environment is supported. 
   - API usage is similar to JSON-JAVA (https://github.com/stleary/JSON-java) 
   - Data structures that can be represented in JSON can be serialized(or deserialized) in binary format. The binary structure can have a smaller data size than the json string type, and has a performance advantage in parsing.
@@ -11,7 +11,7 @@
 
 ```groovy
 dependencies {
-    implementation group: 'io.github.clipsoft-rnd', name: 'cson', version: '27
+    implementation group: 'io.github.clipsoft-rnd', name: 'json5', version: '27
 }
 ```
 
@@ -20,8 +20,8 @@ dependencies {
    ```java
     CSONObject obj = new CSONObject();
     // You can change the container options. 
-    // default is StringFormatOption.json()
-    // CSONObject obj = new CSONObject(StringFormatOption.json());
+    // default is StringFormatOption.json5()
+    // CSONObject obj = new CSONObject(StringFormatOption.json5());
     
     obj.put("name", "John");
     obj.put("age", 25);
@@ -45,7 +45,7 @@ dependencies {
     jsonParsingOptions.setPretty(true);
     // Only arrays can be displayed on one line.
     jsonParsingOptions.setUnprettyArray(true);
-    String prettyJSONString = csonObjectPure.toString(jsonParsingOptions);
+    String prettyJSONString = json5ObjectPure.toString(jsonParsingOptions);
     //{
     //  "name": "John",
     //  "age": 25,
@@ -249,10 +249,10 @@ Convert objects to JSON without much effort. The type of object being serialized
      users.idUserMap.put("qwrd", user1);
      users.idUserMap.put("ffff", user2);
 
-     CSONObject csonObject = CSONObject.fromObject(users, StringFormatOption.json5());
-     //CSONObject csonObject = CSONObject.fromObject(users);
-     //csonObject.setStringFormatOption(StringFormatOption.json5());
-     System.out.println(csonObject);
+     CSONObject json5Object = CSONObject.fromObject(users, StringFormatOption.json5());
+     //CSONObject json5Object = CSONObject.fromObject(users);
+     //json5Object.setStringFormatOption(StringFormatOption.json5());
+     System.out.println(json5Object);
      // Output
      /*
           //Users
@@ -285,11 +285,11 @@ Convert objects to JSON without much effort. The type of object being serialized
 
      // Deserialization 
      // Option 1.
-     Users parsedUsers = CSONObject.toObject(csonObject, Users.class);
+     Users parsedUsers = CSONObject.toObject(json5Object, Users.class);
 
      // Option 2. Can be used even without a default constructor.
      //Users parsedUsers = new Users();
-     //CSONObject.toObject(csonObject, parsedUsers);
+     //CSONObject.toObject(json5Object, parsedUsers);
      ```
    * However, there are some conditions.
      1. Should have a default constructor 'if possible'. It doesn’t matter if it’s private.

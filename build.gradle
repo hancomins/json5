@@ -39,17 +39,17 @@ java {
 }
 
 dependencies {
-    testImplementation group: 'org.json', name: 'json', version: '20240303'
+    testImplementation group: 'org.json5', name: 'json5', version: '20240303'
 // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter
     //testImplementation group: 'junit', name: 'junit', version: '4.+'
     // junit 5
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
 
-    testImplementation 'org.json:json:20240303'
+    testImplementation 'org.json5:json5:20240303'
 
 
 // https://mvnrepository.com/artifact/com.hancomins.cson.container.fastjson2/fastjson2
-    testImplementation 'com.hancomins.cson.container.fastjson2:fastjson2:2.0.53'
+    testImplementation 'com.hancomins.json5.container.fastjson2:fastjson2:2.0.53'
 
 
 

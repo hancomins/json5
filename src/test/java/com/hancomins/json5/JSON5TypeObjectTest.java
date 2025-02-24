@@ -1,0 +1,237 @@
+package com.hancomins.json5;
+
+
+import com.hancomins.json5.options.JSON5WriterOption;
+import org.json.JSONObject;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+
+@DisplayName("JSON5TypeObjectTest (성공)")
+public class JSON5TypeObjectTest {
+
+    private JSON5Object makeCSOObject() {
+        Random random = new Random(System.currentTimeMillis());
+        byte[] randomBuffer = new byte[random.nextInt(64) +2];
+        random.nextBytes(randomBuffer);
+        JSON5Object json5Object = new JSON5Object();
+        json5Object.put("1", 1);
+        json5Object.put("1.1", 1.1f);
+        json5Object.put("2.2", 2.2);
+        json5Object.put("333333L", Long.MIN_VALUE);
+        json5Object.put("boolean", true);
+        json5Object.put("char", 'c');
+        json5Object.put("short", (short)32000);
+        json5Object.put("byte", (byte)128);
+        json5Object.put("null", null);
+        json5Object.put("string", "stri \" \n\rng");
+        json5Object.put("this", json5Object);
+        json5Object.put("byte[]", randomBuffer);
+        JSON5Array JSON5Array = new JSON5Array();
+        JSON5Array.add(1);
+        JSON5Array.add(1.1f);
+        JSON5Array.add((double)2.2);
+        JSON5Array.put(333333L);
+        JSON5Array.put(true);
+        JSON5Array.put('c');
+        JSON5Array.add((short)32000);
+        JSON5Array.add((byte)128);
+        JSON5Array.add(null);
+        JSON5Array.add("stri \" \n\rng");
+        JSON5Array.add(JSON5Array);
+        JSON5Array.add(json5Object.clone());
+        JSON5Array.add(randomBuffer);
+        json5Object.put("array", JSON5Array);
+        json5Object.put("array2", new JSON5Array().put(new JSON5Array().put(1).put(2)).put(new JSON5Array().put(3).put(4)).put(new JSON5Array()).put(new JSON5Object()));
+        json5Object.put("array3", new JSON5Array().put("").put(new JSON5Array().put(3).put(4)).put(new JSON5Array()).put(new JSON5Object()));
+        json5Object.put("array4", new JSON5Array().put(new JSON5Object()).put(new JSON5Object()).put(new JSON5Array()).put(new JSON5Object().put("inArray",new JSON5Array())));
+        json5Object.put("key111", new JSON5Object().put("1", new JSON5Object()));
+        json5Object.put("key112", new JSON5Array().put(new JSON5Object()));
+
+
+
+        return json5Object;
+    }
+
+    @Test
+    public void cloneAndEqualsTest() throws  Exception {
+
+
+        JSONObject jsonObjectX = new JSONObject("{char:'c'}");
+        System.out.println(jsonObjectX.toString());
+
+
+
+
+        JSONObject jsonObject = new JSONObject("{\"key\": \"va \\\" \\n \\r lue\"}");
+
+        JSON5Object json5ObjectA = new JSON5Object("{\"key\": \"va \\\" \\n \\r lue\"}");
+        System.out.println(json5ObjectA.toString());
+        JSONObject jsonObjectA = new JSONObject(json5ObjectA.toString(JSON5WriterOption.json()));
+        new JSON5Object(json5ObjectA.toString(), JSON5WriterOption.json());
+
+        System.out.println("--------------------------------------------------");
+
+        JSON5Object json5Object = makeCSOObject();
+        JSON5Object json5Object2 = json5Object.clone();
+        assertEquals(json5Object, json5Object2);
+        assertEquals(json5Object.toString(), json5Object2.toString());
+
+        System.out.println(json5Object.toString());
+        JSONObject jsonObject1 = new JSONObject(json5Object.toString(JSON5WriterOption.json()));
+        assertEquals(json5Object2,new JSON5Object(json5Object.toString(JSON5WriterOption.json())));
+
+        JSON5WriterOption json5WriterOption = JSON5WriterOption.json().setPretty(true);
+
+
+        assertEquals(json5Object2.toString(json5WriterOption),new JSON5Object(json5Object.toString(json5WriterOption)).toString(json5WriterOption));
+        assertEquals(json5Object2,new JSON5Object(json5Object.toBytes()));
+    }
+
+    @Test
+    public void toCsonAndParseTest() {
+
+        JSON5Object json5Object = makeCSOObject();
+
+        System.out.println(json5Object.toString());
+        byte[] buffer = json5Object.getByteArray("byte[]");
+        byte[] cson = json5Object.toBytes();
+
+
+
+
+        JSON5Object compareCSONObject = new JSON5Object(cson);
+
+
+        assertEquals(1, ((Number)compareCSONObject.get("1")).intValue());
+        assertEquals(1.1f, (float)compareCSONObject.get("1.1"), 0.0001f);
+        assertEquals(2.2, (double)compareCSONObject.get("2.2"), 0.0001);
+        assertEquals(Long.MIN_VALUE, compareCSONObject.get("333333L"));
+        assertEquals(true, compareCSONObject.get("boolean"));
+        assertEquals('c', compareCSONObject.get("char"));
+        assertEquals(null, compareCSONObject.get("null"));
+
+        assertEquals((short)32000, compareCSONObject.getShort("short"));
+        assertEquals((byte)128, compareCSONObject.getByte("byte"));
+        assertEquals("stri \" \n\rng", compareCSONObject.getString("string"));
+
+
+        String aa = compareCSONObject.getString("byte[]");
+
+        assertArrayEquals(buffer, compareCSONObject.getByteArray("byte[]"));
+
+        JSON5Array JSON5Array = compareCSONObject.getJSON5Array("array");
+        assertEquals(1, JSON5Array.getInt(0));
+        assertEquals(1.1f, (float) JSON5Array.get(1), 0.00001f);
+        assertEquals(2.2, (double) JSON5Array.get(2), 0.00001);
+        assertEquals(333333L, JSON5Array.getLong(3));
+        assertEquals(true, JSON5Array.get(4));
+        assertEquals('c', JSON5Array.get(5));
+        assertEquals((short)32000, JSON5Array.get(6));
+        assertEquals((byte)128, JSON5Array.get(7));
+        assertEquals(null, JSON5Array.get(8));
+        assertEquals("stri \" \n\rng", JSON5Array.get(9));
+        assertArrayEquals("stri \" \n\rng".getBytes(StandardCharsets.UTF_8), JSON5Array.optByteArray(9));
+        assertTrue(JSON5Array.get(10) instanceof JSON5Array);
+        assertTrue(JSON5Array.get(11) instanceof JSON5Object);
+        assertArrayEquals(buffer, (byte[]) JSON5Array.get(12));
+
+
+    }
+
+
+    @Test
+    @DisplayName("비어있는 JSON5Object 와 JSON5Array 파싱 테스트")
+    public void emptyCSONObjectAndArrayTest() {
+
+        JSON5Object json5Object = new JSON5Object("{}", JSON5WriterOption.json());
+        JSON5Array JSON5Array = new JSON5Array("[]", JSON5WriterOption.json());
+
+        assertEquals(0, json5Object.size());
+        assertEquals(0, JSON5Array.size());
+
+        JSON5Object complexCSONObject = new JSON5Object("{\"emptyObject\":{},\"emptyArray\":[]}");
+        assertEquals(2, complexCSONObject.size());
+        assertEquals(0, complexCSONObject.getJSON5Object("emptyObject").size());
+        assertEquals(0, complexCSONObject.getJSON5Array("emptyArray").size());
+
+        System.out.println(complexCSONObject);
+
+        assertEquals("{\"emptyObject\":{},\"emptyArray\":[]}", complexCSONObject.toString());
+
+
+
+
+
+
+    }
+
+
+    @Test
+    public void toJsonAndParseTest() {
+
+
+        JSON5Object json5Object = makeCSOObject();
+
+        byte[] buffer = json5Object.getByteArray("byte[]");
+        byte[] bufferOrigin = buffer;
+        String jsonString = json5Object.toString(JSON5WriterOption.json());
+
+
+
+        System.out.println(json5Object.get("string"));
+
+
+        System.out.println(jsonString);
+        String bufferBase64 = "base64," + Base64.getEncoder().encodeToString(buffer);
+        JSON5Object compareCSONObject = new JSON5Object(jsonString, JSON5WriterOption.json());
+
+
+        assertEquals(1, compareCSONObject.getInt("1"));
+        assertEquals(1.1f, compareCSONObject.getFloat("1.1"), 0.0001f);
+        assertEquals(2.2, compareCSONObject.getDouble("2.2"), 0.0001);
+        assertEquals(Long.MIN_VALUE, compareCSONObject.getLong("333333L"));
+        assertEquals(true, compareCSONObject.getBoolean("boolean"));
+        assertEquals('c', compareCSONObject.getChar("char"));
+        assertEquals((short)32000, compareCSONObject.getShort("short"));
+        assertEquals((byte)128, compareCSONObject.getByte("byte"));
+        assertEquals("stri \" \n\rng", compareCSONObject.getString("string"));
+
+
+        assertEquals(bufferBase64, compareCSONObject.getString("byte[]"));
+        assertArrayEquals(bufferOrigin, compareCSONObject.getByteArray("byte[]"));
+
+        JSON5Array JSON5Array = compareCSONObject.getJSON5Array("array");
+        assertEquals(1, JSON5Array.get(0));
+        assertEquals(1.1f, JSON5Array.getFloat(1), 0.00001f);
+        assertEquals(2.2, JSON5Array.getDouble(2), 0.00001);
+        assertEquals(333333L, JSON5Array.getLong(3));
+        assertEquals(true, JSON5Array.getBoolean(4));
+        assertEquals('c', JSON5Array.getChar(5));
+        assertEquals(32000, JSON5Array.getShort(6));
+        assertEquals((byte)128, JSON5Array.getByte(7));
+        assertEquals(null, JSON5Array.getString(8));
+        assertEquals("stri \" \n\rng", JSON5Array.getString(9));
+        assertArrayEquals("stri \" \n\rng".getBytes(StandardCharsets.UTF_8), JSON5Array.optByteArray(9));
+        assertTrue(JSON5Array.get(10) instanceof JSON5Array);
+        assertTrue(JSON5Array.get(11) instanceof JSON5Object);
+        assertArrayEquals(buffer, JSON5Array.getByteArray(12));
+
+        System.out.println("--------------------------------------------------");
+        System.out.println(jsonString);
+
+        JSON5Object json5Object2 = new JSON5Object(jsonString);
+
+    }
+
+    @Test
+    public void csonArrayToStringTest() {
+
+    }
+}
