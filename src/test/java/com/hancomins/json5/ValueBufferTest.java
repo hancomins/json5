@@ -202,13 +202,18 @@ public class ValueBufferTest {
 
         state.reset();
         state.setAllowControlChar(false);
+        state.setIgnoreControlChar(true);
         try {
             state.append("sdafadsfadsf\tsdafdasfadsf");
             assert false;
         } catch (Exception e) {
             assertTrue(e instanceof JSON5Exception);
         }
+
+
+
         state.setAllowControlChar(true);
+        state.setIgnoreControlChar(false);
 
 
         state.reset();

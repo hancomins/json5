@@ -27,9 +27,6 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	protected Map<String, Object> dataMap = new LinkedHashMap<>();
 	private Map<String, CommentObject<String>> keyValueCommentMap;
 
-
-
-
 	public static JSON5Object fromObject(Object obj) {
 		return JSON5Serializer.toJSON5Object(obj);
 	}
@@ -146,24 +143,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 	private void parse(Reader stringReader, ParsingOptions<?> options) {
 		StringFormatType type = options.getFormatType();
-		/*if(JsonParsingOptions.isPureJSONOption(options)) {
-			PureJSONParser.parsePureJSON(stringReader, this, options);
-		} else {*/
-			//JSON5Parser.parsePureJSON(stringReader, this, (JsonParsingOptions)options);
-
-			//JSON5Parser
-			//JSON5ParserV parserV = new JSON5ParserV((JsonParsingOptions) options);
-			//parserV.parsePureJSON(stringReader, this);
-			//parserV.reset();
-
-			//new( (JsonParsingOptions)options).parsePureJSON(stringReader, this);
-
 		JSON5Parser.parse(stringReader, (JsonParsingOptions) options, new JSON5KeyValueDataContainer(this), JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
-
-
-
-		//}
-
 
 	}
 
@@ -285,14 +265,11 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 
-	public Object get(String key) {
-		Object obj =  getFromDataMap(key);
-		if(obj instanceof NullValue) return null;
-		else if(obj == null) throw new JSON5IndexNotFoundException(ExceptionMessages.getJSON5ObjectKeyNotFound(key));
-		return obj;
+	public Object opt(String key) {
+		return get(key);
 	}
 
-    public <T extends Enum<T>> T getEnum(String key, Class<T> enumType) {
+	public <T extends Enum<T>> T getEnum(String key, Class<T> enumType) {
 		Object obj = get(key);
 		T result =  DataConverter.toEnum(enumType, obj);
 		if(result == null) {
@@ -304,163 +281,113 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 	@SuppressWarnings("DuplicatedCode")
-	public Boolean getBoolean(String key) {
-		 Object obj = get(key);
-		if(obj instanceof Boolean) {
-			return (Boolean)obj;
-		} else if("true".equalsIgnoreCase(obj + "")) {
-			return true;
-		} else if("false".equalsIgnoreCase(obj + "")) {
-			return false;
-		}
-		throw new JSON5Exception(key, obj, boolean.class.getTypeName());
+	@Deprecated
+	public Boolean optBoolean(String key) {
+		return getBoolean(key);
 	}
 
 
 
-	public byte getByte(String key) {
-		Object number = get(key);
-        return DataConverter.toByte(number, (byte) 0, ((value, type) -> {
-			throw new JSON5Exception(key, value, type.getTypeName());
-		}));
+	@Deprecated
+	public byte optByte(String key) {
+
+		return getByte(key);
 	}
 
 
-	public byte[] getByteArray(String key) {
-		Object obj = get(key);
-		byte[] byteArray = DataConverter.toByteArray(obj);
-		if(byteArray == null) {
-			throw new JSON5Exception(key, obj, byte[].class.getTypeName());
-		}
-		return byteArray;
+	@Deprecated
+	public byte[] optByteArray(String key) {
+		return getByteArray(key);
 	}
 
-
-	public char getChar(String key) {
-		Object number = get(key);
-		return DataConverter.toChar(number, (char)0, (value, type) -> {
-			throw new JSON5Exception(key, value, type.getTypeName());
-		});
+	@Deprecated
+	public char optChar(String key) {
+		return getChar(key);
 	}
 
 
 
-	public short getShort(String key) {
-		Object number = get(key);
-		return DataConverter.toShort(number, (value, type) -> {
-			throw new JSON5Exception(key, value, type.getTypeName());
-		});
+
+	@Deprecated
+	public short optShort(String key) {
+		return getShort(key);
 	}
 
 
-	public int getInt(String key) {
-		Object number = get(key);
-		return DataConverter.toInteger(number, (value, type) -> {
-			throw new JSON5Exception(key, value, type.getTypeName());
-		});
+	@Deprecated
+	public int optInt(String key) {
+		return getInteger(key);
 	}
 
 
-	public float getFloat(String key) {
-		Object number = get(key);
-		return DataConverter.toFloat(number, (value, type) -> {
-			throw new JSON5Exception(key, value, type.getTypeName());
-		});
+	@Deprecated
+	public float optFloat(String key) {
+		return getFloat(key);
 	}
 
 
-	public long getLong(String key) {
-		Object number = get(key);
-		return DataConverter.toLong(number, (value, type) -> {
-			throw new JSON5Exception(key, value, type.getTypeName());
-		});
+	@Deprecated
+	public long optLong(String key) {
+		return getLong(key);
 	}
 
 
 
-	public double getDouble(String key) {
-		Object number = get(key);
-		return DataConverter.toDouble(number, (value, type) -> {
-			throw new JSON5Exception(key, value, type.getTypeName());
-		});
+	@Deprecated
+	public double optDouble(String key) {
+		return getDouble(key);
 	}
 
-	public String getString(String key) {
-		Object obj = get(key);
-		if(obj == null) {
-			return null;
-		}
-
-		return DataConverter.toString(obj);
+	@Deprecated
+	public String optString(String key) {
+		return getString(key);
 	}
 
 	@SuppressWarnings("DuplicatedCode")
-    public JSON5Object getJSON5Object(String key) {
-		Object obj = get(key);
-		if(obj == null) {
-			return null;
-		}
-		JSON5Object json5Object = DataConverter.toObject(obj, true);
-		if(json5Object == null) {
-			throw new JSON5Exception(key, obj, JSON5Object.class.getTypeName());
-		}
-		return json5Object;
+	@Deprecated
+	public JSON5Object optJSON5Object(String key) {
+		return getJSON5Object(key);
 	}
 
 
-	public JSON5Array getJSON5Array(String key) {
-		Object obj = get(key);
-		JSON5Array JSON5Array = DataConverter.toArray(obj, true);
-		if(JSON5Array == null) {
-			throw new JSON5Exception(key, obj, JSON5Array.class.getTypeName());
-		}
-		return JSON5Array;
+	@Deprecated
+	public JSON5Array optJSON5Array(String key) {
+		return getJSON5Array(key);
 	}
 
 	@SuppressWarnings("DuplicatedCode")
-    public <T> List<T> getList(String key, Class<T> valueType) {
-		JSON5Array JSON5Array = getJSON5Array(key);
-		if(JSON5Array == null) {
-			return null;
-		}
-		try {
-			return JSON5Serializer.json5ArrayToList(JSON5Array, valueType, JSON5Array.getWritingOptions(), false, null);
-		} catch (Throwable e) {
-			throw new JSON5Exception(key, JSON5Array, "List<" + valueType.getTypeName() + ">", e);
-		}
-
+	@Deprecated
+	public <T> List<T> optList(String key, Class<T> valueType) {
+		return getList(key, valueType);
 	}
 
-	public <T> T getObject(String key, Class<T> clazz) {
-		JSON5Object json5Object = getJSON5Object(key);
-		try {
-			return JSON5Serializer.fromJSON5Object(json5Object, clazz);
-		} catch (Throwable e) {
-			throw new JSON5Exception(key, json5Object, clazz.getTypeName(),e);
-		}
+	@Deprecated
+	public <T> T optObject(String key, Class<T> clazz) {
+		return getObject(key, clazz);
 	}
 
-	public Object opt(String key) {
+
+	public Object get(String key) {
 		Object obj = getFromDataMap(key);
 		if(obj instanceof NullValue) return null;
 		return obj;
 	}
 
-	public boolean optBoolean(String key) {
-		return optBoolean(key, false);
+	public boolean getBoolean(String key) {
+		return getBoolean(key, false);
 	}
 
-	public boolean optBoolean(String key, boolean def) {
-		Object obj = opt(key);
+	public boolean getBoolean(String key, boolean def) {
+		Object obj = get(key);
 		return DataConverter.toBoolean(obj, def);
 	}
 
-	public byte optByte(String key) {
-		return optByte(key, (byte)0);
+	public byte getByte(String key) {
+		return getByte(key, (byte)0);
 	}
 
-	public byte optByte(String key, byte def) {
-		Object number = opt(key);
+	public byte getByte(String key, byte def) {
+		Object number = get(key);
 		if(number == null) {
 			return def;
 		}
@@ -468,17 +395,17 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	}
 
 
-	public byte[] optByteArray(String key) {
-		return optByteArray(key, null);
+	public byte[] getByteArray(String key) {
+		return getByteArray(key, null);
 	}
 
 	@SuppressWarnings("unused")
-	public byte[] optByteArray(String key,byte[] def) {
-		Object obj = opt(key);
+	public byte[] getByteArray(String key,byte[] def) {
+		Object obj = get(key);
 		if(obj == null) {
 			return def;
 		}
-		byte[] buffer =  DataConverter.toByteArray(obj);
+		byte[] buffer = DataConverter.toByteArray(obj);
 		if(buffer == null) {
 			return def;
 		}
@@ -487,12 +414,12 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	}
 
 
-	public short optShort(String key) {
-		return optShort(key, (short)0);
+	public short getShort(String key) {
+		return getShort(key, (short)0);
 	}
 
-	public short optShort(String key, short def) {
-		Object number = opt(key);
+	public short getShort(String key, short def) {
+		Object number = get(key);
 		if(number == null) {
 			return def;
 		}
@@ -500,12 +427,12 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	}
 
 	@SuppressWarnings("unused")
-	public char optChar(String key) {
-		return optChar(key, '\0');
+	public char getChar(String key) {
+		return getChar(key, '\0');
 	}
 
-	public char optChar(String key, char def) {
-		Object obj = opt(key);
+	public char getChar(String key, char def) {
+		Object obj = get(key);
 		if(obj == null) {
 			return def;
 		}
@@ -515,12 +442,12 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	}
 
 
-	public int optInt(String key) {
-		return optInt(key, 0);
+	public int getInt(String key) {
+		return getInt(key, 0);
 	}
 
-	public int optInt(String key, int def) {
-		Object number = opt(key);
+	public int getInt(String key, int def) {
+		Object number = get(key);
 		if(number == null) {
 			return def;
 		}
@@ -528,59 +455,59 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 	}
 
-	public float optFloat(String key) {
-		return optFloat(key, Float.NaN);
+	public float getFloat(String key) {
+		return getFloat(key, Float.NaN);
 	}
 
 
-	public float optFloat(String key, float def) {
-		Object obj = opt(key);
+	public float getFloat(String key, float def) {
+		Object obj = get(key);
 		if(obj == null) {
 			return def;
 		}
 		return DataConverter.toFloat(obj, def);
 	}
 
-	public long optLong(String key) {
-		return optLong(key, 0);
+	public long getLong(String key) {
+		return getLong(key, 0);
 	}
 
-	public long optLong(String key, long def) {
-		Object number = opt(key);
+	public long getLong(String key, long def) {
+		Object number = get(key);
 		if(number == null) {
 			return def;
 		}
 		return DataConverter.toLong(number, def);
 	}
 
-	public double optDouble(String key) {
-		return optDouble(key, Double.NaN);
+	public double getDouble(String key) {
+		return getDouble(key, Double.NaN);
 	}
 
-	public double optDouble(String key, double def) {
-		Object obj = opt(key);
+	public double getDouble(String key, double def) {
+		Object obj = get(key);
 		if(obj == null) {
 			return def;
 		}
 		return DataConverter.toDouble(obj, def);
 	}
 
-	public String optString(String key) {
-		return optString(key, null);
+	public String getString(String key) {
+		return getString(key, null);
 	}
 
-	public String optString(String key,String def) {
-		Object obj = opt(key);
+	public String getString(String key,String def) {
+		Object obj = get(key);
 		return obj == null ? def : DataConverter.toString(obj);
 	}
 
-	public JSON5Array optJSON5Array(String key) {
-		return optJSON5Array(key, null);
+	public JSON5Array getJSON5Array(String key) {
+		return getJSON5Array(key, null);
 	}
 
-	public JSON5Array optJSON5Array(String key, JSON5Array def) {
+	public JSON5Array getJSON5Array(String key, JSON5Array def) {
 		@SuppressWarnings("DuplicatedCode")
-		Object obj = opt(key);
+		Object obj = get(key);
 		if(obj == null) {
 			return def;
 		}
@@ -591,9 +518,9 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 		return JSON5Array;
 	}
 
-	public JSON5Array optWrapJSON5Array(String key) {
+	public JSON5Array getWrapJSON5Array(String key) {
 		@SuppressWarnings("DuplicatedCode")
-		Object object = opt(key);
+		Object object = get(key);
 		if(object == null) {
 			return new JSON5Array();
 		}
@@ -604,13 +531,13 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 		return JSON5Array;
 	}
 
-	public JSON5Object optJSON5Object(String key) {
-		return optJSON5Object(key, null);
+	public JSON5Object getJSON5Object(String key) {
+		return getJSON5Object(key, null);
 	}
 
-	public JSON5Object optJSON5Object(String key, JSON5Object def) {
+	public JSON5Object getJSON5Object(String key, JSON5Object def) {
 		@SuppressWarnings("DuplicatedCode")
-		Object obj = opt(key);
+		Object obj = get(key);
 		if(obj == null) {
 			return def;
 		}
@@ -622,11 +549,11 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	}
 
 
-	public <T> T optObject(String key, Class<T> clazz) {
-		return optObject(key, clazz, null);
+	public <T> T getObject(String key, Class<T> clazz) {
+		return getObject(key, clazz, null);
 	}
 
-	public <T> T optObject(String key, Class<T> clazz, T defaultObject) {
+	public <T> T getObject(String key, Class<T> clazz, T defaultObject) {
 		try {
 			JSON5Object json5Object = optJSON5Object(key);
 			return JSON5Serializer.fromJSON5Object(json5Object, clazz);
@@ -636,13 +563,13 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	}
 
 
-	public <T> List<T> optList(String key, Class<T> valueType) {
-		return optList(key, valueType, null);
+	public <T> List<T> getList(String key, Class<T> valueType) {
+		return getList(key, valueType, null);
 	}
 
-	public <T> List<T> optList(String key, Class<T> valueType, T defaultValue) {
+	public <T> List<T> getList(String key, Class<T> valueType, T defaultValue) {
 		try {
-			JSON5Array JSON5Array = optJSON5Array(key);
+			JSON5Array JSON5Array = getJSON5Array(key);
 			if(JSON5Array == null) {
 				return null;
 			}
@@ -653,8 +580,8 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 				result.add(defaultValue);
 				return result;
 			} else {
-                //noinspection unchecked
-                return Collections.EMPTY_LIST;
+				//noinspection unchecked
+				return Collections.EMPTY_LIST;
 			}
 		}
 	}
@@ -767,7 +694,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	 *
 	 */
 	@SuppressWarnings("DeprecatedIsStillUsed")
-    @Deprecated
+	@Deprecated
 	public int getInteger(String key) {
 		return getInt(key);
 	}
@@ -849,7 +776,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 		if(keyValueCommentMap == null) {
 			keyValueCommentMap = new LinkedHashMap<>();
 		}
-        return keyValueCommentMap.computeIfAbsent(key, k -> CommentObject.forKeyValueContainer(key));
+		return keyValueCommentMap.computeIfAbsent(key, k -> CommentObject.forKeyValueContainer(key));
 	}
 
 
@@ -858,32 +785,32 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	 * @deprecated use optWrapJSON5Array instead of this method @see optWrapJSON5Array
 	 */
 	@Deprecated
-	public JSON5Array optWrapArrayf(String key) {
-		return optWrapJSON5Array(key);
+	public JSON5Array getWrapArrayf(String key) {
+		return getWrapJSON5Array(key);
 	}
 
 	/**
 	 * @deprecated use optJSON5Array instead of this method @see optJSON5Array
 	 */
 	@Deprecated
-	public JSON5Array optArray(String key, JSON5Array def) {
-		return optJSON5Array(key, def);
+	public JSON5Array getArray(String key, JSON5Array def) {
+		return getJSON5Array(key, def);
 	}
-
-	/**
-	 * @deprecated use optJSON5Array instead of this method @see optJSON5Array
-	 */
-	@Deprecated
-	public JSON5Array optArray(String key) {
-		return optJSON5Array(key, null);
-	}
-
 
 	/**
 	 * @deprecated use optJSON5Array instead of this method @see optJSON5Array
 	 */
 	@Deprecated
 	public JSON5Array getArray(String key) {
+		return getJSON5Array(key, null);
+	}
+
+
+	/**
+	 * @deprecated use optJSON5Array instead of this method @see optJSON5Array
+	 */
+	@Deprecated
+	public JSON5Array optArray(String key) {
 		return getJSON5Array(key);
 	}
 
@@ -893,7 +820,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	 * @deprecated use optJSON5Object instead of this method @see optJSON5Object
 	 */
 	@Deprecated
-	public JSON5Object optObject(String key) {
+	public JSON5Object getObject(String key) {
 		return optJSON5Object(key);
 	}
 
@@ -902,8 +829,8 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	 */
 	@Deprecated
 	@SuppressWarnings("unused")
-	public JSON5Object optObject(String key, JSON5Object def) {
-		return optJSON5Object(key, def);
+	public JSON5Object getObject(String key, JSON5Object def) {
+		return getJSON5Object(key, def);
 	}
 
 
@@ -1014,7 +941,7 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 	@SuppressWarnings("MethodDoesntCallSuperMethod")
 	@Override
 	public JSON5Object clone() {
-        JSON5Object json5Object = new JSON5Object();
+		JSON5Object json5Object = new JSON5Object();
 		for (Entry<String, Object> entry : dataMap.entrySet()) {
 			String key = entry.getKey();
 			Object obj = entry.getValue();
@@ -1229,19 +1156,19 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 		@Override
 		public void setComment(CommentObject<?> commentObject) {
-				Object index = commentObject.getIndex();
-				if(index instanceof String) {
-					//noinspection unchecked
-					json5Object.setComment((String)index, (CommentObject<String>)commentObject);
-				}
+			Object index = commentObject.getIndex();
+			if(index instanceof String) {
+				//noinspection unchecked
+				json5Object.setComment((String)index, (CommentObject<String>)commentObject);
 			}
+		}
 
 
 
-			@Override
-			public DataIterator<?> iterator() {
-				return new EntryDataIterator(json5Object.dataMap.entrySet().iterator(), json5Object.dataMap.size(), true);
-			}
+		@Override
+		public DataIterator<?> iterator() {
+			return new EntryDataIterator(json5Object.dataMap.entrySet().iterator(), json5Object.dataMap.size(), true);
+		}
 	}
 
 	private static class EntryDataIterator extends DataIterator<Entry<String, Object>>{

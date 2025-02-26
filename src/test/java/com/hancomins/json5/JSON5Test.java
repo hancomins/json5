@@ -19,7 +19,7 @@ public class JSON5Test {
 
     @Test
     public void testA() {
-        JSON5Array JSON5Array = new JSON5Array("[\"value5!\n\tbreak line\"]", ParsingOptions.json5().setAllowControlCharacters(true));
+        JSON5Array JSON5Array = new JSON5Array("[\"value5!\\n\\tbreak line\"\n]", ParsingOptions.json5());
         assertEquals("value5!\n\tbreak line", JSON5Array.getString(0));
 
         JSON5Array = new JSON5Array("[\"value5!\n\tbreak line\"]", ParsingOptions.json5().setIgnoreControlCharacters(true));
@@ -117,7 +117,7 @@ public class JSON5Test {
                 "/*오브젝트 시작*/{/*알수없는 영역*/}/*오브젝트끝*/,13,//14\n" +
 " {/*123*/123:456//456\n,},/*15배열로그*/[,,]/*15after*/,[],[],-Infinity,NaN," +
                 ",[{},{}],[,/*index22*/],[,/*index23*/]/*index23after*/,24,[,]//index25after\n," +
-                "{1:2,//코멘트\n}//코멘트\n,] // 코멘트 \n // 코멘트2",  ParsingOptions.json5().setAllowConsecutiveCommas(true));
+                "{1:2,//코멘트\n}//코멘트\n,] // 코멘트 \n // 코멘트2",  ParsingOptions.json5());
         System.out.println(JSON5Array);
         assertEquals("index1", JSON5Array.getCommentForValue(0));
         assertEquals("테\n스\n트", JSON5Array.getHeaderComment());

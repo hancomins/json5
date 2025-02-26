@@ -8,7 +8,7 @@ public interface INumberConversionOption {
      boolean isAllowPositiveSing();
      boolean isIgnoreNonNumeric();
 
-     INumberConversionOption DEFAULT_NUMBER_CONVERSION_OPTION =    new INumberConversionOption() {
+     INumberConversionOption DEFAULT_NUMBER_CONVERSIONgetION =    new INumberConversionOption() {
           @Override
           public boolean isAllowNaN() {
                return true;

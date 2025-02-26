@@ -129,10 +129,48 @@ public class JSON5Writer extends WriterBorn {
             stringBuilder.repeat(space, depth);
         }
         stringBuilder.append(keyQuote);
-        stringBuilder.append(key);
+        appendString(stringBuilder, key);
         stringBuilder.append(keyQuote);
         writeComment(CommentPosition.AFTER_KEY, false);
         stringBuilder.append(":");
+    }
+
+
+
+    private void appendString(CharacterBuffer stringBuilder, String str) {
+        int len = str.length();
+        for(int i = 0; i < len; i++) {
+            char c = str.charAt(i);
+            switch (c) {
+                case '\b':
+                    stringBuilder.append("\\b");
+                    break;
+                case '\f':
+                    stringBuilder.append("\\f");
+                    break;
+                case '\n':
+                    stringBuilder.append("\\n");
+                    break;
+                case '\r':
+                    stringBuilder.append("\\r");
+                    break;
+                case '\t':
+                    stringBuilder.append("\\t");
+                    break;
+                case '\\':
+                    stringBuilder.append("\\\\");
+                    break;
+                case '"':
+                    stringBuilder.append("\\\"");
+                    break;
+                case '\'':
+                    stringBuilder.append("\\'");
+                    break;
+                default:
+                    stringBuilder.append(c);
+            }
+        }
+
     }
 
     private void writeComment(CommentPosition commentPosition, boolean pretty) {
@@ -232,7 +270,7 @@ public class JSON5Writer extends WriterBorn {
             stringBuilder.append("null");
         } else if(value instanceof Character) {
             stringBuilder.append('"');
-            stringBuilder.append((Character) value);
+            appendString(stringBuilder, String.valueOf(value));
             stringBuilder.append('"');
         }
         else {

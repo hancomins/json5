@@ -44,12 +44,12 @@ public class UnicodeTest {
 
         assertEquals('캫', json5ObjectHexString.optChar("a"));
         assertEquals(52907, JSON5Array.getInt(0));
-        assertEquals(52907, JSON5ArrayHexString.optInt(0));
-        assertEquals(52907, JSON5ArrayHexString.optLong(0));
-        assertEquals(-12629, JSON5ArrayHexString.optShort(0));
-        assertEquals(15, JSON5ArrayHexString.optByte(1));
-        assertEquals( Float.valueOf( 52907), Float.valueOf( JSON5ArrayHexString.optFloat(0)));
-        assertEquals( Double.valueOf( 52907), Double.valueOf( JSON5ArrayHexString.optDouble(0)));
+        assertEquals(52907, JSON5ArrayHexString.getInt(0));
+        assertEquals(52907, JSON5ArrayHexString.getLong(0));
+        assertEquals(-12629, JSON5ArrayHexString.getShort(0));
+        assertEquals(15, JSON5ArrayHexString.getByte(1));
+        assertEquals( Float.valueOf( 52907), Float.valueOf( JSON5ArrayHexString.getFloat(0)));
+        assertEquals( Double.valueOf( 52907), Double.valueOf( JSON5ArrayHexString.getDouble(0)));
 
 
 

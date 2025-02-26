@@ -4,11 +4,11 @@ public interface WritingOptions {
 
 
     static void setDefaultWritingOptions(WritingOptions options) {
-        DefaultOptions.DEFAULT_WRITING_OPTIONS = options;
+        DefaultOptions.DEFAULT_WRITINGgetIONS = options;
     }
 
     static WritingOptions getDefaultWritingOptions() {
-        return DefaultOptions.DEFAULT_WRITING_OPTIONS;
+        return DefaultOptions.DEFAULT_WRITINGgetIONS;
     }
 
 

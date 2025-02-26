@@ -1,5 +1,6 @@
 package com.hancomins.json5.container.json5;
 
+import com.hancomins.json5.JSON5Path;
 import com.hancomins.json5.container.JSON5ParseException;
 import com.hancomins.json5.CommentPosition;
 import com.hancomins.json5.ExceptionMessages;
@@ -17,8 +18,6 @@ import static com.hancomins.json5.container.json5.ParsingState.Open;
 
 
 public class JSON5Parser {
-
-    private static final LinkedBlockingDeque<JSON5Parser> POOL = new LinkedBlockingDeque<>();
 
     private ParsingState parsingState = Open;
     private final ValueBuffer valueBuffer;
@@ -65,15 +64,14 @@ public class JSON5Parser {
     private JSON5Parser(JsonParsingOptions jsonOption) {
         this.allowUnquoted = jsonOption.isAllowUnquoted();
         this.allowComment = jsonOption.isAllowComments();
-
-
         this.skipComments = jsonOption.isSkipComments();
-        this.consecutiveCommas = jsonOption.isAllowConsecutiveCommas();
+
+
         CharacterBuffer keyBuffer = new CharacterBuffer(128);
         this.ignoreTrailingData = jsonOption.isIgnoreTrailingData();
         valueBuffer = new ValueBuffer(keyBuffer);
-        valueBuffer.setAllowControlChar(jsonOption.isAllowControlCharacters());
         valueBuffer.setIgnoreControlChar(jsonOption.isIgnoreControlCharacters());
+        valueBuffer.setAllowControlChar(jsonOption.isAllowControlCharacters());
     }
 
 
@@ -90,10 +88,7 @@ public class JSON5Parser {
 
     @SuppressWarnings("UnusedReturnValue")
     public static BaseDataContainer parse(Reader reader, JsonParsingOptions jsonOption, BaseDataContainer rootContainer, KeyValueDataContainerFactory keyValueDataContainerFactory, ArrayDataContainerFactory arrayDataContainerFactory) {
-        JSON5Parser parser = POOL.poll();
-        if(parser == null) {
-            parser = new JSON5Parser(jsonOption);
-        }
+        JSON5Parser parser = new JSON5Parser(jsonOption);
         try {
             parser.keyValueDataContainerFactory = keyValueDataContainerFactory;
             parser.arrayDataContainerFactory = arrayDataContainerFactory;
@@ -103,7 +98,7 @@ public class JSON5Parser {
                 reader.close();
             } catch (IOException ignored) {}
             parser.reset();
-            POOL.offer(parser);
+
         }
         return rootContainer;
     }

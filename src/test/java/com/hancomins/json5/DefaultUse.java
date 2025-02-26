@@ -43,7 +43,7 @@ public class DefaultUse {
         System.out.println(jsonString);
         JSON5Object json5ObjetPure = new JSON5Object(jsonString);
         JSON5Object json5ObjectJson = new JSON5Object(jsonString);
-        assertEquals("Hello\\World",json5ObjectJson.get("string2"));
+        assertEquals("Hello\\World", json5ObjectJson.get("string2"));
         assertEquals(jsonString, json5ObjetPure.toString(WritingOptions.jsonPretty().setUnprettyArray(true)));
         assertEquals(jsonString, json5ObjectJson.toString(WritingOptions.jsonPretty().setUnprettyArray(true)));
         json5ObjectJson.put("string3", "Hello/World");
@@ -57,8 +57,14 @@ public class DefaultUse {
 
         JSON5Object json5 = new JSON5Object(json5Object.toString(WritingOptions.json5()), ParsingOptions.json5());
         assertEquals("Hello\"World", json5.get("st\"ring'4"));
-
-
-
     }
+
+        @Test
+        public void escapeSequenceTest2() {
+            JSON5Object json5Object = new JSON5Object();
+            json5Object.put("st\"ri\nng'4", "H\nello\"World");
+            System.out.println(json5Object.toString());
+        }
+
+
 }

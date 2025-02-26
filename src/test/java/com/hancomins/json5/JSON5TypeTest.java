@@ -55,7 +55,7 @@ public class JSON5TypeTest {
         JSON5Array numberJSON5Array = json5Object.getJSON5Array("AN");
         assertEquals(numberJsonArray.length(), numberJSON5Array.size());
         for(int i = 0, n = numberJsonArray.length(); i < n; ++i) {
-            assertEquals(numberJsonArray.optString(i), numberJSON5Array.optString(i));
+            assertEquals(numberJsonArray.optString(i), numberJSON5Array.getString(i));
         }
 
         objectJsonArray = jsonObject.getJSONArray("AO");
@@ -106,7 +106,7 @@ public class JSON5TypeTest {
         JSON5Array numberJSON5Array = json5Object.getJSON5Array("AN");
         assertEquals(numberJsonArray.length(), numberJSON5Array.size());
         for(int i = 0, n = numberJsonArray.length(); i < n; ++i) {
-            assertEquals(numberJsonArray.optString(i), numberJSON5Array.optString(i));
+            assertEquals(numberJsonArray.optString(i), numberJSON5Array.getString(i));
         }
 
         objectJsonArray = jsonObject.getJSONArray("AO");
@@ -163,7 +163,7 @@ public class JSON5TypeTest {
         JSON5Array numberJSON5Array = new JSON5Array(new JSON5Array(numberJsonArray.toString()).toBytes());
         assertEquals(numberJsonArray.length(), numberJSON5Array.size());
         for(int i = 0, n = numberJsonArray.length(); i < n; ++i) {
-            assertEquals(numberJsonArray.optString(i), numberJSON5Array.optString(i));
+            assertEquals(numberJsonArray.optString(i), numberJSON5Array.getString(i));
         }
 
         objectJsonArray = new JSONArray(objectJsonArray.toString());

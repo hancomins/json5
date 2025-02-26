@@ -224,7 +224,7 @@ public class JSON5Path {
             JSON5Array JSON5Array = (JSON5Array) JSON5Element;
             int index = pathItem.getIndex();
             if(pathItem.isObject()) {
-                JSON5Object childJSON5Object = JSON5Array.optJSON5Object(index);
+                JSON5Object childJSON5Object = JSON5Array.getJSON5Object(index);
                 if(childJSON5Object == null) {
                     childJSON5Object = new JSON5Object();
                     childJSON5Object.setAllowRawValue(JSON5Element.isAllowRawValue())
@@ -265,7 +265,7 @@ public class JSON5Path {
                 }
             }
             else if(pathItem.isArrayValue()) {
-                JSON5Array childJSON5Array = JSON5Array.optJSON5Array(index);
+                JSON5Array childJSON5Array = JSON5Array.getJSON5Array(index);
                 if(childJSON5Array == null) {
                     childJSON5Array = new JSON5Array();
                     childJSON5Array.setAllowRawValue(JSON5Element.isAllowRawValue())
@@ -288,7 +288,7 @@ public class JSON5Path {
         if(pathItem.isInArray()) {
             if(pathItem.isObject()) {
                 int index = pathItem.getIndex();
-                JSON5Object childJSON5Object = ((JSON5Array) JSON5Element).optJSON5Object(index);
+                JSON5Object childJSON5Object = ((JSON5Array) JSON5Element).getJSON5Object(index);
                 if(childJSON5Object == null) {
                     childJSON5Object = new JSON5Object();
                     JSON5Element.setAllowRawValue(JSON5Element.isAllowRawValue())
@@ -332,7 +332,7 @@ public class JSON5Path {
             if (pathItem.isEndPoint()) {
                 if (pathItem.isInArray()) {
                     if(pathItem.isObject()) {
-                        JSON5Object endPointObject = ((JSON5Array) parents).optJSON5Object(pathItem.getIndex());
+                        JSON5Object endPointObject = ((JSON5Array) parents).getJSON5Object(pathItem.getIndex());
                         if(endPointObject == null) return false;
                         endPointObject.remove(pathItem.getName());
                         return true;
@@ -352,7 +352,7 @@ public class JSON5Path {
             else {
                 if (pathItem.isInArray()) {
                     assert parents instanceof JSON5Array;
-                    parents = ((JSON5Array) parents).opt(pathItem.getIndex());
+                    parents = ((JSON5Array) parents).get(pathItem.getIndex());
                     if(pathItem.isObject() && parents instanceof JSON5Object) {
                         parents = ((JSON5Object) parents).opt(pathItem.getName());
                     }
@@ -381,7 +381,7 @@ public class JSON5Path {
             if (pathItem.isEndPoint()) {
                 if (pathItem.isInArray()) {
                     if(pathItem.isObject()) {
-                        JSON5Object endPointObject = ((JSON5Array) parents).optJSON5Object(pathItem.getIndex());
+                        JSON5Object endPointObject = ((JSON5Array) parents).getJSON5Object(pathItem.getIndex());
                         if(endPointObject == null) return null;
                         return endPointObject.opt(pathItem.getName());
                     }
@@ -398,7 +398,7 @@ public class JSON5Path {
             else {
                 if (pathItem.isInArray()) {
                     assert parents instanceof JSON5Array;
-                    parents = ((JSON5Array) parents).opt(pathItem.getIndex());
+                    parents = ((JSON5Array) parents).get(pathItem.getIndex());
                     if(pathItem.isObject() && parents instanceof JSON5Object) {
                         parents = ((JSON5Object) parents).opt(pathItem.getName());
                     }

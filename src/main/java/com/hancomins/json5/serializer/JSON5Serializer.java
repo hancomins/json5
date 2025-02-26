@@ -14,10 +14,7 @@ public class JSON5Serializer {
     private JSON5Serializer() {}
 
     public static boolean serializable(Class<?> clazz) {
-        if(TypeSchemaMap.getInstance().hasTypeInfo(clazz)) {
-            return true;
-        }
-        return clazz.getAnnotation(JSON5Type.class) != null;
+        return JSON5Mapper.serializable(clazz);
     }
 
     public static JSON5Object toJSON5Object(Object obj) {
@@ -100,7 +97,7 @@ public class JSON5Serializer {
                 } else {
                     if(key instanceof String) {
                         JSON5Object currentObject = ((JSON5Object) JSON5Element);
-                        JSON5Element childElement = currentObject.optJSON5Object((String) key);
+                        JSON5Element childElement = currentObject.getJSON5Object((String) key);
                         if (childElement == null) {
                                 childElement = (schemaNode instanceof SchemaArrayNode) ? new JSON5Array() : new JSON5Object();
                                 currentObject.put((String) key, childElement);
@@ -115,7 +112,7 @@ public class JSON5Serializer {
                         }
                         JSON5Array currentObject = ((JSON5Array) JSON5Element);
                         JSON5Array currentArray = ((JSON5Array) JSON5Element);
-                        JSON5Element childElement = (JSON5Element) currentArray.opt((Integer) key);
+                        JSON5Element childElement = (JSON5Element) currentArray.get((Integer) key);
                         if(childElement == null) {
 
                                 childElement = (schemaNode instanceof SchemaArrayNode) ? new JSON5Array() : new JSON5Object();
@@ -459,7 +456,7 @@ public class JSON5Serializer {
         Map finalTarget = target;
         if(onObtainTypeValue != null) {
             json5Object.keySet().forEach(key -> {
-                Object childInJson5Object = json5Object.opt(key);
+                Object childInJson5Object = json5Object.get(key);
                 if(childInJson5Object == null) {
                     finalTarget.put(key, null);
                     return;
@@ -479,12 +476,12 @@ public class JSON5Serializer {
         }
         else if(Types.isSingleType(types)) {
             json5Object.keySet().forEach(key -> {
-                Object value = Utils.optFrom(json5Object, key, types);
+                Object value = Utils.getFrom(json5Object, key, types);
                 finalTarget.put(key, value);
             });
         } else if(types == Types.Object) {
             json5Object.keySet().forEach(key -> {
-                JSON5Object child = json5Object.optJSON5Object(key, null);
+                JSON5Object child = json5Object.getJSON5Object(key, null);
                 if(child != null) {
                     Object  targetChild = fromJSON5Object(child, valueType);
                     finalTarget.put(key, targetChild);
@@ -494,19 +491,19 @@ public class JSON5Serializer {
             });
         } else if(types == Types.JSON5Object) {
             json5Object.keySet().forEach(key -> {
-                JSON5Object child = json5Object.optJSON5Object(key, null);
+                JSON5Object child = json5Object.getJSON5Object(key, null);
                 if(child != null) finalTarget.put(key, child);
                 else finalTarget.put(key, null);
             });
         } else if(types == Types.JSON5Array) {
             json5Object.keySet().forEach(key -> {
-                JSON5Array child = json5Object.optJSON5Array(key, null);
+                JSON5Array child = json5Object.getJSON5Array(key, null);
                 if(child != null) finalTarget.put(key, child);
                 else finalTarget.put(key, null);
             });
         } else if(types == Types.JSON5Element) {
             json5Object.keySet().forEach(key -> {
-                Object child = json5Object.opt(key);
+                Object child = json5Object.get(key);
                 if(child instanceof JSON5Element) finalTarget.put(key, child);
                 else finalTarget.put(key, null);
             });
@@ -530,10 +527,10 @@ public class JSON5Serializer {
     private static JSON5Element getChildElement(SchemaElementNode schemaElementNode, JSON5Element JSON5Element, Object key) {
         if(key instanceof String) {
             JSON5Object json5Object = (JSON5Object) JSON5Element;
-            return schemaElementNode instanceof  SchemaArrayNode ? json5Object.optJSON5Array((String) key) :  json5Object.optJSON5Object((String) key) ;
+            return schemaElementNode instanceof  SchemaArrayNode ? json5Object.getJSON5Array((String) key) :  json5Object.getJSON5Object((String) key) ;
         } else {
             JSON5Array JSON5Array = (JSON5Array) JSON5Element;
-            return schemaElementNode instanceof SchemaArrayNode ?  JSON5Array.optJSON5Array((int) key) :  JSON5Array.optJSON5Object((int) key);
+            return schemaElementNode instanceof SchemaArrayNode ?  JSON5Array.getJSON5Array((int) key) :  JSON5Array.getJSON5Object((int) key);
         }
 
     }
@@ -696,7 +693,7 @@ public class JSON5Serializer {
     private static void setValueTargetFromJSON5Object(Object parents, SchemaValueAbs schemaField, final JSON5Element json5, Object key, JSON5Object root) {
         boolean isArrayType = json5 instanceof JSON5Array;
 
-        /*Object value = isArrayType ? ((JSON5Array) json5).opt((int)key) : ((JSON5Object)json5).opt((String)key);
+        /*Object value = isArrayType ? ((JSON5Array) json5).get((int)key) : ((JSON5Object)json5).get((String)key);
         //todo null 값에 대하여 어떻게 할 것인지 고민해봐야함.
         if(value == null) {
             boolean isNull = isArrayType ? ((JSON5Array) json5).isNull((int)key) : ((JSON5Object)json5).isNull((String)key);
@@ -709,10 +706,10 @@ public class JSON5Serializer {
         }*/
         Types valueType = schemaField.getType();
         if(Types.isSingleType(valueType)) {
-            Object valueObj = Utils.optFrom(json5, key, valueType);
+            Object valueObj = Utils.getFrom(json5, key, valueType);
             schemaField.setValue(parents, valueObj);
         } else if((Types.AbstractObject == valueType || Types.GenericType == valueType) && schemaField instanceof ObtainTypeValueInvokerGetter) {
-            Object val = Utils.optFrom(json5, key, valueType);
+            Object val = Utils.getFrom(json5, key, valueType);
 
             Object obj = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parents, root).obtain(val) ;//on == null ? null : onObtainTypeValue.obtain(json5 instanceof JSON5Object ? (JSON5Object) json5 : null);
             if(obj == null) {
@@ -722,7 +719,7 @@ public class JSON5Serializer {
             schemaField.setValue(parents, obj);
         }
         else if(Types.Collection == valueType) {
-            JSON5Array JSON5Array = isArrayType ? ((JSON5Array) json5).optJSON5Array((int)key) : ((JSON5Object)json5).optJSON5Array((String)key);
+            JSON5Array JSON5Array = isArrayType ? ((JSON5Array) json5).getJSON5Array((int)key) : ((JSON5Object)json5).getJSON5Array((String)key);
             if(JSON5Array != null) {
                 OnObtainTypeValue onObtainTypeValue = null;
                 boolean isGenericOrAbsType = ((ISchemaArrayValue)schemaField).isGenericTypeValue() || ((ISchemaArrayValue)schemaField).isAbstractType();
@@ -736,7 +733,7 @@ public class JSON5Serializer {
                 } catch (Exception ignored) {}
             }
         } else if(Types.Object == valueType) {
-            JSON5Object json5Obj = isArrayType ? ((JSON5Array) json5).optJSON5Object((int)key) : ((JSON5Object)json5).optJSON5Object((String)key);
+            JSON5Object json5Obj = isArrayType ? ((JSON5Array) json5).getJSON5Object((int)key) : ((JSON5Object)json5).getJSON5Object((String)key);
             if(json5Obj != null) {
                 Object target = schemaField.newInstance();
                 fromJSON5Object(json5Obj, target);
@@ -745,7 +742,7 @@ public class JSON5Serializer {
                 schemaField.setValue(parents, null);
             }
         } else if(Types.Map == valueType) {
-            JSON5Object json5Obj = isArrayType ? ((JSON5Array) json5).optJSON5Object((int)key) : ((JSON5Object)json5).optJSON5Object((String)key);
+            JSON5Object json5Obj = isArrayType ? ((JSON5Array) json5).getJSON5Object((int)key) : ((JSON5Object)json5).getJSON5Object((String)key);
             if(json5Obj != null) {
                 Object target = schemaField.newInstance();
                 Class<?> type = ((ISchemaMapValue)schemaField).getElementType();
@@ -760,13 +757,13 @@ public class JSON5Serializer {
                 schemaField.setValue(parents, null);
             }
         } else if(Types.JSON5Object == valueType) {
-            JSON5Object value = isArrayType ? ((JSON5Array) json5).optJSON5Object((int)key) : ((JSON5Object)json5).optJSON5Object((String)key);
+            JSON5Object value = isArrayType ? ((JSON5Array) json5).getJSON5Object((int)key) : ((JSON5Object)json5).getJSON5Object((String)key);
             schemaField.setValue(parents, value);
         } else if(Types.JSON5Array == valueType) {
-            JSON5Array value = isArrayType ? ((JSON5Array) json5).optJSON5Array((int)key) : ((JSON5Object)json5).optJSON5Array((String)key);
+            JSON5Array value = isArrayType ? ((JSON5Array) json5).getJSON5Array((int)key) : ((JSON5Object)json5).getJSON5Array((String)key);
             schemaField.setValue(parents, value);
         } else if(Types.JSON5Element == valueType) {
-            Object value = isArrayType ? ((JSON5Array) json5).opt((int)key) : ((JSON5Object)json5).opt((String)key);
+            Object value = isArrayType ? ((JSON5Array) json5).get((int)key) : ((JSON5Object)json5).get((String)key);
             if(value instanceof JSON5Element) {
                 schemaField.setValue(parents, value);
             } else {
@@ -813,29 +810,29 @@ public class JSON5Serializer {
 
         switch (ISchemaArrayValue.getEndpointValueType()) {
             case Byte:
-                return JSON5Array.optByte(index);
+                return JSON5Array.getByte(index);
             case Short:
-                return JSON5Array.optShort(index);
+                return JSON5Array.getShort(index);
             case Integer:
-                return JSON5Array.optInt(index);
+                return JSON5Array.getInt(index);
             case Long:
-                return JSON5Array.optLong(index);
+                return JSON5Array.getLong(index);
             case Float:
-                return JSON5Array.optFloat(index);
+                return JSON5Array.getFloat(index);
             case Double:
-                return JSON5Array.optDouble(index);
+                return JSON5Array.getDouble(index);
             case Boolean:
-                return JSON5Array.optBoolean(index);
+                return JSON5Array.getBoolean(index);
             case Character:
-                return JSON5Array.optChar(index, '\0');
+                return JSON5Array.getChar(index, '\0');
             case String:
-                return JSON5Array.optString(index);
+                return JSON5Array.getString(index);
             case JSON5Array:
-                return JSON5Array.optJSON5Array(index);
+                return JSON5Array.getJSON5Array(index);
             case JSON5Object:
-                return JSON5Array.optJSON5Object(index);
+                return JSON5Array.getJSON5Object(index);
             case Object:
-                JSON5Object json5Object = JSON5Array.optJSON5Object(index);
+                JSON5Object json5Object = JSON5Array.getJSON5Object(index);
                 if(json5Object != null) {
                     Object target = ISchemaArrayValue.getObjectValueTypeElement().newInstance();
                     fromJSON5Object(json5Object, target);
@@ -863,7 +860,7 @@ public class JSON5Serializer {
         for(int index = 0; index <= end; ++index) {
             objectItem.setArrayIndex(index);
             if(collectionItem.isGeneric() || collectionItem.isAbstractType()) {
-                JSON5Object json5Object = objectItem.JSON5Array.optJSON5Object(index);
+                JSON5Object json5Object = objectItem.JSON5Array.getJSON5Object(index);
                 Object object = onObtainTypeValue.obtain(json5Object);
                 objectItem.collectionObject.add(object);
             }
@@ -871,7 +868,7 @@ public class JSON5Serializer {
                 Object value = optValueInJSON5Array(objectItem.JSON5Array, index, ISchemaArrayValue);
                 objectItem.collectionObject.add(value);
             } else {
-                JSON5Array inArray = objectItem.JSON5Array.optJSON5Array(index);
+                JSON5Array inArray = objectItem.JSON5Array.getJSON5Array(index);
                 if (inArray == null) {
                     objectItem.collectionObject.add(null);
                 } else {

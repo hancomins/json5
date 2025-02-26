@@ -137,7 +137,7 @@ public class JSON5TypeObjectTest {
         assertEquals((byte)128, JSON5Array.get(7));
         assertEquals(null, JSON5Array.get(8));
         assertEquals("stri \" \n\rng", JSON5Array.get(9));
-        assertArrayEquals("stri \" \n\rng".getBytes(StandardCharsets.UTF_8), JSON5Array.optByteArray(9));
+        assertArrayEquals("stri \" \n\rng".getBytes(StandardCharsets.UTF_8), JSON5Array.getByteArray(9));
         assertTrue(JSON5Array.get(10) instanceof JSON5Array);
         assertTrue(JSON5Array.get(11) instanceof JSON5Object);
         assertArrayEquals(buffer, (byte[]) JSON5Array.get(12));
@@ -218,7 +218,7 @@ public class JSON5TypeObjectTest {
         assertEquals((byte)128, JSON5Array.getByte(7));
         assertEquals(null, JSON5Array.getString(8));
         assertEquals("stri \" \n\rng", JSON5Array.getString(9));
-        assertArrayEquals("stri \" \n\rng".getBytes(StandardCharsets.UTF_8), JSON5Array.optByteArray(9));
+        assertArrayEquals("stri \" \n\rng".getBytes(StandardCharsets.UTF_8), JSON5Array.getByteArray(9));
         assertTrue(JSON5Array.get(10) instanceof JSON5Array);
         assertTrue(JSON5Array.get(11) instanceof JSON5Object);
         assertArrayEquals(buffer, JSON5Array.getByteArray(12));

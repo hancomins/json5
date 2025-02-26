@@ -8,11 +8,11 @@ public interface ParsingOptions<T>  {
 
 
     static void setDefaultParsingOptions(ParsingOptions<?> options) {
-        DefaultOptions.DEFAULT_PARSING_OPTIONS = options;
+        DefaultOptions.DEFAULT_PARSINGgetIONS = options;
     }
 
     static ParsingOptions<?> getDefaultParsingOptions() {
-        return DefaultOptions.DEFAULT_PARSING_OPTIONS;
+        return DefaultOptions.DEFAULT_PARSINGgetIONS;
     }
 
 

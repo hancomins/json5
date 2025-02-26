@@ -69,8 +69,8 @@ public class JSON5Elements {
             return false;
         }
         for(int i = 0; i < array1.size(); i++) {
-            Object value = array1.opt(i);
-            Object value2 = array2.opt(i);
+            Object value = array1.get(i);
+            Object value2 = array2.get(i);
             if(!equalsObject(value, value2,ignoreTypes)) {
                 return false;
             }

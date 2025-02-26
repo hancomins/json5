@@ -429,10 +429,10 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 
 
 	/**
-	 * @deprecated use {@link #getJSON5Object(int)} instead.
+	 * @deprecated use {@link #optJSON5Object(int)} instead.
 	 */
 	@Deprecated
-	public JSON5Object getObject(int index) {
+	public JSON5Object optObject(int index) {
 		return getJSON5Object(index);
 	}
 
@@ -449,17 +449,9 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 
-
-
-	public Object get(int index) {
-		if(index < 0 || index >= list.size()) {
-			throw new JSON5IndexNotFoundException(ExceptionMessages.getJSON5ArrayIndexOutOfBounds(index, list.size()));
-		}
-		Object obj = list.get(index);
-		if(obj instanceof NullValue) return null;
-		copyHeadTailCommentToValueObject(index, obj);
-
-		return obj;
+	@Deprecated
+	public Object opt(int index) {
+		return get(index);
 	}
 
 	private void copyHeadTailCommentToValueObject(int index, Object obj) {
@@ -483,153 +475,94 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 
-	public boolean getBoolean(int index) {
-		Object obj = get(index);
-		if(obj instanceof Boolean) {
-			return (Boolean)obj;
-		} else if("true".equalsIgnoreCase(obj + "")) {
-			return true;
-		} else if("false".equalsIgnoreCase(obj + "")) {
-			return false;
-		}
-		throw new JSON5Exception(index, obj, boolean.class.getTypeName());
+	@Deprecated
+	public boolean optBoolean(int index) {
+		return getBoolean(index);
 	}
 
-
-	public byte getByte(final int index) {
-		Object number = get(index);
-		return DataConverter.toByte(number, (byte) 0, ((value, type) -> {
-			throw new JSON5Exception(index, value, type.getTypeName());
-		}));
+	@Deprecated
+	public byte optByte(final int index) {
+		return getByte(index);
 	}
 
 
 
 
-	public byte[] getByteArray(int index) {
-		Object obj = get(index);
-		byte[] byteArray = DataConverter.toByteArray(obj);
-		if(byteArray == null) {
-			throw new JSON5Exception(index, obj, byte[].class.getTypeName());
-		}
-		return byteArray;
+	@Deprecated
+	public byte[] optByteArray(int index) {
+		return getByteArray(index);
 	}
 
 
-	public char getChar(int index) {
-		Object number = get(index);
-
-		return DataConverter.toChar(number, (char)0, (value, type) -> {
-			throw new JSON5Exception(index, value, type.getTypeName());
-		});
+	@Deprecated
+	public char optChar(int index) {
+		return getChar(index);
 
 	}
 
 
-
-	public short getShort(int index) {
-		Object number = get(index);
-		return DataConverter.toShort(number, (value, type) -> {
-			throw new JSON5Exception(index, value, type.getTypeName());
-		});
-
+	@Deprecated
+	public short optShort(int index) {
+		return getShort(index);
 	}
 
 
-	public int getInt(int index) {
-		Object number = get(index);
-		return DataConverter.toInteger(number, (value, type) -> {
-			throw new JSON5Exception(index, value, type.getTypeName());
-		});
+	@Deprecated
+	public int optInt(int index) {
+		return getInteger(index);
 	}
 
 
 
-	public float getFloat(int index) {
-		Object number = get(index);
-		return DataConverter.toFloat(number, (value, type) -> {
-			throw new JSON5Exception(index, value, type.getTypeName());
-		});
+	@Deprecated
+	public float optFloat(int index) {
+		return getFloat(index);
 	}
 
 
-	public long getLong(int index) {
-		Object number = get(index);
-		return DataConverter.toLong(number, (value, type) -> {
-			throw new JSON5Exception(index, value, type.getTypeName());
-		});
+	@Deprecated
+	public long optLong(int index) {
+		return getLong(index);
 	}
 
 
 
-	public double getDouble(int index) {
-		Object number = get(index);
-		return DataConverter.toDouble(number, (value, type) -> {
-			throw new JSON5Exception(index, value, type.getTypeName());
-		});
+	@Deprecated
+	public double optDouble(int index) {
+		return getDouble(index);
 	}
 
 
-	public String getString(int index) {
-		Object obj = get(index);
-		if(obj == null) {
-			return null;
-		}
-
-		return DataConverter.toString(obj);
+	@Deprecated
+	public String optString(int index) {
+		return getString(index);
 	}
 
-	public JSON5Array getJSON5Array(int index) {
-		Object obj = get(index);
-		if(obj == null) {
-			return null;
-		}
-		JSON5Array JSON5Array = DataConverter.toArray(obj, true);
-		if(JSON5Array == null) {
-			throw new JSON5Exception(index, obj, JSON5Array.class.getTypeName());
-		}
-		return JSON5Array;
+	@Deprecated
+	public JSON5Array optJSON5Array(int index) {
+		return getJSON5Array(index);
 	}
 
-	public JSON5Object getJSON5Object(int index) {
-		Object obj = get(index);
-		if(obj == null) {
-			return null;
-		}
-		JSON5Object json5Object = DataConverter.toObject(obj, true);
-		if(json5Object == null) {
-			throw new JSON5Exception(index, obj, JSON5Object.class.getTypeName());
-		}
-		return json5Object;
+	@Deprecated
+	public JSON5Object optJSON5Object(int index) {
+		return getJSON5Object(index);
 	}
 
 
-	public <T> List<T> getList(int index, Class<T> valueType) {
-		JSON5Array JSON5Array = getJSON5Array(index);
-		if(JSON5Array == null) {
-			return null;
-		}
-		try {
-			
-			return JSON5Serializer.json5ArrayToList(JSON5Array, valueType, JSON5Array.getWritingOptions(), false, null);
-		} catch (Throwable e) {
-			throw new JSON5Exception(index, JSON5Array, "List<" + valueType.getTypeName() + ">", e);
-		}
+	@Deprecated
+	public <T> List<T> optList(int index, Class<T> valueType) {
+		return getList(index, valueType);
 	}
 
 
 
-	public <T> T getObject(int index, Class<T> clazz) {
-		JSON5Object json5Object = getJSON5Object(index);
-		try {
-			return JSON5Serializer.fromJSON5Object(json5Object, clazz);
-		} catch (Throwable e) {
-			throw new JSON5Exception(index, json5Object, clazz.getTypeName(),e );
-		}
+	@Deprecated
+	public <T> T optObject(int index, Class<T> clazz) {
+		return getObject(index, clazz);
 	}
 
 
-	public Object opt(int index) {
+	public Object get(int index) {
 		if(index < 0 || index >= list.size()) {
 			return null;
 		}
@@ -640,23 +573,23 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 
-	public boolean optBoolean(int index, boolean def) {
-		Object obj = opt(index);
+	public boolean getBoolean(int index, boolean def) {
+		Object obj = get(index);
 		return DataConverter.toBoolean(obj, def);
 	}
 
-	public boolean optBoolean(int index) {
-		return optBoolean(index, false);
+	public boolean getBoolean(int index) {
+		return getBoolean(index, false);
 	}
 
 
-	public byte optByte(int index) {
-		return optByte(index, (byte)0);
+	public byte getByte(int index) {
+		return getByte(index, (byte)0);
 	}
 
 	@SuppressWarnings("unused")
-	public byte optByte(int index, byte def) {
-		Object number = opt(index);
+	public byte getByte(int index, byte def) {
+		Object number = get(index);
 		if(number == null) {
 			return def;
 		}
@@ -665,13 +598,13 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 
 
 
-	public byte[] optByteArray(int index) {
-		return optByteArray(index, null);
+	public byte[] getByteArray(int index) {
+		return getByteArray(index, null);
 	}
 
 	@SuppressWarnings("unused")
-	public byte[] optByteArray(int index,byte[] def) {
-		Object obj = opt(index);
+	public byte[] getByteArray(int index, byte[] def) {
+		Object obj = get(index);
 		if(obj == null) {
 			return def;
 		}
@@ -685,12 +618,12 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 
 
 
-	public short optShort(int index) {
-		return optShort(index, (short)0);
+	public short getShort(int index) {
+		return getShort(index, (short)0);
 	}
 
-	public short optShort(int index, short def) {
-		Object number = opt(index);
+	public short getShort(int index, short def) {
+		Object number = get(index);
 		if(number == null) {
 			return def;
 		}
@@ -698,12 +631,12 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 	@SuppressWarnings("unused")
-	public char optChar(int index) {
-		return optChar(index, '\0');
+	public char getChar(int index) {
+		return getChar(index, '\0');
 	}
 
-	public char optChar(int index, char def) {
-		Object obj = opt(index);
+	public char getChar(int index, char def) {
+		Object obj = get(index);
 		if(obj == null) {
 			return def;
 		}
@@ -711,12 +644,12 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 
-	public int optInt(int index) {
-		return optInt(index, 0);
+	public int getInt(int index) {
+		return getInt(index, 0);
 	}
 
-	public int optInt(int index, int def) {
-		Object number = opt(index);
+	public int getInt(int index, int def) {
+		Object number = get(index);
 		if(number == null) {
 			return def;
 		}
@@ -724,61 +657,61 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 
 	}
 
-	public float optFloat(int index) {
-		return optFloat(index, Float.NaN);
+	public float getFloat(int index) {
+		return getFloat(index, Float.NaN);
 	}
 
 
-	public float optFloat(int index, float def) {
-		Object obj = opt(index);
+	public float getFloat(int index, float def) {
+		Object obj = get(index);
 		if(obj == null) {
 			return def;
 		}
 		return DataConverter.toFloat(obj, def);
 	}
 
-	public long optLong(int index) {
-		return optLong(index, 0);
+	public long getLong(int index) {
+		return getLong(index, 0);
 	}
 
-	public long optLong(int index, long def) {
-		Object number = opt(index);
+	public long getLong(int index, long def) {
+		Object number = get(index);
 		if(number == null) {
 			return def;
 		}
 		return DataConverter.toLong(number, def);
 	}
 
-	public double optDouble(int index) {
-		return optDouble(index, Double.NaN);
+	public double getDouble(int index) {
+		return getDouble(index, Double.NaN);
 	}
 
-	public double optDouble(int index, double def) {
-		Object obj = opt(index);
+	public double getDouble(int index, double def) {
+		Object obj = get(index);
 		if(obj == null) {
 			return def;
 		}
 		return DataConverter.toDouble(obj, def);
 	}
 
-	public String optString(int index) {
-		return optString(index, null);
+	public String getString(int index) {
+		return getString(index, null);
 	}
 
-	public String optString(int index,String def) {
-		Object obj = opt(index);
+	public String getString(int index, String def) {
+		Object obj = get(index);
 		if(obj == null) {
 			return def;
 		}
 		return DataConverter.toString(obj);
 	}
 
-	public JSON5Array optJSON5Array(int index) {
-		return optJSON5Array(index, null);
+	public JSON5Array getJSON5Array(int index) {
+		return getJSON5Array(index, null);
 	}
 
-	public JSON5Array optJSON5Array(int index, JSON5Array def) {
-		Object obj = opt(index);
+	public JSON5Array getJSON5Array(int index, JSON5Array def) {
+		Object obj = get(index);
 		if(obj == null) {
 			return def;
 		}
@@ -789,8 +722,9 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		return JSON5Array;
 	}
 
-	public JSON5Array optWrapJSON5Array(int index) {
-		Object object = opt(index);
+	@Deprecated
+	public JSON5Array getWrapJSON5Array(int index) {
+		Object object = get(index);
 		if(object == null) {
 			return new JSON5Array();
 		}
@@ -801,12 +735,12 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		return JSON5Array;
 	}
 
-	public JSON5Object optJSON5Object(int index) {
-		return optJSON5Object(index, null);
+	public JSON5Object getJSON5Object(int index) {
+		return getJSON5Object(index, null);
 	}
 
-	public JSON5Object optJSON5Object(int index, JSON5Object def) {
-		Object obj = opt(index);
+	public JSON5Object getJSON5Object(int index, JSON5Object def) {
+		Object obj = get(index);
 		if(obj == null) {
 			return def;
 		}
@@ -818,13 +752,13 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 
-	public <T> T optObject(int index, Class<T> clazz) {
-		return optObject(index, clazz, null);
+	public <T> T getObject(int index, Class<T> clazz) {
+		return getObject(index, clazz, null);
 	}
 
-	public <T> T optObject(int index, Class<T> clazz, T defaultObject) {
+	public <T> T getObject(int index, Class<T> clazz, T defaultObject) {
 		try {
-			JSON5Object json5Object = optJSON5Object(index);
+			JSON5Object json5Object = getJSON5Object(index);
 			return JSON5Serializer.fromJSON5Object(json5Object, clazz);
 		} catch (Exception e) {
 			return defaultObject;
@@ -832,13 +766,13 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	}
 
 
-	public <T> List<T> optList(int index, Class<T> valueType) {
-		return optList(index, valueType, null);
+	public <T> List<T> getList(int index, Class<T> valueType) {
+		return getList(index, valueType, null);
 	}
 
-	public <T> List<T> optList(int index, Class<T> valueType, T defaultValue) {
+	public <T> List<T> getList(int index, Class<T> valueType, T defaultValue) {
 		try {
-			JSON5Array JSON5Array = optJSON5Array(index);
+			JSON5Array JSON5Array = getJSON5Array(index);
 			if(JSON5Array == null) {
 				return null;
 			}
@@ -948,15 +882,6 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 			return array.getJSON5Array(index++);
 		}
 
-		@Deprecated
-		public JSON5Array optArray() {
-			return array.optJSON5Array(index++);
-		}
-
-		public JSON5Array optCSOMArray() {
-			return array.optJSON5Array(index++);
-		}
-
 		@SuppressWarnings("unused")
 		@Deprecated
 		public int getInteger() {
@@ -970,48 +895,25 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		@SuppressWarnings("unused")
 		@Deprecated
 		public int optInteger() {
-			return array.optInteger(index++);
+			return array.getInteger(index++);
 		}
 
-
-		public int optInt() {
-			return array.optInteger(index++);
-		}
 
 		public short getShort() {
 			return array.getShort(index++);
-		}
-
-		@SuppressWarnings("unused")
-		public int optShort() {
-			return array.optShort(index++);
 		}
 
 		public float getFloat() {
 			return array.getFloat(index++);
 		}
 
-		@SuppressWarnings("unused")
-		public float optFloat() {
-			return array.optFloat(index++);
-		}
-
 		public String getString() {
 			return array.getString(index++);
 		}
 
-		@SuppressWarnings("unused")
-		public String optString() {
-			return array.optString(index++);
-		}
 
 		public boolean getBoolean() {
 			return array.getBoolean(index++);
-		}
-
-		@SuppressWarnings("unused")
-		public boolean optBoolean() {
-			return array.optBoolean(index++);
 		}
 
 
@@ -1084,7 +986,7 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 	public void merge(JSON5Array JSON5Array) {
 		for(int i = 0, n = JSON5Array.size(); i < n; ++i) {
 			Object newObj = JSON5Array.get(i);
-			Object originObj = opt(i);
+			Object originObj = get(i);
 			if(originObj == null) {
 				add(newObj);
 			} else if(originObj instanceof JSON5Array && newObj instanceof JSON5Array) {
@@ -1107,7 +1009,7 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		JSON5Array result = new JSON5Array();
 		for(int i = 0, n = JSON5Array.size(); i < n; ++i) {
 			Object newObj = JSON5Array.get(i);
-			Object originObj = opt(i);
+			Object originObj = get(i);
 			if(originObj == null) {
 				continue;
 			} else if(originObj instanceof JSON5Array && newObj instanceof JSON5Array) {
@@ -1130,7 +1032,7 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		JSON5Array result = new JSON5Array();
 		for(int i = 0, n = size(); i < n; ++i) {
 			Object originObj = get(i);
-			Object newObj = JSON5Array.opt(i);
+			Object newObj = JSON5Array.get(i);
 			if(originObj == null) {
 				continue;
 			} else if(originObj instanceof JSON5Array && newObj instanceof JSON5Array) {
@@ -1149,24 +1051,24 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 
 
 	/**
-	 * @deprecated use {@link #optJSON5Object(int)} instead.
+	 * @deprecated use {@link #getJSON5Object(int)} instead.
 	 */
 	@Deprecated
-	public JSON5Object optObject(int index) {
-		return optJSON5Object(index);
+	public JSON5Object getObject(int index) {
+		return getJSON5Object(index);
 	}
 
 
 
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	@Deprecated
-	public int optInteger(int index) {
-		return optInt(index);
+	public int getInteger(int index) {
+		return getInt(index);
 	}
 
 	@Deprecated
-	public int optInteger(int index, int def) {
-		return optInt(index, def);
+	public int getInteger(int index, int def) {
+		return getInt(index, def);
 	}
 
 
@@ -1179,30 +1081,23 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		return getJSON5Array(index);
 	}
 
+
 	/**
-	 * @deprecated use {@link #optJSON5Array(int)} instead.
+	 * @deprecated use {@link #getJSON5Array(int, JSON5Array)} instead.
 	 */
 	@Deprecated
-	public JSON5Array optArray(int index) {
-		return optJSON5Array(index);
+	public JSON5Array getArray(int index, JSON5Array def) {
+		return getJSON5Array(index, def);
 	}
 
 	/**
-	 * @deprecated use {@link #optJSON5Array(int, JSON5Array)} instead.
-	 */
-	@Deprecated
-	public JSON5Array optArray(int index, JSON5Array def) {
-		return optJSON5Array(index, def);
-	}
-
-	/**
-	 * @deprecated use {@link #getInt(int)} instead.
+	 * @deprecated use {@link #optInt(int)} instead.
 	 */
 
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	@Deprecated
-	public int getInteger(int index) {
-		return getInt(index);
+	public int optInteger(int index) {
+		return optInt(index);
 	}
 
 

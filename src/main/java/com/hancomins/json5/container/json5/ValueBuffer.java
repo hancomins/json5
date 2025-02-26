@@ -433,11 +433,13 @@ public class ValueBuffer {
             }
         }
 
-        else if(!allowControlChar && Character.isISOControl(c)) {
-            if(ignoreControlChar) {
-               return;
+        else if(Character.isISOControl(c)) {
+            if(!allowControlChar) {
+                throw new JSON5Exception(ExceptionMessages.getCtrlCharNotAllowed(c));
+            } else if(!ignoreControlChar) {
+                characterBuffer.append(c);
             }
-            throw new JSON5Exception(ExceptionMessages.getCtrlCharNotAllowed(c));
+
         }
         else {
             if(c == quoteChar) {

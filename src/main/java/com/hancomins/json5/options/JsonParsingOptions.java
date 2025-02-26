@@ -10,8 +10,8 @@ public class JsonParsingOptions implements ParsingOptions<JsonParsingOptions> {
         private boolean allowComments = true;
         private boolean ignoreTrailingData = false;
         private boolean skipComments = false;
-        private boolean allowControlCharacters = false;
         private boolean ignoreControlCharacters = true;
+        private boolean isAllowControlCharacters = true;
 
         private JsonParsingOptions() {
         }
@@ -26,12 +26,17 @@ public class JsonParsingOptions implements ParsingOptions<JsonParsingOptions> {
         }
 
 
-        private boolean allowConsecutiveCommas = false;
-
-
-        public boolean isAllowConsecutiveCommas() {
-            return allowConsecutiveCommas;
+        public JsonParsingOptions setAllowControlCharacters(boolean allowControlCharacters) {
+            isAllowControlCharacters = allowControlCharacters;
+            return this;
         }
+
+        public boolean isAllowControlCharacters() {
+            return isAllowControlCharacters;
+        }
+
+
+
 
         public boolean isAllowUnquoted() {
             return allowUnquoted;
@@ -55,14 +60,6 @@ public class JsonParsingOptions implements ParsingOptions<JsonParsingOptions> {
             return skipComments;
         }
 
-        public boolean isAllowControlCharacters() {
-            return allowControlCharacters;
-        }
-
-        public JsonParsingOptions setAllowControlCharacters(boolean allowControlCharacters) {
-            this.allowControlCharacters = allowControlCharacters;
-            return this;
-        }
 
         public boolean isIgnoreControlCharacters() {
             return ignoreControlCharacters;
@@ -79,10 +76,6 @@ public class JsonParsingOptions implements ParsingOptions<JsonParsingOptions> {
             return this;
         }
 
-        public JsonParsingOptions setAllowConsecutiveCommas(boolean allowConsecutiveCommas) {
-            this.allowConsecutiveCommas = allowConsecutiveCommas;
-            return this;
-        }
 
         public boolean isIgnoreTrailingData() {
             return ignoreTrailingData;

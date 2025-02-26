@@ -16,12 +16,11 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 public abstract  class JSON5Element implements Iterable<Object>  {
 
-	private ParsingOptions<?> parsingOptions = ParsingOptions.getDefaultParsingOptions();
-	private WritingOptions writingOptions = WritingOptions.getDefaultWritingOptions();
+    private WritingOptions writingOptions = WritingOptions.getDefaultWritingOptions();
 
 	private static final Pattern BASE64_PREFIX_REPLACE_PATTERN = Pattern.compile("(?i)^base64,");
 	private static final Pattern BASE64_PREFIX_PATTERN = Pattern.compile("^((?i)base64,)([a-zA-Z0-9+/]*={0,2})$");
-	private CommentObject headTailCommentObject = null;
+	private CommentObject<?> headTailCommentObject = null;
 
 	private JSON5Path json5Path = null;
 
@@ -40,8 +39,7 @@ public abstract  class JSON5Element implements Iterable<Object>  {
 
 	protected JSON5Element(ElementType type, ParsingOptions<?> parsingOptions, WritingOptions writingOptions) {
 		this.type = type;
-		this.parsingOptions = parsingOptions;
-		this.writingOptions = writingOptions;
+        this.writingOptions = writingOptions;
 	}
 
 	protected JSON5Element(ElementType type, WritingOptions writingOptions) {

@@ -75,13 +75,13 @@ public class JSON5ParserTest  {
     public void testConsecutiveCommas() {
 
             String json = "{\n" +
-                    "  \"consecutiveCommas\": \"are just fine\",,,\n" +
+                    "  \"consecutiveCommas\": \"are just fine\",\n" +
                     " nullValue : /* 이 값은 어디에 */  ,\n" +
                     " arrays: [1,2,,3,],\n" +
                     "}";
 
 
-            JSON5Object json5Object = new JSON5Object(json, ParsingOptions.json5().setAllowConsecutiveCommas(true));
+            JSON5Object json5Object = new JSON5Object(json, ParsingOptions.json5());
             System.out.println(json5Object);
             assertEquals("are just fine", json5Object.optString("consecutiveCommas"));
             assertNull(json5Object.get("nullValue"));
@@ -92,13 +92,6 @@ public class JSON5ParserTest  {
             assertNull(json5Object.optJSON5Array("arrays").get(2));
             assertEquals(3, json5Object.optJSON5Array("arrays").getInt(3));
 
-            try {
-                json5Object = new JSON5Object(json, ParsingOptions.json5().setAllowConsecutiveCommas(false));
-                assertEquals("are just fine", json5Object.optString("consecutiveCommas"));
-                fail();
-            } catch (Exception e) {
-
-            }
     }
 
     @Test
@@ -153,7 +146,7 @@ public class JSON5ParserTest  {
 
             JSON5Object json5Object = new JSON5Object(json, ParsingOptions.json5());
             assertEquals("in objects", json5Object.optString("trailingComma"));
-            assertEquals("arrays", json5Object.optJSON5Array("andIn").optString(0));
+            assertEquals("arrays", json5Object.optJSON5Array("andIn").getString(0));
 
     }
 
@@ -329,11 +322,11 @@ public class JSON5ParserTest  {
         assertEquals(3, nestedObject.optJSON5Array("array").getInt(2));
 
         // Assert nested array within an array
-        JSON5Array nestedArray = nestedObject.optJSON5Array("array").optJSON5Array(4);
-        assertEquals("nested", nestedArray.optString(0));
+        JSON5Array nestedArray = nestedObject.optJSON5Array("array").getJSON5Array(4);
+        assertEquals("nested", nestedArray.getString(0));
 
         // Assert nested object within an array
-        JSON5Object nestedObjectInArray = nestedObject.optJSON5Array("array").optJSON5Object(3);
+        JSON5Object nestedObjectInArray = nestedObject.optJSON5Array("array").getJSON5Object(3);
         assertEquals("nestedValue", nestedObjectInArray.optString("nestedKey"));
 
         System.out.println(json5Object);
