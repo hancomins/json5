@@ -2,8 +2,6 @@ package com.hancomins.json5;
 
 import com.hancomins.json5.options.ParsingOptions;
 import com.hancomins.json5.options.WritingOptions;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -97,11 +95,11 @@ public class JSON5Test {
     @Test
     public void testArrayComment() {
 
-        JSONObject jsonObject = new JSONObject("{\"key\": \"3 \"}");
+        JSON5Object jsonObject = new JSON5Object("{\"key\": \"3 \"}");
         System.out.println(jsonObject.get("key"));
 
 
-        JSONArray jsonArray = new JSONArray("[1,,2,3,4,5,6,7,8,9,10,Infinity,NaN,]"  );
+        JSON5Array jsonArray = new JSON5Array("[1,,2,3,4,5,6,7,8,9,10,Infinity,NaN,]"  );
         Object obj =  jsonArray.get(1);
 
         JSON5Array JSON5Array = null;

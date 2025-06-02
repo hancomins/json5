@@ -2,7 +2,6 @@ package com.hancomins.json5;
 
 
 import com.hancomins.json5.options.JSON5WriterOption;
-import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -63,17 +62,17 @@ public class JSON5TypeObjectTest {
     public void cloneAndEqualsTest() throws  Exception {
 
 
-        JSONObject jsonObjectX = new JSONObject("{char:'c'}");
+        JSON5Object jsonObjectX = new JSON5Object("{char:'c'}");
         System.out.println(jsonObjectX.toString());
 
 
 
 
-        JSONObject jsonObject = new JSONObject("{\"key\": \"va \\\" \\n \\r lue\"}");
+        JSON5Object jsonObject = new JSON5Object("{\"key\": \"va \\\" \\n \\r lue\"}");
 
         JSON5Object json5ObjectA = new JSON5Object("{\"key\": \"va \\\" \\n \\r lue\"}");
         System.out.println(json5ObjectA.toString());
-        JSONObject jsonObjectA = new JSONObject(json5ObjectA.toString(JSON5WriterOption.json()));
+        JSON5Object jsonObjectA = new JSON5Object(json5ObjectA.toString(JSON5WriterOption.json()));
         new JSON5Object(json5ObjectA.toString(), JSON5WriterOption.json());
 
         System.out.println("--------------------------------------------------");
@@ -84,7 +83,7 @@ public class JSON5TypeObjectTest {
         assertEquals(json5Object.toString(), json5Object2.toString());
 
         System.out.println(json5Object.toString());
-        JSONObject jsonObject1 = new JSONObject(json5Object.toString(JSON5WriterOption.json()));
+        JSON5Object jsonObject1 = new JSON5Object(json5Object.toString(JSON5WriterOption.json()));
         assertEquals(json5Object2,new JSON5Object(json5Object.toString(JSON5WriterOption.json())));
 
         JSON5WriterOption json5WriterOption = JSON5WriterOption.json().setPretty(true);

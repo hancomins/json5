@@ -1,8 +1,6 @@
 package com.hancomins.json5;
 
 import com.hancomins.json5.options.WritingOptions;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -24,23 +22,23 @@ public class JSON5TypeTest {
 
     @Test
     public void jsonStringParsingTest() {
-        JSONObject jsonObject = new JSONObject();
+        JSON5Object jsonObject = new JSON5Object();
         jsonObject.put("11111",1)
         .put("22222",1L).put("33333","3").put("00000", true).put("44444", 4.4f).put("55555", 5.5).put("66666", '6');
-        JSONArray numberJsonArray = new JSONArray();
+        JSON5Array numberJsonArray = new JSON5Array();
         for(int i = 0, n = ThreadLocalRandom.current().nextInt(100) + 1; i < n; ++i) {
             numberJsonArray.put(n);
         }
         jsonObject.put("AN",numberJsonArray);
 
-        JSONArray objectJsonArray = new JSONArray();
+        JSON5Array objectJsonArray = new JSON5Array();
         for(int i = 0, n = ThreadLocalRandom.current().nextInt(100) + 1; i < n; ++i) {
-            objectJsonArray.put(new JSONObject().put("str", "str").put("true", true).put("false", false).put("random", ThreadLocalRandom.current().nextLong()));
+            objectJsonArray.put(new JSON5Object().put("str", "str").put("true", true).put("false", false).put("random", ThreadLocalRandom.current().nextLong()));
         }
         jsonObject.put("AO",objectJsonArray);
 
 
-        jsonObject = new JSONObject(jsonObject.toString());
+        jsonObject = new JSON5Object(jsonObject.toString());
 
         JSON5Object json5Object = new JSON5Object(new JSON5Object(jsonObject.toString()).toString(WritingOptions.json()));
         Set<String> originalKeySet = jsonObject.keySet();
@@ -51,18 +49,18 @@ public class JSON5TypeTest {
             assertEquals(jsonObject.get(oriKey),json5Object.get(oriKey) );
         }
 
-        numberJsonArray = jsonObject.getJSONArray("AN");
+        numberJsonArray = jsonObject.getJSON5Array("AN");
         JSON5Array numberJSON5Array = json5Object.getJSON5Array("AN");
-        assertEquals(numberJsonArray.length(), numberJSON5Array.size());
-        for(int i = 0, n = numberJsonArray.length(); i < n; ++i) {
+        assertEquals(numberJsonArray.size(), numberJSON5Array.size());
+        for(int i = 0, n = numberJsonArray.size(); i < n; ++i) {
             assertEquals(numberJsonArray.optString(i), numberJSON5Array.getString(i));
         }
 
-        objectJsonArray = jsonObject.getJSONArray("AO");
+        objectJsonArray = jsonObject.getJSON5Array("AO");
         JSON5Array objectJSON5Array = json5Object.getJSON5Array("AO");
-        assertEquals(objectJsonArray.length(), objectJSON5Array.size());
-        for(int i = 0, n = objectJsonArray.length(); i < n; ++i) {
-            JSONObject jao = objectJsonArray.getJSONObject(i);
+        assertEquals(objectJsonArray.size(), objectJSON5Array.size());
+        for(int i = 0, n = objectJsonArray.size(); i < n; ++i) {
+            JSON5Object jao = objectJsonArray.getJSON5Object(i);
             JSON5Object cao = objectJSON5Array.getJSON5Object(i);
             assertEquals(jao.getString("str"), cao.getString("str"));
             assertEquals(jao.optString("true"), cao.getString("true"));
@@ -74,23 +72,23 @@ public class JSON5TypeTest {
 
     @Test
     public void jsonAndCSonParsingTest() {
-        JSONObject jsonObject = new JSONObject();
+        JSON5Object jsonObject = new JSON5Object();
         jsonObject.put("11111",1)
                 .put("22222",1L).put("33333","3").put("00000", true).put("44444", 4.4f).put("55555", 5.5).put("66666", '6');
-        JSONArray numberJsonArray = new JSONArray();
+        JSON5Array numberJsonArray = new JSON5Array();
         for(int i = 0, n = ThreadLocalRandom.current().nextInt(100) + 1; i < n; ++i) {
             numberJsonArray.put(n);
         }
         jsonObject.put("AN",numberJsonArray);
 
-        JSONArray objectJsonArray = new JSONArray();
+        JSON5Array objectJsonArray = new JSON5Array();
         for(int i = 0, n = ThreadLocalRandom.current().nextInt(100) + 1; i < n; ++i) {
-            objectJsonArray.put(new JSONObject().put("str", "str").put("true", true).put("false", false).put("random", ThreadLocalRandom.current().nextLong()).put("float", ThreadLocalRandom.current().nextDouble()));
+            objectJsonArray.put(new JSON5Object().put("str", "str").put("true", true).put("false", false).put("random", ThreadLocalRandom.current().nextLong()).put("float", ThreadLocalRandom.current().nextDouble()));
         }
         jsonObject.put("AO",objectJsonArray);
 
 
-        jsonObject = new JSONObject(jsonObject.toString());
+        jsonObject = new JSON5Object(jsonObject.toString());
         System.out.println(jsonObject);
 
         JSON5Object json5Object = new JSON5Object(new JSON5Object(jsonObject.toString()).toBytes());
@@ -102,18 +100,18 @@ public class JSON5TypeTest {
             assertEquals(Integer.getInteger(jsonObject.get(oriKey)  + "") ,Integer.getInteger( json5Object.get(oriKey) + ""));
         }
 
-        numberJsonArray = jsonObject.getJSONArray("AN");
+        numberJsonArray = jsonObject.getJSON5Array("AN");
         JSON5Array numberJSON5Array = json5Object.getJSON5Array("AN");
-        assertEquals(numberJsonArray.length(), numberJSON5Array.size());
-        for(int i = 0, n = numberJsonArray.length(); i < n; ++i) {
+        assertEquals(numberJsonArray.size(), numberJSON5Array.size());
+        for(int i = 0, n = numberJsonArray.size(); i < n; ++i) {
             assertEquals(numberJsonArray.optString(i), numberJSON5Array.getString(i));
         }
 
-        objectJsonArray = jsonObject.getJSONArray("AO");
+        objectJsonArray = jsonObject.getJSON5Array("AO");
         JSON5Array objectJSON5Array = json5Object.getJSON5Array("AO");
-        assertEquals(objectJsonArray.length(), objectJSON5Array.size());
-        for(int i = 0, n = objectJsonArray.length(); i < n; ++i) {
-            JSONObject jao = objectJsonArray.getJSONObject(i);
+        assertEquals(objectJsonArray.size(), objectJSON5Array.size());
+        for(int i = 0, n = objectJsonArray.size(); i < n; ++i) {
+            JSON5Object jao = objectJsonArray.getJSON5Object(i);
             JSON5Object cao = objectJSON5Array.getJSON5Object(i);
             assertEquals(jao.getString("str"), cao.getString("str"));
             assertEquals(jao.optString("true"), cao.getString("true"));
@@ -150,31 +148,31 @@ public class JSON5TypeTest {
 
     @Test
     public void jsonArrayAndCSonParsingTest() {
-        JSONArray numberJsonArray = new JSONArray();
+        JSON5Array numberJsonArray = new JSON5Array();
         for(int i = 0, n = ThreadLocalRandom.current().nextInt(100) + 1; i < n; ++i) {
             numberJsonArray.put(n);
         }
-        JSONArray objectJsonArray = new JSONArray();
+        JSON5Array objectJsonArray = new JSON5Array();
         for(int i = 0, n = ThreadLocalRandom.current().nextInt(100) + 1; i < n; ++i) {
-            objectJsonArray.put(new JSONObject().put("str", "str").put("true", true).put("false", false).put("random", ThreadLocalRandom.current().nextLong()).put("float", ThreadLocalRandom.current().nextDouble()));
+            objectJsonArray.put(new JSON5Object().put("str", "str").put("true", true).put("false", false).put("random", ThreadLocalRandom.current().nextLong()).put("float", ThreadLocalRandom.current().nextDouble()));
         }
 
-        numberJsonArray = new JSONArray(numberJsonArray.toString());
+        numberJsonArray = new JSON5Array(numberJsonArray.toString());
         JSON5Array numberJSON5Array = new JSON5Array(new JSON5Array(numberJsonArray.toString()).toBytes());
-        assertEquals(numberJsonArray.length(), numberJSON5Array.size());
-        for(int i = 0, n = numberJsonArray.length(); i < n; ++i) {
+        assertEquals(numberJsonArray.size(), numberJSON5Array.size());
+        for(int i = 0, n = numberJsonArray.size(); i < n; ++i) {
             assertEquals(numberJsonArray.optString(i), numberJSON5Array.getString(i));
         }
 
-        objectJsonArray = new JSONArray(objectJsonArray.toString());
+        objectJsonArray = new JSON5Array(objectJsonArray.toString());
         System.out.println(objectJsonArray.toString());
         JSON5Array objectJSON5Array = new JSON5Array(new JSON5Array(objectJsonArray.toString()).toBytes());
 
 
-        assertEquals(objectJsonArray.length(), objectJSON5Array.size());
-        for(int i = 0, n = objectJsonArray.length(); i < n; ++i) {
+        assertEquals(objectJsonArray.size(), objectJSON5Array.size());
+        for(int i = 0, n = objectJsonArray.size(); i < n; ++i) {
             System.out.println(i);
-            JSONObject jao = objectJsonArray.getJSONObject(i);
+            JSON5Object jao = objectJsonArray.getJSON5Object(i);
             JSON5Object cao = objectJSON5Array.getJSON5Object(i);
             System.out.println(jao.toString());
             System.out.println(cao.toString());
