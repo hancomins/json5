@@ -43,7 +43,7 @@ apply from: "${rootDir}/scripts/publish-maven.gradle"
 apply from: 'publish.gradle'
 
 
-group 'com.hancomins'
+group 'io.github.hancomins'
 version getProperty("version")
 
 repositories {
@@ -82,11 +82,11 @@ javadoc {
 
 jar {
     group = 'build'
-    archiveBaseName.set("JSON5")
+    archiveBaseName.set("json5")
 
     manifest {
         attributes(
-                'Implementation-Title': 'JSON5',       // 프로젝트 제목
+                'Implementation-Title': 'json5',       // 프로젝트 제목
                 'Implementation-Version': project.version,          // 프로젝트 버전
                 'Implementation-Vendor': 'HANCOM INNOSTREAM',      // 제작자 또는 회사 이름
                 'Built-By': 'Sungbeom HONG', // 빌드한 사람
@@ -123,7 +123,7 @@ dependencies {
 
 }
 
-test.onlyIf { !project.hasProperty("skipTests") }
+test.onlyIf { !project.hasProperty("skipTests") || project.skipTests == "true" } // skipTests 속성이 true인 경우 테스트를 건너뜀
 
 
 task jarJavadoc(type: Jar, dependsOn: javadoc) {
@@ -135,7 +135,7 @@ task jarJavadoc(type: Jar, dependsOn: javadoc) {
 
     manifest {
         attributes(
-                'Implementation-Title': ':JSON5',       // 프로젝트 제목
+                'Implementation-Title': ':json5',       // 프로젝트 제목
                 'Implementation-Version': project.version,          // 프로젝트 버전
                 'Implementation-Vendor': 'HANCOM INNOSTREAM',      // 제작자 또는 회사 이름
                 'Built-By': 'Sungbeom HONG', // 빌드한 사람
@@ -162,7 +162,7 @@ task jarSources(type: Jar) {
 
     manifest {
         attributes(
-                'Implementation-Title': ':JSON5',       // 프로젝트 제목
+                'Implementation-Title': ':json5',       // 프로젝트 제목
                 'Implementation-Version': project.version,          // 프로젝트 버전
                 'Implementation-Vendor': 'HANCOM INNOSTREAM',      // 제작자 또는 회사 이름
                 'Built-By': 'Sungbeom HONG', // 빌드한 사람
@@ -195,11 +195,12 @@ task makePom {
 
         PomBuilder.SCM scm = PomBuilder.newSCM("hancomins/json5");
 
-        PomBuilder.builder().setGroupId("io.github.json5")
+        PomBuilder.builder().setGroupId("io.github.hancomins")
                 .setArtifactId("json5")
                 .setVersion("${version}")
                 .setName("json5")
                 .setUrl("https://github.com/hancomins/json5")
+                .setDescription("A JSON5 library for configuration files. Supports comments.")
                 .addDeveloper(developer)
                 .setScm(scm)
                 .writeFile(pomFilePath);
@@ -209,10 +210,58 @@ task makePom {
 }
 
 
+task dist() {
+    group = 'distribution'
+    dependsOn build
+    dependsOn makePom
+    doLast {
+        def sourceDir = new File("${buildDir}/libs")
+        def targetDir = new File("${buildDir}/dist/io/github/hancomins/json5/${version}")
+        def zipFile = new File("${buildDir}/dist/json5-${version}.zip")
 
-build.dependsOn(clean)
+        // 1. 대상 디렉토리 생성
+        if (!targetDir.exists()) {
+            targetDir.mkdirs()
+        }
+
+        // 2. 파일 복사
+        sourceDir.eachFile { file ->
+            def destFile = new File(targetDir, file.name)
+            file.withInputStream { is ->
+                destFile.withOutputStream { os ->
+                    os << is
+                }
+            }
+        }
+
+        // 3. 파일 압축
+        zipFile.withOutputStream { fos ->
+            new java.util.zip.ZipOutputStream(fos).withCloseable { zos ->
+                targetDir.eachFileRecurse { file ->
+                    if (file.isFile()) {
+                        def relativePath = file.path.replace(targetDir.path + File.separator, "")
+                        def entryName = "io/github/hancomins/json5/${version}/" + relativePath
+                        zos.putNextEntry(new java.util.zip.ZipEntry(entryName))
+                        file.withInputStream { fis ->
+                            zos << fis
+                        }
+                        zos.closeEntry()
+                    }
+                }
+            }
+        }
+
+        println "Files from ${sourceDir} copied to ${targetDir} and zipped into ${zipFile}"
+
+
+    }
+}
+
+
+
 build.dependsOn(jarJavadoc)
 build.dependsOn(jarSources)
+
 
 
 
