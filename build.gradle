@@ -4,16 +4,38 @@
 buildscript {
     dependencies {
         classpath "io.github.gradle-nexus:publish-plugin:1.1.0"
+        classpath 'org.bouncycastle:bcpg-jdk15on:1.70'
+        def path = new File("${projectDir}/libs-build").getCanonicalFile().getAbsolutePath();
+
+        classpath fileTree(dir:path, include: ['*.jar'])
     }
 }
+import com.hancomins.util.JarSign
+import com.hancomins.util.PomBuilder
 
 plugins {
     id 'java'
 }
 
 
+
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+def JAVA_VERSION = 1.8
+
+def signPropsFilePath =  getAbsolutePath("${projectDir}/sign.properties");
+Properties signProperties = new Properties()
+if (file(signPropsFilePath).exists()) {
+    try(InputStream inputStream = new FileInputStream(signPropsFilePath)) {
+        signProperties.load(inputStream)
+    }
+    String keyRingFilePath = getAbsolutePath(signProperties.getProperty(JarSign.PROPERTY_KEY_SECRET_KEY_RING_FILE, ''))
+    signProperties.setProperty(JarSign.PROPERTY_KEY_SECRET_KEY_RING_FILE, keyRingFilePath);
+}
+
+
+
 
 
 apply plugin: 'io.github.gradle-nexus.publish-plugin'
@@ -21,7 +43,7 @@ apply from: "${rootDir}/scripts/publish-maven.gradle"
 apply from: 'publish.gradle'
 
 
-group 'com.snoworca'
+group 'com.hancomins'
 version getProperty("version")
 
 repositories {
@@ -38,6 +60,53 @@ java {
     targetCompatibility = "1.8"
 }
 
+
+javadoc {
+    source = sourceSets.main.allJava
+    def includes = ['com/hancomins/json5/*']
+
+    include includes
+
+    destinationDir = file("$buildDir/docs/javadoc")
+
+    // 문서 생성 시 사용될 옵션 (선택 사항)
+    options {
+        encoding 'UTF-8'
+        charSet 'UTF-8'
+        author true
+        version true
+    }
+}
+
+
+
+jar {
+    group = 'build'
+    archiveBaseName.set("JSON5")
+
+    manifest {
+        attributes(
+                'Implementation-Title': 'JSON5',       // 프로젝트 제목
+                'Implementation-Version': project.version,          // 프로젝트 버전
+                'Implementation-Vendor': 'HANCOM INNOSTREAM',      // 제작자 또는 회사 이름
+                'Built-By': 'Sungbeom HONG', // 빌드한 사람
+                'Build-Jdk': "${JAVA_VERSION}", // JDK 버전
+                'Created-By': "Gradle ${gradle.gradleVersion}"  // Gradle 버전
+        )
+    }
+
+    from('LICENSE') {
+        into('/')
+    }
+
+    doLast {
+        def jarFilePath = archiveFile.get().asFile.path
+        JarSign.sign(jarFilePath, signProperties);
+    }
+}
+
+
+
 dependencies {
     testImplementation group: 'org.json', name: 'json', version: '20240303'
 // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter
@@ -52,15 +121,113 @@ dependencies {
    // testImplementation 'com.hancomins.json.container.fastjson2:fastjson2:2.0.53'
 
 
-
-
-
 }
 
 test.onlyIf { !project.hasProperty("skipTests") }
 
+
+task jarJavadoc(type: Jar, dependsOn: javadoc) {
+    group = 'build'
+    archiveBaseName.set("json5")
+    from javadoc.destinationDir
+    archiveClassifier.set('javadoc') // Gradle 6.4 이상에서는 이 방법을 사용
+
+
+    manifest {
+        attributes(
+                'Implementation-Title': ':JSON5',       // 프로젝트 제목
+                'Implementation-Version': project.version,          // 프로젝트 버전
+                'Implementation-Vendor': 'HANCOM INNOSTREAM',      // 제작자 또는 회사 이름
+                'Built-By': 'Sungbeom HONG', // 빌드한 사람
+                'Created-By': "Gradle ${gradle.gradleVersion}"  // Gradle 버전
+        )
+    }
+
+    from('LICENSE') {
+        into('/')
+    }
+
+    doLast {
+        def jarFilePath = archiveFile.get().asFile.path
+        JarSign.sign(jarFilePath, signProperties);
+    }
+}
+
+task jarSources(type: Jar) {
+    group = 'build'
+    archiveBaseName.set("json5")
+    from sourceSets.main.allSource
+    archiveClassifier.set('sources') // Gradle 6.4 이상에서는 이 방법을 사용
+
+
+    manifest {
+        attributes(
+                'Implementation-Title': ':JSON5',       // 프로젝트 제목
+                'Implementation-Version': project.version,          // 프로젝트 버전
+                'Implementation-Vendor': 'HANCOM INNOSTREAM',      // 제작자 또는 회사 이름
+                'Built-By': 'Sungbeom HONG', // 빌드한 사람
+                'Build-Jdk': "${JAVA_VERSION}", // JDK 버전
+                'Created-By': "Gradle ${gradle.gradleVersion}"  // Gradle 버전
+        )
+    }
+
+    from('LICENSE') {
+        into('/')
+    }
+
+    doLast {
+        def jarFilePath = archiveFile.get().asFile.path
+        JarSign.sign(jarFilePath, signProperties);
+    }
+}
+
+
+task makePom {
+    group = 'build'
+    doLast {
+        def pomFilePath = "${buildDir}/libs/json5-${version}.pom"
+
+        PomBuilder.builder()
+        PomBuilder.Developer developer = PomBuilder.newDeveloper("Sungbeom Hong")
+                .setEmail("ice3x2@hancomins.com")
+                .setOrganization("HANCOM INNOSTREAM")
+                .setOrganizationUrl("https://github.com/hancomins").setId("ice3x2");
+
+        PomBuilder.SCM scm = PomBuilder.newSCM("hancomins/json5");
+
+        PomBuilder.builder().setGroupId("io.github.json5")
+                .setArtifactId("json5")
+                .setVersion("${version}")
+                .setName("json5")
+                .setUrl("https://github.com/hancomins/json5")
+                .addDeveloper(developer)
+                .setScm(scm)
+                .writeFile(pomFilePath);
+
+        JarSign.sign(pomFilePath, signProperties);
+    }
+}
+
+
+
+build.dependsOn(clean)
+build.dependsOn(jarJavadoc)
+build.dependsOn(jarSources)
+
+
+
 test {
     //useJUnitPlatform()
+}
+
+
+
+String getAbsolutePath(String path) {
+    if (path.startsWith("/") || path.matches("^[a-zA-Z]:.*")) {
+        return file(path).getCanonicalFile().getAbsolutePath();
+    } else {
+        return file("${rootDir}/${path}").getCanonicalFile().getAbsolutePath();
+    }
 }
 
 

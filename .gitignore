@@ -45,3 +45,4 @@ local.properties
 ### Mac OS ###
 .DS_Store
 *.log
+sign.properties
