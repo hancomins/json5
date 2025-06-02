@@ -90,7 +90,7 @@ public class JSON5TypeObjectTest {
 
 
         assertEquals(json5Object2.toString(json5WriterOption),new JSON5Object(json5Object.toString(json5WriterOption)).toString(json5WriterOption));
-        assertEquals(json5Object2,new JSON5Object(json5Object.toBytes()));
+        assertEquals(json5Object2,new JSON5Object(json5Object.toString()));
     }
 
     @Test
@@ -100,20 +100,18 @@ public class JSON5TypeObjectTest {
 
         System.out.println(json5Object.toString());
         byte[] buffer = json5Object.getByteArray("byte[]");
-        byte[] json5 = json5Object.toBytes();
 
 
-
-
-        JSON5Object compareJSON5Object = new JSON5Object(json5);
-
+        JSON5Object compareJSON5Object = new JSON5Object(json5Object.toString());
 
         assertEquals(1, ((Number)compareJSON5Object.get("1")).intValue());
-        assertEquals(1.1f, (float)compareJSON5Object.get("1.1"), 0.0001f);
-        assertEquals(2.2, (double)compareJSON5Object.get("2.2"), 0.0001);
+        assertEquals(1.1f, compareJSON5Object.getFloat("1.1"), 0.0001f);
+        assertEquals(2.2, compareJSON5Object.getDouble("2.2"), 0.0001);
         assertEquals(Long.MIN_VALUE, compareJSON5Object.get("333333L"));
         assertEquals(true, compareJSON5Object.get("boolean"));
-        assertEquals('c', compareJSON5Object.get("char"));
+        assertEquals('c', compareJSON5Object.getChar("char"));
+        Object value =  compareJSON5Object.get("null");
+
         assertEquals(null, compareJSON5Object.get("null"));
 
         assertEquals((short)32000, compareJSON5Object.getShort("short"));
@@ -127,19 +125,19 @@ public class JSON5TypeObjectTest {
 
         JSON5Array JSON5Array = compareJSON5Object.getJSON5Array("array");
         assertEquals(1, JSON5Array.getInt(0));
-        assertEquals(1.1f, (float) JSON5Array.get(1), 0.00001f);
-        assertEquals(2.2, (double) JSON5Array.get(2), 0.00001);
+        assertEquals(1.1f, JSON5Array.getFloat(1), 0.00001f);
+        assertEquals(2.2, JSON5Array.getDouble(2), 0.00001);
         assertEquals(333333L, JSON5Array.getLong(3));
-        assertEquals(true, JSON5Array.get(4));
-        assertEquals('c', JSON5Array.get(5));
-        assertEquals((short)32000, JSON5Array.get(6));
-        assertEquals((byte)128, JSON5Array.get(7));
+        assertEquals(true, JSON5Array.getBoolean(4));
+        assertEquals('c', JSON5Array.getChar(5));
+        assertEquals((short)32000, JSON5Array.getShort(6));
+        assertEquals((byte)128, JSON5Array.getByte(7));
         assertEquals(null, JSON5Array.get(8));
         assertEquals("stri \" \n\rng", JSON5Array.get(9));
         assertArrayEquals("stri \" \n\rng".getBytes(StandardCharsets.UTF_8), JSON5Array.getByteArray(9));
         assertTrue(JSON5Array.get(10) instanceof JSON5Array);
         assertTrue(JSON5Array.get(11) instanceof JSON5Object);
-        assertArrayEquals(buffer, (byte[]) JSON5Array.get(12));
+        assertArrayEquals(buffer, JSON5Array.getByteArray(12));
 
 
     }

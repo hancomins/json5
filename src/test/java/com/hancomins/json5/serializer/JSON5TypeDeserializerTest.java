@@ -428,7 +428,7 @@ public class JSON5TypeDeserializerTest {
     public void testBigDecimalValue() {
         JSON5Object json5ObjectBigValue  = new JSON5Object("{\"bigValue\":68542801231231231231231231231238550.123}", JsonParsingOptions.json5())  ;
         System.out.println(json5ObjectBigValue);
-        json5ObjectBigValue = new JSON5Object(json5ObjectBigValue.toBytes());
+        json5ObjectBigValue = new JSON5Object(json5ObjectBigValue.toString());
         Object obj = json5ObjectBigValue.get("bigValue");
         System.out.println(obj);
         assertTrue(obj instanceof BigDecimal);

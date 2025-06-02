@@ -2,8 +2,6 @@ package com.hancomins.json5;
 
 
 import com.hancomins.json5.container.*;
-import com.hancomins.json5.container.cson.BinaryCSONParser;
-import com.hancomins.json5.container.cson.BinaryCSONWriter;
 import com.hancomins.json5.container.json5.JSON5Parser;
 import com.hancomins.json5.container.json5.JSON5Writer;
 import com.hancomins.json5.options.*;
@@ -12,9 +10,6 @@ import com.hancomins.json5.util.DataConverter;
 import com.hancomins.json5.util.NoSynchronizedStringReader;
 import com.hancomins.json5.util.NullValue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -47,26 +42,6 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 		return JSON5Serializer.fromJSON5Object(json5Object, object);
 	}
 
-
-
-	public JSON5Object(byte[] binaryJSON5) {
-		super(ElementType.Object);
-		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(binaryJSON5);
-		BinaryCSONParser parser = new BinaryCSONParser(JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
-		try {
-			parser.parse(byteArrayInputStream, new JSON5KeyValueDataContainer(this));
-		} catch (IOException e) {
-			throw new JSON5Exception(e);
-		}
-	}
-
-
-
-	public JSON5Object(byte[] binaryJSON5, int offset, int length) {
-		super(ElementType.Object);
-		JSON5Object json5Object = (JSON5Object) BinaryCSONParser.parse(binaryJSON5, offset, length);
-		this.dataMap = json5Object.dataMap;
-	}
 
 
 
@@ -875,63 +850,12 @@ public class JSON5Object extends JSON5Element implements Cloneable {
 
 
 
-	public byte[] toBytes() {
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		BinaryCSONWriter writer = new BinaryCSONWriter(outputStream);
-		writer.write(new JSON5KeyValueDataContainer(this));
-		return outputStream.toByteArray();
-
-	}
 
 
 
 	@Override
 	protected void write(FormatWriter writer) {
 		writer.write(new JSON5KeyValueDataContainer(this));
-
-		/*Iterator<Entry<String, Object>> iter = dataMap.entrySet().iterator();
-		boolean isComment = writer.isComment() && keyValueCommentMap != null;
-
-		// root 오브젝트가 아닌 경우에는 주석을 무시한다.
-		if(root) {
-			writer.writeComment(getHeadComment(), false,"","\n" );
-		}
-		writer.openObject();
-		while(iter.hasNext()) {
-			Entry<String, Object> entry = iter.next();
-			String key = entry.getKey();
-			Object obj = entry.getValue();
-			KeyValueCommentObject keyValueCommentObject = isComment ? keyValueCommentMap.get(key) : null;
-			writer.nextCommentObject(keyValueCommentObject == null ? null : keyValueCommentObject.keyCommentObject);
-			writer.nextCommentObject(keyValueCommentObject == null ? null : keyValueCommentObject.valueCommentObject);
-
-			if (obj == null || obj instanceof NullValue) writer.key(key).nullValue();
-			else if (obj instanceof JSON5Element) {
-				//writer.key(key);
-				//((JSON5Element) obj).write(writer, false);
-				writer.key(key).value((JSON5Element)obj);
-			} else if (obj instanceof Byte) {
-				writer.key(key).value((byte) obj);
-			} else if (obj instanceof Short) writer.key(key).value((short) obj);
-			else if (obj instanceof Character) writer.key(key).value((char) obj);
-			else if (obj instanceof Integer) writer.key(key).value((int) obj);
-			else if (obj instanceof Float) writer.key(key).value((float) obj);
-			else if (obj instanceof Long) writer.key(key).value((long) obj);
-			else if (obj instanceof Double) writer.key(key).value((double) obj);
-			else if (obj instanceof String) writer.key(key).value((String) obj);
-			else if (obj instanceof Boolean) writer.key(key).value((boolean) obj);
-			else if (obj instanceof BigDecimal) writer.key(key).value(obj);
-			else if(obj instanceof BigInteger) writer.key(key).value(obj);
-			else if (obj instanceof byte[]) writer.key(key).value((byte[]) obj);
-			else if (isAllowRawValue()) {
-				writer.key(key).value(obj.toString());
-			}
-
-		}
-		writer.closeObject();
-		if(root) {
-			writer.writeComment(getTailComment(), false,"\n","" );
-		}*/
 
 	}
 

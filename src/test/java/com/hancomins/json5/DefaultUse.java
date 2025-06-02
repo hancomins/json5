@@ -14,21 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("DefaultUse  (성공)")
 public class DefaultUse {
 
-    @Test
-    public void toBinaryArrayTest() {
-        JSON5Object json5Object = new JSON5Object();
-        json5Object.put("number", (short)1000).put("bigNumber", new BigDecimal(10000000000L));
 
-        byte[] bytes = json5Object.toBytes();
-
-        JSON5Object parsedJSON5Object = new JSON5Object(bytes);
-        assertEquals(json5Object.get("number"), parsedJSON5Object.get("number"));
-        assertEquals((short)1000, parsedJSON5Object.get("number"));
-
-        assertEquals(10000000000L, parsedJSON5Object.getLong("bigNumber"));
-
-
-    }
 
     @Test
     public void escapeSequenceTest() {

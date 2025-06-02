@@ -2,7 +2,6 @@ package com.hancomins.json5;
 
 
 import com.hancomins.json5.container.FormatWriter;
-import com.hancomins.json5.container.cson.BinaryCSONDataType;
 import com.hancomins.json5.options.ParsingOptions;
 import com.hancomins.json5.options.WritingOptions;
 import com.hancomins.json5.util.NullValue;
@@ -25,8 +24,6 @@ public abstract  class JSON5Element implements Iterable<Object>  {
 	private JSON5Path json5Path = null;
 
 
-	//private JSON5Element parents = null;
-	private byte[] versionRaw = BinaryCSONDataType.VER_RAW;
 	private final ElementType type;
 
 
@@ -62,13 +59,13 @@ public abstract  class JSON5Element implements Iterable<Object>  {
 		return (T)this;
 	}
 
-	@SuppressWarnings({"unchecked", "unused"})
+	@SuppressWarnings({"unchecked", "unused", "UnusedReturnValue"})
 	public <T extends JSON5Element> T setUnknownObjectToString(boolean unknownObjectToString) {
 		this.unknownObjectToString = unknownObjectToString;
 		return (T)this;
 	}
 
-	@SuppressWarnings({"unchecked", "unused"})
+	@SuppressWarnings({"unchecked", "unused", "UnusedReturnValue"})
 	public <T extends JSON5Element> T setWritingOptions(WritingOptions writingOptions) {
 		this.writingOptions = writingOptions;
         //noinspection unchecked
@@ -153,14 +150,6 @@ public abstract  class JSON5Element implements Iterable<Object>  {
 		return type;
 	}
 
-
-	public String getVersion() {
-		return Short.toString(ByteBuffer.wrap(versionRaw).getShort());
-	}
-
-	public void setVersion(byte[] versionRaw) {
-		this.versionRaw = versionRaw;
-	}
 
 
 

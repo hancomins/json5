@@ -91,7 +91,7 @@ public class JSON5TypeTest {
         jsonObject = new JSON5Object(jsonObject.toString());
         System.out.println(jsonObject);
 
-        JSON5Object json5Object = new JSON5Object(new JSON5Object(jsonObject.toString()).toBytes());
+        JSON5Object json5Object = new JSON5Object(new JSON5Object(jsonObject.toString()).toString());
         Set<String> originalKeySet = jsonObject.keySet();
         Set<String> json5KeySet =json5Object.keySet();
         assertEquals(originalKeySet, json5KeySet);
@@ -124,26 +124,6 @@ public class JSON5TypeTest {
         }
     }
 
-    @Test
-    public void overBufferTest() {
-        JSON5Object json5Object = new JSON5Object().put("sdfasdf",213123).put("sdf2w123", 21311).put("key", "name");
-        byte[] buffer = json5Object.toBytes();
-        ArrayList<Byte> list = new ArrayList<>();
-        for(byte b : buffer) {
-            list.add(b);
-        }
-        Random rand = new Random(System.currentTimeMillis());
-        for(int i = 0; i < 1000; ++i) {
-            list.add((byte)rand.nextInt(255));
-        }
-        byte[] overBuffer = new byte[list.size()];
-        for(int i = 0, n = list.size(); i < n; ++i) {
-            overBuffer[i] = list.get(i);
-        }
-        JSON5Object fromOverBuffer = new JSON5Object(overBuffer);
-        assertArrayEquals(json5Object.toBytes(), fromOverBuffer.toBytes());
-
-    }
 
 
     @Test
@@ -158,7 +138,7 @@ public class JSON5TypeTest {
         }
 
         numberJsonArray = new JSON5Array(numberJsonArray.toString());
-        JSON5Array numberJSON5Array = new JSON5Array(new JSON5Array(numberJsonArray.toString()).toBytes());
+        JSON5Array numberJSON5Array = new JSON5Array(new JSON5Array(numberJsonArray.toString()).toString());
         assertEquals(numberJsonArray.size(), numberJSON5Array.size());
         for(int i = 0, n = numberJsonArray.size(); i < n; ++i) {
             assertEquals(numberJsonArray.optString(i), numberJSON5Array.getString(i));
@@ -166,7 +146,7 @@ public class JSON5TypeTest {
 
         objectJsonArray = new JSON5Array(objectJsonArray.toString());
         System.out.println(objectJsonArray.toString());
-        JSON5Array objectJSON5Array = new JSON5Array(new JSON5Array(objectJsonArray.toString()).toBytes());
+        JSON5Array objectJSON5Array = new JSON5Array(new JSON5Array(objectJsonArray.toString()).toString());
 
 
         assertEquals(objectJsonArray.size(), objectJSON5Array.size());

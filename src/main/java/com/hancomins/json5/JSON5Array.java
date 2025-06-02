@@ -2,8 +2,6 @@ package com.hancomins.json5;
 
 
 import com.hancomins.json5.container.*;
-import com.hancomins.json5.container.cson.BinaryCSONParser;
-import com.hancomins.json5.container.cson.BinaryCSONWriter;
 import com.hancomins.json5.container.json5.JSON5Parser;
 import com.hancomins.json5.container.json5.JSON5Writer;
 import com.hancomins.json5.options.*;
@@ -121,22 +119,6 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 		list.addAll(objects);
 	}
 
-	public JSON5Array(byte[] json5) {
-		super(ElementType.Array);
-		BinaryCSONParser parser = new BinaryCSONParser(JSON5Object.KeyValueDataContainerFactory, JSON5Array.ArrayDataContainerFactory);
-        try {
-            parser.parse(new ByteArrayInputStream(json5), new JSON5ArrayDataContainer(this));
-        } catch (IOException e) {
-			// todo 메시지 추가해야한다.
-			throw new JSON5Exception(e);
-        }
-    }
-
-
-	public JSON5Array(byte[] binary, int offset, int len) {
-		super(ElementType.Array);
-		this.list = ((JSON5Array) BinaryCSONParser.parse(binary, offset, len)).list;
-	}
 
 
 
@@ -925,13 +907,6 @@ public class JSON5Array extends JSON5Element implements Collection<Object>, Clon
 
 
 
-
-	public byte[] toBytes() {
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		BinaryCSONWriter writer = new BinaryCSONWriter(byteArrayOutputStream);
-		writer.write(new JSON5ArrayDataContainer(this));
-		return byteArrayOutputStream.toByteArray();
-	}
 
 
 

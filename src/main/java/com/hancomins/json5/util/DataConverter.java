@@ -36,11 +36,6 @@ public class DataConverter {
 				return new JSON5Array((String) value);
 			} catch (JSON5Exception ignored) {}
 		}
-		if(allowFromData && value instanceof byte[]) {
-			try {
-				return new JSON5Array((byte[]) value);
-			} catch (JSON5Exception ignored) {}
-		}
 		return null;
 	}
 
@@ -53,12 +48,6 @@ public class DataConverter {
 				return new JSON5Object((String) value);
 			} catch (JSON5Exception ignored) {}
 		}
-		if(allowFromData && value instanceof byte[]) {
-			try {
-				return new JSON5Object((byte[]) value);
-			} catch (JSON5Exception ignored) {}
-		}
-
 		return null;
 	}
 
