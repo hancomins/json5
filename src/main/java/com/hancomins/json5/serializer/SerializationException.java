@@ -78,10 +78,11 @@ public class SerializationException extends JSON5SerializerException {
      * @return 순환 참조 예외
      */
     public static SerializationException circularReference(Class<?> objectType, String path) {
-        return new SerializationException(CIRCULAR_REFERENCE, 
-            "Circular reference detected during serialization")
-            .addContext("objectType", objectType != null ? objectType.getName() : "unknown")
-            .addContext("path", path);
+        SerializationException exception = new SerializationException(CIRCULAR_REFERENCE, 
+            "Circular reference detected during serialization");
+        exception.addContext("objectType", objectType != null ? objectType.getName() : "unknown");
+        exception.addContext("path", path);
+        return exception;
     }
     
     /**
@@ -92,10 +93,11 @@ public class SerializationException extends JSON5SerializerException {
      * @return 지원되지 않는 타입 예외
      */
     public static SerializationException unsupportedType(Class<?> unsupportedType, String fieldName) {
-        return new SerializationException(UNSUPPORTED_TYPE, 
-            "Unsupported type for serialization")
-            .addContext("type", unsupportedType != null ? unsupportedType.getName() : "unknown")
-            .addContext("field", fieldName);
+        SerializationException exception = new SerializationException(UNSUPPORTED_TYPE, 
+            "Unsupported type for serialization");
+        exception.addContext("type", unsupportedType != null ? unsupportedType.getName() : "unknown");
+        exception.addContext("field", fieldName);
+        return exception;
     }
     
     /**
@@ -107,10 +109,11 @@ public class SerializationException extends JSON5SerializerException {
      * @return 필드 접근 예외
      */
     public static SerializationException fieldAccessError(String fieldName, Class<?> objectType, Throwable cause) {
-        return new SerializationException(FIELD_ACCESS_ERROR, 
-            "Failed to access field during serialization", cause)
-            .addContext("field", fieldName)
-            .addContext("objectType", objectType != null ? objectType.getName() : "unknown");
+        SerializationException exception = new SerializationException(FIELD_ACCESS_ERROR, 
+            "Failed to access field during serialization", cause);
+        exception.addContext("field", fieldName);
+        exception.addContext("objectType", objectType != null ? objectType.getName() : "unknown");
+        return exception;
     }
     
     /**
@@ -122,10 +125,11 @@ public class SerializationException extends JSON5SerializerException {
      * @return 어노테이션 오류 예외
      */
     public static SerializationException annotationError(Class<?> annotationType, String fieldName, String reason) {
-        return new SerializationException(ANNOTATION_ERROR, 
-            "Annotation configuration error during serialization")
-            .addContext("annotation", annotationType != null ? annotationType.getSimpleName() : "unknown")
-            .addContext("field", fieldName)
-            .addContext("reason", reason);
+        SerializationException exception = new SerializationException(ANNOTATION_ERROR, 
+            "Annotation configuration error during serialization");
+        exception.addContext("annotation", annotationType != null ? annotationType.getSimpleName() : "unknown");
+        exception.addContext("field", fieldName);
+        exception.addContext("reason", reason);
+        return exception;
     }
 }
