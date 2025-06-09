@@ -1,6 +1,5 @@
 package com.hancomins.json5.serializer;
 
-;
 import java.lang.reflect.*;
 import java.util.*;
 

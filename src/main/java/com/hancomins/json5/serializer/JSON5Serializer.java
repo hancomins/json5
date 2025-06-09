@@ -235,87 +235,10 @@ public class JSON5Serializer {
         return json5ArrayToList(json5Array, valueType, null, ignoreError, null);
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> List<T> json5ArrayToList(JSON5Array json5Array, Class<T> valueType, WritingOptions writingOptions, boolean ignoreError, T defaultValue) {
-        Types types = Types.of(valueType);
-        if(valueType.isPrimitive()) {
-            if(ignoreError) {
-                return null;
-            }
-            throw new JSON5SerializerException("valueType is primitive type. valueType=" + valueType.getName());
-        } else if(Collection.class.isAssignableFrom(valueType)) {
-            if(ignoreError) {
-                return null;
-            }
-            throw new JSON5SerializerException("valueType is java.util.Collection type. Use a class that wraps your Collection.  valueType=" + valueType.getName());
-        }  else if(Map.class.isAssignableFrom(valueType)) {
-            if(ignoreError) {
-                return null;
-            }
-            throw new JSON5SerializerException("valueType is java.util.Map type. Use a class that wraps your Map.  valueType=" + valueType.getName());
-        } else if(valueType.isArray() && Types.ByteArray != types) {
-            if(ignoreError) {
-                return null;
-            }
-            throw new JSON5SerializerException("valueType is Array type. ArrayType cannot be used. valueType=" + valueType.getName());
-        }
-        ArrayList<T> result = new ArrayList<T>();
-        for(int i = 0, n = json5Array.size(); i < n; ++i) {
-            Object value = json5Array.get(i);
-            if(value == null) {
-                result.add(defaultValue);
-            }
-            else if(Number.class.isAssignableFrom(valueType)) {
-                try {
-                    Number no = DataConverter.toBoxingNumberOfType(value, (Class<? extends Number>) valueType);
-                    result.add((T) no);
-                } catch (NumberFormatException e) {
-                    if(ignoreError) {
-                        result.add(defaultValue);
-                        continue;
-                    }
-                    throw new JSON5SerializerException("valueType is Number type. But value is not Number type. valueType=" + valueType.getName());
-                }
-            } else if(Boolean.class == valueType) {
-                if(value.getClass() == Boolean.class) {
-                    result.add((T)value);
-                } else {
-                    result.add("true".equals(value.toString()) ? (T)Boolean.TRUE : (T)Boolean.FALSE);
-                }
-            } else if(Character.class == valueType) {
-                try {
-                    if (value.getClass() == Character.class) {
-                        result.add((T) value);
-                    } else {
-                        result.add((T) (Character) DataConverter.toChar(value));
-                    }
-                } catch (NumberFormatException e) {
-                    if(ignoreError) {
-                        result.add(defaultValue);
-                        continue;
-                    }
-                    throw new JSON5SerializerException("valueType is Character type. But value is not Character type. valueType=" + valueType.getName());
-                }
-            } else if(valueType == String.class) {
-                if(writingOptions != null && value instanceof JSON5Element) {
-                    result.add((T)((JSON5Element) value).toString(writingOptions));
-                } else {
-                    result.add((T) value.toString());
-                }
-            } else if(value instanceof JSON5Object && JSON5Serializer.serializable(valueType)) {
-                try {
-                    value = JSON5Serializer.fromJSON5Object((JSON5Object) value, valueType);
-                } catch (JSON5Exception e) {
-                    if(ignoreError) {
-                        result.add(defaultValue);
-                        continue;
-                    }
-                    throw e;
-                }
-                result.add((T)value);
-            }
-        }
-        return result;
+        // 새로운 CollectionDeserializer 사용
+        DeserializationEngine engine = new DeserializationEngine();
+        return engine.deserializeToList(json5Array, valueType, writingOptions, ignoreError, defaultValue);
     }
 
 
@@ -477,18 +400,9 @@ public class JSON5Serializer {
      */
     @SuppressWarnings({"unchecked", "unused"})
     public static <T> Map<String, T> fromJSON5ObjectToMap(JSON5Object json5Object, Class<T> valueType) {
-        Types types = Types.of(valueType);
-        if(valueType.isPrimitive()) {
-            throw new JSON5SerializerException("valueType is primitive type. valueType=" + valueType.getName());
-        } else if(Collection.class.isAssignableFrom(valueType)) {
-            throw new JSON5SerializerException("valueType is java.util.Collection type. Use a class that wraps your Collection.  valueType=" + valueType.getName());
-        }  else if(Collection.class.isAssignableFrom(valueType)) {
-            throw new JSON5SerializerException("valueType is java.util.Map type. Use a class that wraps your Map.  valueType=" + valueType.getName());
-        } else if(valueType.isArray() && Types.ByteArray != types) {
-            throw new JSON5SerializerException("valueType is Array type. ArrayType cannot be used. valueType=" + valueType.getName());
-        }
-        return (Map<String, T>) fromJSON5ObjectToMap(null, json5Object, valueType,null);
-
+        // 새로운 MapDeserializer 사용
+        DeserializationEngine engine = new DeserializationEngine();
+        return engine.deserializeToMap(json5Object, valueType);
     }
 
     private static interface OnObtainTypeValue {
@@ -567,9 +481,9 @@ public class JSON5Serializer {
 
     @SuppressWarnings("unchecked")
     public static<T> T fromJSON5Object(JSON5Object json5Object, Class<T> clazz) {
-        TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
-        Object object = typeSchema.newInstance();
-        return (T) fromJSON5Object(json5Object, object);
+        // 새로운 DeserializationEngine 사용
+        DeserializationEngine engine = new DeserializationEngine();
+        return engine.deserialize(json5Object, clazz);
     }
 
 
@@ -585,73 +499,9 @@ public class JSON5Serializer {
     }
 
     public static<T> T fromJSON5Object(final JSON5Object json5Object, T targetObject) {
-        TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(targetObject.getClass());
-        SchemaObjectNode schemaRoot = typeSchema.getSchemaObjectNode();
-        HashMap<Integer, Object> parentObjMap = new HashMap<>();
-        JSON5Element JSON5Element = json5Object;
-        ArrayDeque<ObjectSerializeDequeueItem> objectSerializeDequeueItems = new ArrayDeque<>();
-        Iterator<Object> iter = schemaRoot.keySet().iterator();
-        SchemaObjectNode schemaNode = schemaRoot;
-        ObjectSerializeDequeueItem currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, json5Object);
-        objectSerializeDequeueItems.add(currentObjectSerializeDequeueItem);
-        while(iter.hasNext()) {
-            Object key = iter.next();
-            ISchemaNode node = schemaNode.get(key);
-            JSON5Element parentsJSON5 = JSON5Element;
-            if(node instanceof SchemaElementNode) {
-                boolean nullValue = false;
-                JSON5Element childElement = getChildElement((SchemaElementNode) node, JSON5Element, key);
-                if(key instanceof String) {
-                    JSON5Object parentObject = (JSON5Object) JSON5Element;
-                    if(childElement == null) {
-                        if(parentObject.isNull((String) key)) {
-                            nullValue = true;
-                        } else {
-                            continue;
-                        }
-                    }
-                } else {
-                    assert JSON5Element instanceof JSON5Array;
-                    JSON5Array parentArray = (JSON5Array) JSON5Element;
-                    int index = (Integer)key;
-                    if(childElement == null) {
-                        if(parentArray.size() <= index || parentArray.isNull(index)) {
-                            nullValue = true;
-                        } else {
-                            continue;
-                        }
-                    }
-                }
-
-                JSON5Element = childElement;
-                schemaNode = (SchemaObjectNode)node;
-                List<SchemaValueAbs> parentSchemaFieldList = schemaNode.getParentSchemaFieldList();
-                for(SchemaValueAbs parentSchemaField : parentSchemaFieldList) {
-                    getOrCreateParentObject(parentSchemaField, parentObjMap, targetObject, nullValue, parentsJSON5, json5Object);
-                }
-                iter = schemaNode.keySet().iterator();
-                currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, JSON5Element);
-                objectSerializeDequeueItems.add(currentObjectSerializeDequeueItem);
-            }
-            else if(node instanceof SchemaValueAbs && ((SchemaValueAbs)node).types() != Types.Object) {
-                SchemaValueAbs schemaField = (SchemaValueAbs) node;
-                SchemaValueAbs parentField = schemaField.getParentField();
-                if(JSON5Element != null) {
-                    Object obj = getOrCreateParentObject(parentField, parentObjMap, targetObject, parentsJSON5, json5Object);
-                    setValueTargetFromJSON5Objects(obj, schemaField, JSON5Element, key, json5Object);
-                }
-            }
-            while(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
-                ObjectSerializeDequeueItem objectSerializeDequeueItem = objectSerializeDequeueItems.getFirst();
-                iter = objectSerializeDequeueItem.keyIterator;
-                schemaNode = (SchemaObjectNode) objectSerializeDequeueItem.ISchemaNode;
-                JSON5Element = objectSerializeDequeueItem.resultElement;
-                if(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
-                    objectSerializeDequeueItems.removeFirst();
-                }
-            }
-        }
-        return targetObject;
+        // 새로운 DeserializationEngine 사용
+        DeserializationEngine engine = new DeserializationEngine();
+        return engine.deserialize(json5Object, targetObject);
     }
 
     private static Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, JSON5Element JSON5Element, JSON5Object rootJSON5) {
