@@ -483,7 +483,7 @@ public class JSON5Serializer {
         }
         else if(Types.isSingleType(types)) {
             json5Object.keySet().forEach(key -> {
-                Object value = Utils.getFrom(json5Object, key, types);
+                Object value = JSON5ElementExtractor.getFrom(json5Object, key, types);
                 finalTarget.put(key, value);
             });
         } else if(types == Types.Object) {
@@ -713,10 +713,10 @@ public class JSON5Serializer {
         }*/
         Types valueType = schemaField.getType();
         if(Types.isSingleType(valueType)) {
-            Object valueObj = Utils.getFrom(json5, key, valueType);
+            Object valueObj = JSON5ElementExtractor.getFrom(json5, key, valueType);
             schemaField.setValue(parents, valueObj);
         } else if((Types.AbstractObject == valueType || Types.GenericType == valueType) && schemaField instanceof ObtainTypeValueInvokerGetter) {
-            Object val = Utils.getFrom(json5, key, valueType);
+            Object val = JSON5ElementExtractor.getFrom(json5, key, valueType);
 
             Object obj = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parents, root).obtain(val) ;//on == null ? null : onObtainTypeValue.obtain(json5 instanceof JSON5Object ? (JSON5Object) json5 : null);
             if(obj == null) {

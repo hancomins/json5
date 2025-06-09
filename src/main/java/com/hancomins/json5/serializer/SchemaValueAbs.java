@@ -224,7 +224,7 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
                 if(this instanceof ISchemaArrayValue || this instanceof ISchemaMapValue) {
                     return value;
                 } else {
-                    value = Utils.convertValue(value, duplicatedSchemaValueAbs.type);
+                    value = TypeConverter.convertValue(value, duplicatedSchemaValueAbs.type);
                 }
             }
             ++index;
