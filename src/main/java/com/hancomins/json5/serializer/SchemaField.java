@@ -22,7 +22,12 @@ public abstract class SchemaField extends SchemaValueAbs implements ObtainTypeVa
         super(parentsTypeSchema, path, field.getType(), field.getGenericType());
         this.field = field;
         this.fieldName = field.getName();
-        field.setAccessible(true);
+        try {
+            field.setAccessible(true);
+        } catch (Exception e) {
+            // Java 9+ 모듈 시스템에서 일부 기본 모듈의 필드 접근이 제한될 수 있음
+            // 이 경우 field.setAccessible(true) 호출을 건너뛰고 계속 진행
+        }
         this.isStatic = java.lang.reflect.Modifier.isStatic(field.getModifiers());
 
         obtainTypeValueInvoker = parentsTypeSchema.findObtainTypeValueInvoker(fieldName);

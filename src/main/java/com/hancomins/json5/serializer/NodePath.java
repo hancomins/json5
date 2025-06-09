@@ -18,31 +18,8 @@ public class NodePath {
 
 
     public static SchemaObjectNode makeSchema(TypeSchema targetTypeSchema, SchemaValueAbs parentFieldRack) {
-        List<SchemaValueAbs> fieldRacks = searchAllJSON5ValueFields(targetTypeSchema, targetTypeSchema.getType());
-        SchemaObjectNode objectNode = new SchemaObjectNode().setBranchNode(false);
-
-        for(SchemaValueAbs fieldRack : fieldRacks) {
-            fieldRack.setParentFiled(parentFieldRack);
-            String path = fieldRack.getPath();
-            if(fieldRack.getType() == Types.Object) {
-                TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(fieldRack.getValueTypeClass());
-                SchemaObjectNode childTree = makeSchema(typeSchema,fieldRack);
-                childTree.setComment(fieldRack.getComment());
-                childTree.setAfterComment(fieldRack.getAfterComment());
-                childTree.addParentFieldRack(fieldRack);
-                childTree.setBranchNode(false);
-                SchemaElementNode elementNode = makeSubTree(path, childTree);
-                elementNode.setBranchNode(false);
-                objectNode.merge(elementNode);
-                continue;
-            }
-            SchemaElementNode elementNode = makeSubTree(path, fieldRack);
-            objectNode.merge(elementNode);
-        }
-        if(parentFieldRack == null) {
-            objectNode.setBranchNode(false);
-        }
-        return objectNode;
+        // SchemaFactory를 사용하여 Schema 생성 위임
+        return SchemaFactory.getInstance().createSchema(targetTypeSchema, parentFieldRack);
     }
 
 
@@ -187,19 +164,8 @@ public class NodePath {
 
 
     public static SchemaElementNode makeSubTree(String path, ISchemaNode value) {
-        List<PathItem> list = PathItem.parseMultiPath2(path);
-        SchemaElementNode rootNode = new SchemaObjectNode();
-        SchemaElementNode schemaNode = rootNode;
-        //noinspection ForLoopReplaceableByForEach
-        for(int i = 0, n = list.size(); i < n; ++i) {
-            PathItem pathItem = list.get(i);
-            if(pathItem.isEndPoint()) {
-                putNode(schemaNode, pathItem, value);
-                break;
-            }
-            schemaNode = obtainOrCreateChild(schemaNode, pathItem);
-        }
-        return rootNode;
+        // SchemaFactory를 사용하여 SubTree 생성 위임
+        return SchemaFactory.getInstance().createSubTree(path, value);
     }
 
 

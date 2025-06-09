@@ -198,71 +198,9 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
 
     @Override
     public Object getValue(Object parent) {
-        Object value = null;
-
-        int index = 0;
-        int size = this.allSchemaValueAbsList.size();
-
-        while(value == null && index < size) {
-            SchemaValueAbs duplicatedSchemaValueAbs = this.allSchemaValueAbsList.get(index);
-
-            value = duplicatedSchemaValueAbs.onGetValue(parent);
-            if(value != null && duplicatedSchemaValueAbs.getType() == Types.GenericType) {
-                Types inType = Types.of(value.getClass());
-                if(Types.isSingleType(inType) || Types.isJSON5Type(inType)) {
-                    return value;
-                } else {
-                    return JSON5Object.fromObject(value);
-                }
-            }
-
-            if(value == null) {
-                ++index;
-                continue;
-            }
-            if(!this.equalsValueType(duplicatedSchemaValueAbs)) {
-                if(this instanceof ISchemaArrayValue || this instanceof ISchemaMapValue) {
-                    return value;
-                } else {
-                    value = TypeConverter.convertValue(value, duplicatedSchemaValueAbs.type);
-                }
-            }
-            ++index;
-
-        }
-        return value;
-
-
-        /*int index = this.allSchemaValueAbsList.size() - 1;
-
-        while(value == null && index > -1) {
-            SchemaValueAbs duplicatedSchemaValueAbs = this.allSchemaValueAbsList.get(index);
-
-            value = duplicatedSchemaValueAbs.onGetValue(parent);
-            if(value != null && duplicatedSchemaValueAbs.getType() == Types.GenericType) {
-                Types inType = Types.of(value.getClass());
-                if(Types.isSingleType(inType)) {
-                    return value;
-                } else {
-                    return JSON5Object.fromObject(value);
-                }
-            }
-
-            if(value == null) {
-                index--;
-                continue;
-            }
-            if(!this.equalsValueType(duplicatedSchemaValueAbs)) {
-                if(this instanceof ISchemaArrayValue || this instanceof ISchemaMapValue) {
-                    return value;
-                } else {
-                    value = Utils.convertValue(value, duplicatedSchemaValueAbs.type);
-                }
-            }
-            index--;
-
-        }
-        return value;*/
+        // ValueProcessor를 사용하여 타입별로 최적화된 처리 수행
+        ValueProcessor processor = ValueProcessorFactory.getInstance().getProcessor(this.type);
+        return processor.getValue(parent, this);
     }
 
 
@@ -316,7 +254,9 @@ abstract class SchemaValueAbs implements ISchemaNode, ISchemaValue {
 
     @Override
     public void setValue(Object parent, Object value) {
-        onSetValue(parent, value);
+        // ValueProcessor를 사용하여 타입별로 최적화된 처리 수행
+        ValueProcessor processor = ValueProcessorFactory.getInstance().getProcessor(this.type);
+        processor.setValue(parent, value, this);
     }
 
 
