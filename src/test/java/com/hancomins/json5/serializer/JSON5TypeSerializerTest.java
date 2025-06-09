@@ -1319,7 +1319,7 @@ public class JSON5TypeSerializerTest {
     }
 
 
-     @JSON5Type(explicit = true)
+
     public static class A1 {
         @JSON5Value
         private String name = "name";

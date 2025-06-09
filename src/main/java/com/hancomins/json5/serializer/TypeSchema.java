@@ -91,7 +91,6 @@ class TypeSchema {
         if(JSON5Array.class.isAssignableFrom(type)) {
             return JSON5_ARRAY;
         }
-        checkJSON5Annotation(type);
         Constructor<?> constructor = null;
         try {
             constructor = type.getDeclaredConstructor();
@@ -177,62 +176,13 @@ class TypeSchema {
     }
 
 
-    /**
-     * 인터페이스를 포함한 부모 클래스 모두를 탐색하여 @JSON5Type 어노테이션이 있는지 확인한다.
-     * @param type 탐색할 클래스
-     * @return
-     */
-    private static boolean isJSON5Annotated(Class<?> type) {
-        AtomicBoolean result = new AtomicBoolean(false);
-        ReflectionUtils.searchSuperClassAndInterfaces(type, (superClass) -> {
-            JSON5Type a = superClass.getAnnotation(JSON5Type.class);
-            if(a != null) {
-                result.set(true);
-                return false;
-            }
-            return true;
-        });
-        return false;
-
-    }
-
 
     Set<String> getGenericTypeNames() {
         return genericTypeNames;
     }
 
-    private static boolean isJSON5AnnotatedOfInterface(Class<?> type) {
-        Class<?>[] interfaces = type.getInterfaces();
-        if(interfaces == null) {
-            return false;
-        }
-
-        for(Class<?> interfaceClass : interfaces) {
-            JSON5Type a = interfaceClass.getAnnotation(JSON5Type.class);
-            if(a != null) {
-                return true;
-            }
-            if(isJSON5Annotated(interfaceClass)) {
-                return true;
-            }
-
-        }
-        return false;
-    }
 
 
-    private static void checkJSON5Annotation(Class<?> type) {
-         Annotation a = type.getAnnotation(JSON5Type.class);
-         if(a == null) {
-             if(isJSON5Annotated(type) || isJSON5AnnotatedOfInterface(type)) {
-                 return;
-             }
-             if(type.isAnonymousClass()) {
-                throw new JSON5SerializerException("Anonymous class " + type.getName() + " is not annotated with @JSON5Type");
-             }
-             throw new JSON5SerializerException("Type " + type.getName() + " is not annotated with @JSON5Type");
-         }
-    }
 
     private static void checkConstructor(Class<?> type) {
         Constructor<?> constructor = null;

@@ -14,7 +14,14 @@ public class JSON5Serializer {
     private JSON5Serializer() {}
 
     public static boolean serializable(Class<?> clazz) {
-        return JSON5Mapper.serializable(clazz);
+        if(TypeSchemaMap.getInstance().hasTypeInfo(clazz)) {
+            return true;
+        }
+        // enum 타입일 경우 true 반환
+        if(clazz.isEnum()) {
+            return true;
+        }
+        return !(clazz.isInterface() || java.lang.reflect.Modifier.isAbstract(clazz.getModifiers()));
     }
 
     public static JSON5Object toJSON5Object(Object obj) {
