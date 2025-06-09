@@ -101,6 +101,17 @@ public class SerializationException extends JSON5SerializerException {
     }
     
     /**
+     * 지원되지 않는 타입 오류를 위한 팩토리 메소드입니다. (메시지 버전)
+     * 
+     * @param message 오류 메시지
+     * @param cause 원인 예외
+     * @return 지원되지 않는 타입 예외
+     */
+    public static SerializationException unsupportedType(String message, Throwable cause) {
+        return new SerializationException(UNSUPPORTED_TYPE, message, cause);
+    }
+    
+    /**
      * 필드 접근 오류를 위한 팩토리 메소드입니다.
      * 
      * @param fieldName 접근 실패한 필드명
