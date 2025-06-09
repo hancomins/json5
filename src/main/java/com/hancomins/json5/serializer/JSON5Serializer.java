@@ -26,12 +26,31 @@ public class JSON5Serializer {
 
     public static JSON5Object toJSON5Object(Object obj) {
         Objects.requireNonNull(obj, "obj is null");
-        Class<?> clazz = obj.getClass();
-        TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
-        return serializeTypeElement(typeSchema,obj);
+        
+        // 새로운 SerializationEngine 사용
+        SerializationEngine engine = new SerializationEngine();
+        return engine.serialize(obj);
     }
 
-    private static JSON5Object serializeTypeElement(TypeSchema typeSchema, final Object rootObject) {
+    /**
+     * TypeSchema 기반 직렬화 (새로운 SerializationEngine 사용)
+     * 
+     * @param typeSchema 타입 스키마
+     * @param rootObject 루트 객체
+     * @return 직렬화된 JSON5Object
+     */
+    public static JSON5Object serializeTypeElement(TypeSchema typeSchema, final Object rootObject) {
+        SerializationEngine engine = new SerializationEngine();
+        return engine.serializeTypeElement(typeSchema, rootObject);
+    }
+    
+    @Deprecated
+    private static JSON5Object serializeTypeElement_deprecated_impl(TypeSchema typeSchema, final Object rootObject) {
+        // 기존 구현을 그대로 사용 (복잡한 순환 참조 처리를 위해)
+        return serializeTypeElement_deprecated_impl(typeSchema, rootObject);
+    }
+    
+    private static JSON5Object serializeTypeElement_deprecated(TypeSchema typeSchema, final Object rootObject) {
         Class<?> type = typeSchema.getType();
         /*if(rootObject.getClass() != type) {
             throw new JSON5SerializerException("Type mismatch error. " + type.getName() + "!=" + rootObject.getClass().getName());
@@ -197,11 +216,13 @@ public class JSON5Serializer {
     }
 
     public static JSON5Object mapToJSON5Object(Map<String, ?> map) {
-        return mapObjectToJSON5Object(map, null);
+        SerializationEngine engine = new SerializationEngine();
+        return engine.serializeMap(map, null);
     }
 
     public static JSON5Array collectionToJSON5Array(Collection<?> collection) {
-        return collectionObjectToJSON5Array(collection, null);
+        SerializationEngine engine = new SerializationEngine();
+        return engine.serializeCollection(collection, null);
     }
 
 
@@ -298,7 +319,14 @@ public class JSON5Serializer {
     }
 
 
+    @Deprecated
     private static JSON5Object mapObjectToJSON5Object(Map<String, ?> map, Class<?> valueType) {
+        // 새로운 MapSerializer 사용
+        SerializationEngine engine = new SerializationEngine();
+        return engine.serializeMap(map, valueType);
+    }
+    
+    private static JSON5Object mapObjectToJSON5Object_deprecated(Map<String, ?> map, Class<?> valueType) {
         JSON5Object json5Object = new JSON5Object();
         Set<? extends Map.Entry<String, ?>> entries = map.entrySet();
         Types types = valueType == null ? null : Types.of(valueType);
@@ -345,7 +373,14 @@ public class JSON5Serializer {
 
 
 
+    @Deprecated
     private static JSON5Array collectionObjectToJSON5Array(Collection<?> collection, Class<?> valueType) {
+        // 새로운 CollectionSerializer 사용
+        SerializationEngine engine = new SerializationEngine();
+        return engine.serializeCollection(collection, valueType);
+    }
+    
+    private static JSON5Array collectionObjectToJSON5Array_deprecated(Collection<?> collection, Class<?> valueType) {
         JSON5Array JSON5Array = new JSON5Array();
         Types types = valueType == null ? null : Types.of(valueType);
         for(Object object : collection) {
@@ -370,7 +405,14 @@ public class JSON5Serializer {
 
 
 
+    @Deprecated
     private static JSON5Array collectionObjectToSONArrayKnownSchema(Collection<?> collection, ISchemaArrayValue ISchemaArrayValue) {
+        // 새로운 CollectionSerializer 사용
+        SerializationEngine engine = new SerializationEngine();
+        return engine.serializeCollectionWithSchema(collection, ISchemaArrayValue);
+    }
+    
+    private static JSON5Array collectionObjectToSONArrayKnownSchema_deprecated(Collection<?> collection, ISchemaArrayValue ISchemaArrayValue) {
         JSON5Array resultJSON5Array = new JSON5Array();
         JSON5Array JSON5Array = resultJSON5Array;
         Iterator<?> iter = collection.iterator();
