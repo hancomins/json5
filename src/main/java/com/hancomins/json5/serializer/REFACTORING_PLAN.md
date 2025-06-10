@@ -671,7 +671,7 @@ public enum TypeCategory {
 ### 상세 작업 내용
 
 #### 6.1 JSON5Serializer Facade 재구성
-**Facade 패턴 적용:**
+**Facade 패턴 적용:**InboundMessageDispatcher
 ```java
 public class JSON5Serializer {
     private final SerializationEngine serializationEngine;
