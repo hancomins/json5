@@ -1,26 +1,44 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Object;
+import com.hancomins.json5.JSON5Element;
 import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * 제네릭 타입과 추상 타입/인터페이스를 처리하는 TypeHandler입니다.
+ * 개선된 제네릭 타입과 추상 타입/인터페이스를 처리하는 TypeHandler입니다.
  * 
- * <p>이 핸들러는 다음 타입들을 처리합니다:</p>
+ * <p>5.2단계에서 TypeVariableResolver가 통합되어 더욱 정확한 제네릭 타입 처리가 가능합니다.</p>
+ * 
+ * <h3>개선사항:</h3>
  * <ul>
- *   <li>제네릭 타입 (Types.GenericType)</li>
- *   <li>추상 클래스와 인터페이스 (Types.AbstractObject)</li>
- *   <li>@ObtainTypeValue 어노테이션을 통한 동적 타입 결정</li>
+ *   <li>복잡한 제네릭 타입 해석 (List&lt;T&gt;, Map&lt;K,V&gt; 등)</li>
+ *   <li>TypeVariable의 정확한 실제 타입 결정</li>
+ *   <li>중첩된 제네릭 타입 처리</li>
+ *   <li>WildcardType 및 GenericArrayType 지원</li>
  * </ul>
- * 
- * <p>이 핸들러는 낮은 우선순위를 가지므로 다른 구체적인 핸들러가 먼저 시도됩니다.</p>
  * 
  * @author JSON5 팀
  * @version 2.0
  * @since 2.0
  */
 public class GenericTypeHandler implements TypeHandler {
+    
+    private final TypeVariableResolver typeVariableResolver;
+    private final Map<Class<?>, Class<?>> defaultImplementations;
+    
+    public GenericTypeHandler() {
+        this.typeVariableResolver = new TypeVariableResolver();
+        this.defaultImplementations = createDefaultImplementationMap();
+    }
+    
+    /**
+     * 커스텀 TypeVariableResolver를 사용하는 생성자입니다.
+     */
+    public GenericTypeHandler(TypeVariableResolver typeVariableResolver) {
+        this.typeVariableResolver = Objects.requireNonNull(typeVariableResolver, "typeVariableResolver is null");
+        this.defaultImplementations = createDefaultImplementationMap();
+    }
     
     @Override
     public boolean canHandle(Types type, Class<?> clazz) {
@@ -35,17 +53,18 @@ public class GenericTypeHandler implements TypeHandler {
             return null;
         }
         
-        // 실제 객체의 타입으로 직렬화
         Class<?> actualClass = value.getClass();
         Types actualType = Types.of(actualClass);
         
-        // 적절한 TypeHandler 찾기
-        TypeHandler handler = context.getTypeHandlerRegistry().getHandler(actualType, actualClass);
-        if (handler != null && handler != this) { // 자기 자신은 제외
-            return handler.handleSerialization(value, context);
+        // 실제 객체의 타입이 제네릭이 아닌 구체 타입이면 해당 TypeHandler에 위임
+        if (actualType != Types.GenericType && actualType != Types.AbstractObject) {
+            TypeHandler handler = context.getTypeHandlerRegistry().getHandler(actualType, actualClass);
+            if (handler != null && handler != this) {
+                return handler.handleSerialization(value, context);
+            }
         }
         
-        // Fallback: 기본 직렬화
+        // 기본 직렬화 수행
         return JSON5Serializer.toJSON5Object(value);
     }
     
@@ -56,95 +75,183 @@ public class GenericTypeHandler implements TypeHandler {
             return null;
         }
         
-        // @ObtainTypeValue 어노테이션을 통한 동적 타입 결정 시도
-        Object resolvedObject = resolveGenericType(element, targetType, context);
-        if (resolvedObject != null) {
-            return resolvedObject;
-        }
-        
-        // 인터페이스나 추상 클래스의 경우 구체 구현체 생성 시도
-        Class<?> concreteType = resolveConcreteType(targetType);
-        if (concreteType != null && concreteType != targetType) {
-            // 구체 타입으로 역직렬화
-            Types concreteTypes = Types.of(concreteType);
-            TypeHandler handler = context.getTypeHandlerRegistry().getHandler(concreteTypes, concreteType);
-            if (handler != null && handler != this) {
-                return handler.handleDeserialization(element, concreteType, context);
+        try {
+            // 1. @ㄴ 어노테이션을 통한 동적 타입 결정 시도
+            Object dynamicResult = resolveDynamicType(element, targetType, context);
+            if (dynamicResult != null) {
+                return dynamicResult;
             }
+            
+            // 2. 제네릭 타입 해석 시도
+            Class<?> resolvedType = resolveGenericType(targetType, context);
+            if (resolvedType != null && resolvedType != targetType) {
+                return deserializeToResolvedType(element, resolvedType, context);
+            }
+            
+            // 3. 인터페이스나 추상 클래스의 기본 구현체 사용
+            Class<?> concreteType = resolveConcreteImplementation(targetType);
+            if (concreteType != null) {
+                return deserializeToResolvedType(element, concreteType, context);
+            }
+            
+            // 4. 구체 클래스라면 직접 역직렬화
+            if (!targetType.isInterface() && !Modifier.isAbstract(targetType.getModifiers())) {
+                if (element instanceof JSON5Object) {
+                    return JSON5Serializer.fromJSON5Object((JSON5Object) element, targetType);
+                }
+            }
+            
+            throw new DeserializationException("Cannot resolve concrete type for: " + targetType.getName());
+            
+        } catch (DeserializationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DeserializationException("Failed to deserialize generic/abstract type: " + targetType.getName(), e);
         }
-        
-        // Fallback: 기본 역직렬화 시도
-        if (element instanceof JSON5Object && !targetType.isInterface() && !Modifier.isAbstract(targetType.getModifiers())) {
-            return JSON5Serializer.fromJSON5Object((JSON5Object) element, targetType);
-        }
-        
-        throw new DeserializationException("Cannot deserialize to abstract type or interface: " + targetType.getName() + 
-                                         ". Consider using @ObtainTypeValue annotation.");
     }
     
     @Override
     public TypeHandlerPriority getPriority() {
-        return TypeHandlerPriority.LOW; // 제네릭/추상 타입은 낮은 우선순위 (다른 핸들러 우선)
+        return TypeHandlerPriority.LOW;
     }
     
     /**
      * @ObtainTypeValue 어노테이션을 통한 동적 타입 결정을 시도합니다.
      */
-    private Object resolveGenericType(Object element, Class<?> targetType, DeserializationContext context) {
-        // 실제 구현은 기존 JSON5Serializer의 동적 타입 결정 로직 활용
-        // 현재는 간단한 fallback만 제공
+    private Object resolveDynamicType(Object element, Class<?> targetType, DeserializationContext context) {
+        if (element instanceof JSON5Object) {
+            JSON5Object obj = (JSON5Object) element;
+            
+            if (obj.has("_type")) {
+                try {
+                    String typeName = obj.getString("_type");
+                    Class<?> dynamicType = Class.forName(typeName);
+                    
+                    if (targetType.isAssignableFrom(dynamicType)) {
+                        return JSON5Serializer.fromJSON5Object(obj, dynamicType);
+                    }
+                } catch (Exception e) {
+                    // 동적 타입 결정 실패 시 무시
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 제네릭 타입을 실제 타입으로 해석합니다.
+     */
+    private Class<?> resolveGenericType(Class<?> targetType, DeserializationContext context) {
+        TypeSchema typeSchema = context.getRootTypeSchema();
+        if (typeSchema != null) {
+            return resolveFromTypeSchema(targetType, typeSchema);
+        }
+        
+        Object rootObject = context.getRootObject();
+        if (rootObject != null) {
+            TypeVariable<?> firstTypeVar = getFirstTypeVariable(targetType);
+            if (firstTypeVar != null) {
+                return typeVariableResolver.resolveTypeVariable(firstTypeVar, rootObject.getClass());
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * TypeSchema에서 제네릭 타입 정보를 해석합니다.
+     */
+    private Class<?> resolveFromTypeSchema(Class<?> targetType, TypeSchema typeSchema) {
+        Set<String> genericTypeNames = typeSchema.getGenericTypeNames();
+        
+        if (targetType.getTypeParameters().length > 0 && !genericTypeNames.isEmpty()) {
+            TypeVariable<?> firstTypeParam = targetType.getTypeParameters()[0];
+            
+            if (genericTypeNames.contains(firstTypeParam.getName())) {
+                return typeVariableResolver.resolveTypeVariable(firstTypeParam, typeSchema.getType());
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 클래스의 첫 번째 TypeVariable을 반환합니다.
+     */
+    private TypeVariable<?> getFirstTypeVariable(Class<?> clazz) {
+        TypeVariable<?>[] typeParams = clazz.getTypeParameters();
+        return typeParams.length > 0 ? typeParams[0] : null;
+    }
+    
+    /**
+     * 해석된 타입으로 역직렬화를 수행합니다.
+     */
+    private Object deserializeToResolvedType(Object element, Class<?> resolvedType, DeserializationContext context) {
+        Types resolvedTypes = Types.of(resolvedType);
+        
+        TypeHandler handler = context.getTypeHandlerRegistry().getHandler(resolvedTypes, resolvedType);
+        if (handler != null && handler != this) {
+            return handler.handleDeserialization(element, resolvedType, context);
+        }
+        
+        if (element instanceof JSON5Object) {
+            return JSON5Serializer.fromJSON5Object((JSON5Object) element, resolvedType);
+        }
+        
         return null;
     }
     
     /**
      * 추상 타입이나 인터페이스에 대한 구체 구현체를 결정합니다.
      */
-    private Class<?> resolveConcreteType(Class<?> abstractType) {
-        // 일반적인 인터페이스들에 대한 기본 구현체 매핑
-        if (abstractType == List.class) {
-            return ArrayList.class;
-        } else if (abstractType == Set.class) {
-            return HashSet.class;
-        } else if (abstractType == Map.class) {
-            return HashMap.class;
-        } else if (abstractType == Queue.class) {
-            return ArrayDeque.class;
-        } else if (abstractType == Deque.class) {
-            return ArrayDeque.class;
-        }
-        
-        // 추상 클래스나 다른 인터페이스는 현재 지원하지 않음
-        return null;
+    private Class<?> resolveConcreteImplementation(Class<?> abstractType) {
+        return defaultImplementations.get(abstractType);
     }
     
     /**
-     * 제네릭 타입 정보를 해석합니다.
+     * 기본 구현체 맵을 생성합니다.
      */
+    private Map<Class<?>, Class<?>> createDefaultImplementationMap() {
+        Map<Class<?>, Class<?>> map = new HashMap<>();
+        
+        map.put(List.class, ArrayList.class);
+        map.put(Set.class, HashSet.class);
+        map.put(Map.class, HashMap.class);
+        map.put(Queue.class, ArrayDeque.class);
+        map.put(Deque.class, ArrayDeque.class);
+        map.put(Collection.class, ArrayList.class);
+        map.put(NavigableSet.class, TreeSet.class);
+        map.put(SortedSet.class, TreeSet.class);
+        map.put(NavigableMap.class, TreeMap.class);
+        map.put(SortedMap.class, TreeMap.class);
+        
+        return Collections.unmodifiableMap(map);
+    }
+    
+    // Public API 메소드들
+    
     public boolean isGenericType(Type type, Set<String> genericTypeNames) {
-        if (type instanceof TypeVariable) {
-            TypeVariable<?> typeVar = (TypeVariable<?>) type;
-            return genericTypeNames != null && genericTypeNames.contains(typeVar.getName());
-        }
-        
-        if (type instanceof ParameterizedType) {
-            ParameterizedType paramType = (ParameterizedType) type;
-            for (Type argType : paramType.getActualTypeArguments()) {
-                if (isGenericType(argType, genericTypeNames)) {
-                    return true;
-                }
-            }
-        }
-        
-        return false;
+        return typeVariableResolver.containsTypeVariable(type, genericTypeNames);
     }
     
-    /**
-     * TypeVariable을 실제 타입으로 해석합니다.
-     */
     public Class<?> resolveTypeVariable(TypeVariable<?> typeVariable, Class<?> implementationClass) {
-        // 기본 구현: Object 타입으로 처리
-        // 실제로는 더 복잡한 제네릭 타입 해석이 필요하지만,
-        // 기존 시스템과의 호환성을 위해 단순화
-        return Object.class;
+        return typeVariableResolver.resolveTypeVariable(typeVariable, implementationClass);
+    }
+    
+    public Class<?>[] resolveGenericInterface(Class<?> implementationClass, Class<?> genericInterface) {
+        return typeVariableResolver.resolveGenericInterface(implementationClass, genericInterface);
+    }
+    
+    public TypeVariableResolver getTypeVariableResolver() {
+        return typeVariableResolver;
+    }
+    
+    public void clearCache() {
+        typeVariableResolver.clearCache();
+    }
+    
+    public String getCacheStats() {
+        return typeVariableResolver.getCacheStats();
     }
 }
