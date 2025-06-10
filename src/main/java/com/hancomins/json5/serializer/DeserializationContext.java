@@ -17,6 +17,12 @@ public class DeserializationContext {
     private final JSON5Object rootJson5Object;
     private final TypeSchema rootTypeSchema;
     
+    /** TypeHandler 레지스트리 */
+    private TypeHandlerRegistry typeHandlerRegistry;
+    
+    /** DeserializationEngine 참조 */
+    private DeserializationEngine deserializationEngine;
+    
     /**
      * DeserializationContext 생성자
      * 
@@ -95,6 +101,42 @@ public class DeserializationContext {
      */
     public Map<Integer, Object> getParentObjectMap() {
         return parentObjectMap;
+    }
+    
+    /**
+     * TypeHandlerRegistry를 설정합니다.
+     * 
+     * @param typeHandlerRegistry TypeHandler 레지스트리
+     */
+    public void setTypeHandlerRegistry(TypeHandlerRegistry typeHandlerRegistry) {
+        this.typeHandlerRegistry = typeHandlerRegistry;
+    }
+    
+    /**
+     * TypeHandlerRegistry를 반환합니다.
+     * 
+     * @return TypeHandler 레지스트리
+     */
+    public TypeHandlerRegistry getTypeHandlerRegistry() {
+        return typeHandlerRegistry;
+    }
+    
+    /**
+     * DeserializationEngine을 설정합니다.
+     * 
+     * @param deserializationEngine 역직렬화 엔진
+     */
+    public void setDeserializationEngine(DeserializationEngine deserializationEngine) {
+        this.deserializationEngine = deserializationEngine;
+    }
+    
+    /**
+     * DeserializationEngine을 반환합니다.
+     * 
+     * @return 역직렬화 엔진
+     */
+    public DeserializationEngine getDeserializationEngine() {
+        return deserializationEngine;
     }
     
     /**

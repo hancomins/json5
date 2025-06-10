@@ -28,6 +28,12 @@ public class SerializationContext {
     /** 루트 객체 */
     private final Object rootObject;
     
+    /** TypeHandler 레지스트리 */
+    private TypeHandlerRegistry typeHandlerRegistry;
+    
+    /** SerializationEngine 참조 */
+    private SerializationEngine serializationEngine;
+    
     /**
      * 직렬화 컨텍스트를 생성합니다.
      * 
@@ -128,6 +134,42 @@ public class SerializationContext {
      */
     public Object getRootObject() {
         return rootObject;
+    }
+    
+    /**
+     * TypeHandlerRegistry를 설정합니다.
+     * 
+     * @param typeHandlerRegistry TypeHandler 레지스트리
+     */
+    public void setTypeHandlerRegistry(TypeHandlerRegistry typeHandlerRegistry) {
+        this.typeHandlerRegistry = typeHandlerRegistry;
+    }
+    
+    /**
+     * TypeHandlerRegistry를 반환합니다.
+     * 
+     * @return TypeHandler 레지스트리
+     */
+    public TypeHandlerRegistry getTypeHandlerRegistry() {
+        return typeHandlerRegistry;
+    }
+    
+    /**
+     * SerializationEngine을 설정합니다.
+     * 
+     * @param serializationEngine 직렬화 엔진
+     */
+    public void setSerializationEngine(SerializationEngine serializationEngine) {
+        this.serializationEngine = serializationEngine;
+    }
+    
+    /**
+     * SerializationEngine을 반환합니다.
+     * 
+     * @return 직렬화 엔진
+     */
+    public SerializationEngine getSerializationEngine() {
+        return serializationEngine;
     }
     
     /**
