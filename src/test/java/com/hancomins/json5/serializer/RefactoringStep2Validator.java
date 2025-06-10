@@ -1,7 +1,9 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Object;
-import java.util.*;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Validator for Step 2 refactoring (Schema system modularization) completion.

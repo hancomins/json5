@@ -2,9 +2,10 @@ package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Element;
 import com.hancomins.json5.JSON5Object;
-import com.hancomins.json5.JSON5Array;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * JSON5 Serializer 리팩토링 3.4 단계 검증 클래스입니다.

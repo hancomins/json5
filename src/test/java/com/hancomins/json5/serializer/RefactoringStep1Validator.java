@@ -1,7 +1,7 @@
 package com.hancomins.json5.serializer;
 
-import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.JSON5Array;
+import com.hancomins.json5.JSON5Object;
 
 /**
  * 1.1 단계 Utils 클래스 분해 검증용 테스트 클래스입니다.

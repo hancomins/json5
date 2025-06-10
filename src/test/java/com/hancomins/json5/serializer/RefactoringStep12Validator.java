@@ -1,7 +1,5 @@
 package com.hancomins.json5.serializer;
 
-import com.hancomins.json5.JSON5Object;
-import com.hancomins.json5.JSON5Array;
 import java.util.Map;
 
 /**
