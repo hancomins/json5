@@ -38,12 +38,23 @@ public class SerializationEngine {
     private final CollectionSerializer collectionSerializer;
     private final MapSerializer mapSerializer;
     private final SerializationStrategyFactory strategyFactory;
+    private final SerializerConfiguration configuration;
     
     /**
      * 기본 직렬화 엔진을 생성합니다.
      * 기본 전략들이 자동으로 등록됩니다.
      */
     public SerializationEngine() {
+        this(SerializerConfiguration.getDefault());
+    }
+    
+    /**
+     * 설정을 받는 직렬화 엔진을 생성합니다.
+     * 
+     * @param configuration 직렬화 설정
+     */
+    public SerializationEngine(SerializerConfiguration configuration) {
+        this.configuration = Objects.requireNonNull(configuration, "configuration is null");
         this.objectSerializer = new ObjectSerializer();
         this.collectionSerializer = new CollectionSerializer();
         this.mapSerializer = new MapSerializer();
@@ -56,6 +67,7 @@ public class SerializationEngine {
      * @param strategyFactory 사용할 전략 팩토리
      */
     public SerializationEngine(SerializationStrategyFactory strategyFactory) {
+        this.configuration = SerializerConfiguration.getDefault();
         this.objectSerializer = new ObjectSerializer();
         this.collectionSerializer = new CollectionSerializer();
         this.mapSerializer = new MapSerializer();
@@ -261,5 +273,80 @@ public class SerializationEngine {
      */
     public void clearStrategyCache() {
         strategyFactory.clearCache();
+    }
+    
+    /**
+     * 설정을 반환합니다.
+     * 
+     * @return SerializerConfiguration
+     */
+    public SerializerConfiguration getConfiguration() {
+        return configuration;
+    }
+    
+    /**
+     * 컨텍스트와 함께 객체를 직렬화합니다.
+     * 
+     * @param obj 직렬화할 객체
+     * @param context 직렬화 컨텍스트
+     * @return 직렬화된 JSON5Object
+     * @throws JSON5SerializerException 직렬화 중 오류가 발생한 경우
+     */
+    public JSON5Object serialize(Object obj, SerializationContext context) {
+        Objects.requireNonNull(obj, "obj is null");
+        Objects.requireNonNull(context, "context is null");
+        
+        // 컨텍스트에 엔진 설정
+        context.setSerializationEngine(this);
+        if (configuration.getTypeHandlerRegistry() != null) {
+            context.setTypeHandlerRegistry(configuration.getTypeHandlerRegistry());
+        }
+        
+        // Strategy 패턴 적용 시도
+        JSON5Element result = serializeWithStrategy(obj, context);
+        if (result instanceof JSON5Object) {
+            return (JSON5Object) result;
+        }
+        
+        // Strategy로 처리되지 않은 경우 기존 방식 사용
+        Class<?> clazz = obj.getClass();
+        TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
+        if (typeSchema == null) {
+            throw new JSON5SerializerException("No TypeSchema found for class: " + clazz.getName());
+        }
+        return serializeTypeElement(typeSchema, obj);
+    }
+    
+    /**
+     * 컨텍스트와 함께 전략 패턴을 사용하여 객체를 직렬화합니다.
+     * 
+     * @param obj 직렬화할 객체
+     * @param context 직렬화 컨텍스트
+     * @return 직렬화된 JSON5Element, 처리할 수 없으면 null
+     */
+    private JSON5Element serializeWithStrategy(Object obj, SerializationContext context) {
+        if (obj == null) {
+            return null;
+        }
+        
+        Types type = Types.of(obj.getClass());
+        
+        // 기본 타입들은 전략을 사용하지 않고 직접 처리하여 무한 재귀 방지
+        if (Types.isSingleType(type)) {
+            return null;
+        }
+        
+        SerializationStrategy strategy = strategyFactory.getStrategy(obj, type);
+        
+        if (strategy != null) {
+            try {
+                return strategy.serialize(obj, context);
+            } catch (Exception e) {
+                System.err.println("Strategy serialization failed for " + obj.getClass().getName() + ": " + e.getMessage());
+                return null;
+            }
+        }
+        
+        return null;
     }
 }

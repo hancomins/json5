@@ -18,8 +18,14 @@ public class DeserializationEngine {
     private final CollectionDeserializer collectionDeserializer;
     private final MapDeserializer mapDeserializer;
     private final DeserializationStrategyFactory strategyFactory;
+    private final SerializerConfiguration configuration;
     
     public DeserializationEngine() {
+        this(SerializerConfiguration.getDefault());
+    }
+    
+    public DeserializationEngine(SerializerConfiguration configuration) {
+        this.configuration = Objects.requireNonNull(configuration, "configuration is null");
         this.objectDeserializer = new ObjectDeserializer();
         this.collectionDeserializer = new CollectionDeserializer();
         this.mapDeserializer = new MapDeserializer();
@@ -27,6 +33,7 @@ public class DeserializationEngine {
     }
     
     public DeserializationEngine(DeserializationStrategyFactory strategyFactory) {
+        this.configuration = SerializerConfiguration.getDefault();
         this.objectDeserializer = new ObjectDeserializer();
         this.collectionDeserializer = new CollectionDeserializer();
         this.mapDeserializer = new MapDeserializer();
@@ -223,5 +230,106 @@ public class DeserializationEngine {
      */
     public DeserializationStrategyFactory getStrategyFactory() {
         return strategyFactory;
+    }
+    
+    /**
+     * 설정을 반환합니다.
+     * 
+     * @return SerializerConfiguration
+     */
+    public SerializerConfiguration getConfiguration() {
+        return configuration;
+    }
+    
+    /**
+     * 컨텍스트와 함께 JSON5Object를 역직렬화합니다.
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param clazz 대상 클래스
+     * @param context 역직렬화 컨텍스트
+     * @param <T> 반환 타입
+     * @return 역직렬화된 객체
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T deserialize(JSON5Object json5Object, Class<T> clazz, DeserializationContext context) {
+        Objects.requireNonNull(json5Object, "json5Object is null");
+        Objects.requireNonNull(clazz, "clazz is null");
+        Objects.requireNonNull(context, "context is null");
+        
+        // 컨텍스트에 엔진 설정
+        context.setDeserializationEngine(this);
+        if (configuration.getTypeHandlerRegistry() != null) {
+            context.setTypeHandlerRegistry(configuration.getTypeHandlerRegistry());
+        }
+        
+        // 전략 패턴 먼저 시도
+        Object strategyResult = tryDeserializeWithStrategy(json5Object, clazz, context);
+        if (strategyResult != null) {
+            return (T) strategyResult;
+        }
+        
+        // 기존 방식으로 처리
+        TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
+        Object object = typeSchema.newInstance();
+        return (T) objectDeserializer.deserialize(json5Object, object);
+    }
+    
+    /**
+     * 컨텍스트와 함께 JSON5Object를 기존 객체에 역직렬화합니다.
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param targetObject 대상 객체
+     * @param context 역직렬화 컨텍스트
+     * @param <T> 반환 타입
+     * @return 역직렬화된 객체
+     */
+    public <T> T deserialize(JSON5Object json5Object, T targetObject, DeserializationContext context) {
+        Objects.requireNonNull(json5Object, "json5Object is null");
+        Objects.requireNonNull(targetObject, "targetObject is null");
+        Objects.requireNonNull(context, "context is null");
+        
+        // 컨텍스트에 엔진 설정
+        context.setDeserializationEngine(this);
+        if (configuration.getTypeHandlerRegistry() != null) {
+            context.setTypeHandlerRegistry(configuration.getTypeHandlerRegistry());
+        }
+        
+        // 전략 패턴 먼저 시도
+        @SuppressWarnings("unchecked")
+        T strategyResult = (T) tryDeserializeWithStrategy(json5Object, targetObject.getClass(), context);
+        if (strategyResult != null) {
+            return strategyResult;
+        }
+        
+        // 기존 방식으로 처리
+        return objectDeserializer.deserialize(json5Object, targetObject);
+    }
+    
+    /**
+     * 컨텍스트와 함께 전략 패턴을 사용하여 역직렬화를 시도합니다.
+     * 
+     * @param json5Element 역직렬화할 JSON5Element
+     * @param targetType 대상 클래스 타입
+     * @param context 역직렬화 컨텍스트
+     * @return 역직렬화된 객체, 실패 시 null
+     */
+    public Object tryDeserializeWithStrategy(JSON5Element json5Element, Class<?> targetType, DeserializationContext context) {
+        if (json5Element == null || targetType == null) {
+            return null;
+        }
+        
+        Types type = Types.of(targetType);
+        DeserializationStrategy strategy = strategyFactory.getStrategy(type, targetType);
+        
+        if (strategy != null) {
+            try {
+                return strategy.deserialize(json5Element, targetType, context);
+            } catch (Exception e) {
+                // 전략 실패 시 null 반환하여 기존 방식으로 처리
+                return null;
+            }
+        }
+        
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.*;
+import com.hancomins.json5.options.WritingOptions;
 
 import java.util.*;
 
@@ -22,6 +23,18 @@ public class DeserializationContext {
     
     /** DeserializationEngine 참조 */
     private DeserializationEngine deserializationEngine;
+    
+    /** 오류 무시 여부 */
+    private boolean ignoreError = false;
+    
+    /** 엄격한 타입 검사 여부 */
+    private boolean strictTypeChecking = true;
+    
+    /** 기본값 */
+    private Object defaultValue = null;
+    
+    /** WritingOptions */
+    private WritingOptions writingOptions;
     
     /**
      * DeserializationContext 생성자
@@ -140,6 +153,78 @@ public class DeserializationContext {
     }
     
     /**
+     * 오류 무시 여부를 설정합니다.
+     * 
+     * @param ignoreError 오류 무시 여부
+     */
+    public void setIgnoreError(boolean ignoreError) {
+        this.ignoreError = ignoreError;
+    }
+    
+    /**
+     * 오류 무시 여부를 반환합니다.
+     * 
+     * @return 오류 무시 여부
+     */
+    public boolean isIgnoreError() {
+        return ignoreError;
+    }
+    
+    /**
+     * 엄격한 타입 검사 여부를 설정합니다.
+     * 
+     * @param strictTypeChecking 엄격한 타입 검사 여부
+     */
+    public void setStrictTypeChecking(boolean strictTypeChecking) {
+        this.strictTypeChecking = strictTypeChecking;
+    }
+    
+    /**
+     * 엄격한 타입 검사 여부를 반환합니다.
+     * 
+     * @return 엄격한 타입 검사 여부
+     */
+    public boolean isStrictTypeChecking() {
+        return strictTypeChecking;
+    }
+    
+    /**
+     * 기본값을 설정합니다.
+     * 
+     * @param defaultValue 기본값
+     */
+    public void setDefaultValue(Object defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+    
+    /**
+     * 기본값을 반환합니다.
+     * 
+     * @return 기본값
+     */
+    public Object getDefaultValue() {
+        return defaultValue;
+    }
+    
+    /**
+     * WritingOptions을 설정합니다.
+     * 
+     * @param writingOptions WritingOptions
+     */
+    public void setWritingOptions(WritingOptions writingOptions) {
+        this.writingOptions = writingOptions;
+    }
+    
+    /**
+     * WritingOptions을 반환합니다.
+     * 
+     * @return WritingOptions
+     */
+    public WritingOptions getWritingOptions() {
+        return writingOptions;
+    }
+    
+    /**
      * 디버깅용 문자열 표현
      * 
      * @return 문자열 표현
@@ -150,6 +235,8 @@ public class DeserializationContext {
                 "parentObjectCount=" + parentObjectMap.size() +
                 ", rootObjectType=" + (rootObject != null ? rootObject.getClass().getSimpleName() : "null") +
                 ", rootTypeSchema=" + (rootTypeSchema != null ? rootTypeSchema.getType().getSimpleName() : "null") +
+                ", ignoreError=" + ignoreError +
+                ", strictTypeChecking=" + strictTypeChecking +
                 '}';
     }
 }

@@ -2,6 +2,7 @@ package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Element;
 import com.hancomins.json5.JSON5Object;
+import com.hancomins.json5.options.WritingOptions;
 import java.util.*;
 
 /**
@@ -33,6 +34,15 @@ public class SerializationContext {
     
     /** SerializationEngine 참조 */
     private SerializationEngine serializationEngine;
+    
+    /** WritingOptions */
+    private WritingOptions writingOptions;
+    
+    /** null 값 포함 여부 */
+    private boolean includeNullValues = false;
+    
+    /** 무시할 필드들 */
+    private Set<String> ignoredFields = new HashSet<>();
     
     /**
      * 직렬화 컨텍스트를 생성합니다.
@@ -170,6 +180,70 @@ public class SerializationContext {
      */
     public SerializationEngine getSerializationEngine() {
         return serializationEngine;
+    }
+    
+    /**
+     * WritingOptions을 설정합니다.
+     * 
+     * @param writingOptions WritingOptions
+     */
+    public void setWritingOptions(WritingOptions writingOptions) {
+        this.writingOptions = writingOptions;
+    }
+    
+    /**
+     * WritingOptions을 반환합니다.
+     * 
+     * @return WritingOptions
+     */
+    public WritingOptions getWritingOptions() {
+        return writingOptions;
+    }
+    
+    /**
+     * null 값 포함 여부를 설정합니다.
+     * 
+     * @param includeNullValues null 값 포함 여부
+     */
+    public void setIncludeNullValues(boolean includeNullValues) {
+        this.includeNullValues = includeNullValues;
+    }
+    
+    /**
+     * null 값 포함 여부를 반환합니다.
+     * 
+     * @return null 값 포함 여부
+     */
+    public boolean isIncludeNullValues() {
+        return includeNullValues;
+    }
+    
+    /**
+     * 무시할 필드들을 설정합니다.
+     * 
+     * @param ignoredFields 무시할 필드들
+     */
+    public void setIgnoredFields(Set<String> ignoredFields) {
+        this.ignoredFields = ignoredFields != null ? ignoredFields : new HashSet<>();
+    }
+    
+    /**
+     * 무시할 필드들을 반환합니다.
+     * 
+     * @return 무시할 필드들
+     */
+    public Set<String> getIgnoredFields() {
+        return ignoredFields;
+    }
+    
+    /**
+     * 지정된 필드가 무시되어야 하는지 확인합니다.
+     * 
+     * @param fieldName 필드명
+     * @return 무시해야 하면 true
+     */
+    public boolean isIgnoredField(String fieldName) {
+        return ignoredFields.contains(fieldName);
     }
     
     /**
