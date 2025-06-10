@@ -1,0 +1,308 @@
+package com.hancomins.json5;
+
+import com.hancomins.json5.serializer.SerializerConfiguration;
+import com.hancomins.json5.options.WritingOptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * SerializerConfiguration의 6.2 단계 설정 시스템 테스트 클래스입니다.
+ * 
+ * 이 테스트는 다음 항목들을 검증합니다:
+ * - 기본 설정 생성
+ * - 환경별 설정 (개발/운영/테스트)
+ * - Builder 패턴 동작
+ * - 민감한 필드 관리
+ * - 편의 메소드들
+ * - 설정 검증
+ * - toBuilder 메소드
+ */
+public class SerializerConfigurationTest {
+    
+    @Test
+    @DisplayName("기본 설정 생성 테스트")
+    public void testDefaultConfiguration() {
+        SerializerConfiguration config = SerializerConfiguration.getDefault();
+        
+        assertNotNull(config);
+        assertFalse(config.isIgnoreUnknownProperties());
+        assertFalse(config.isFailOnEmptyBeans());
+        assertFalse(config.isEnableSchemaCache());
+        assertEquals(SerializerConfiguration.EnvironmentProfile.CUSTOM, config.getEnvironmentProfile());
+        assertEquals(64, config.getMaxDepth());
+        assertEquals(30000, config.getSerializationTimeoutMs());
+    }
+    
+    @Test
+    @DisplayName("개발 환경 설정 테스트")
+    public void testDevelopmentConfiguration() {
+        SerializerConfiguration config = SerializerConfiguration.forDevelopment();
+        
+        assertEquals(SerializerConfiguration.EnvironmentProfile.DEVELOPMENT, config.getEnvironmentProfile());
+        assertEquals(WritingOptions.json5Pretty(), config.getDefaultWritingOptions());
+        assertTrue(config.isEnableStrictTypeChecking());
+        assertTrue(config.isEnablePerformanceMonitoring());
+        assertTrue(config.isEnableCircularReferenceDetection());
+        assertTrue(config.isPreserveFieldOrder());
+    }
+    
+    @Test
+    @DisplayName("운영 환경 설정 테스트")
+    public void testProductionConfiguration() {
+        SerializerConfiguration config = SerializerConfiguration.forProduction();
+        
+        assertEquals(SerializerConfiguration.EnvironmentProfile.PRODUCTION, config.getEnvironmentProfile());
+        assertEquals(WritingOptions.json5(), config.getDefaultWritingOptions());
+        assertTrue(config.isEnableSchemaCache());
+        assertTrue(config.isEnableLazyLoading());
+        assertTrue(config.isMaskSensitiveFields());
+        assertTrue(config.isSensitiveField("password"));
+        assertTrue(config.isSensitiveField("secret"));
+        assertTrue(config.isSensitiveField("token"));
+        assertTrue(config.isSensitiveField("key"));
+        assertEquals(5000, config.getSerializationTimeoutMs());
+        assertEquals(32, config.getMaxDepth());
+        assertTrue(config.isEnableFieldNameValidation());
+        assertEquals(10000, config.getMaxStringLength());
+    }
+    
+    @Test
+    @DisplayName("테스트 환경 설정 테스트")
+    public void testTestingConfiguration() {
+        SerializerConfiguration config = SerializerConfiguration.forTesting();
+        
+        assertEquals(SerializerConfiguration.EnvironmentProfile.TEST, config.getEnvironmentProfile());
+        assertTrue(config.isIncludeNullValues());
+        assertTrue(config.isPreserveFieldOrder());
+        assertTrue(config.isIgnoreUnknownProperties());
+    }
+    
+    @Test
+    @DisplayName("Builder 패턴 테스트")
+    public void testBuilderPattern() {
+        SerializerConfiguration config = SerializerConfiguration.builder()
+            .ignoreUnknownProperties()
+            .enableSchemaCache()
+            .withMaxDepth(100)
+            .withSerializationTimeout(15000)
+            .maskSensitiveFields()
+            .addSensitiveField("customField")
+            .withDefaultWritingOptions(WritingOptions.jsonPretty())
+            .enableStrictTypeChecking()
+            .build();
+        
+        assertTrue(config.isIgnoreUnknownProperties());
+        assertTrue(config.isEnableSchemaCache());
+        assertEquals(100, config.getMaxDepth());
+        assertEquals(15000, config.getSerializationTimeoutMs());
+        assertTrue(config.isMaskSensitiveFields());
+        assertTrue(config.isSensitiveField("customField"));
+        assertEquals(WritingOptions.jsonPretty(), config.getDefaultWritingOptions());
+        assertTrue(config.isEnableStrictTypeChecking());
+    }
+    
+    @Test
+    @DisplayName("민감한 필드 관리 테스트")
+    public void testSensitiveFieldsManagement() {
+        SerializerConfiguration config = SerializerConfiguration.builder()
+            .maskSensitiveFields()
+            .addSensitiveField("password")
+            .addSensitiveField("secret", "token", "apiKey")
+            .build();
+        
+        assertTrue(config.isMaskSensitiveFields());
+        assertTrue(config.isSensitiveField("password"));
+        assertTrue(config.isSensitiveField("secret"));
+        assertTrue(config.isSensitiveField("token"));
+        assertTrue(config.isSensitiveField("apiKey"));
+        assertFalse(config.isSensitiveField("normalField"));
+        
+        // getSensitiveFields는 복사본을 반환해야 함
+        config.getSensitiveFields().add("shouldNotBeAdded");
+        assertFalse(config.isSensitiveField("shouldNotBeAdded"));
+    }
+    
+    @Test
+    @DisplayName("편의 메소드 테스트")
+    public void testConvenienceMethods() {
+        // 모든 보안 기능 활성화
+        SerializerConfiguration securityConfig = SerializerConfiguration.builder()
+            .enableAllSecurityFeatures()
+            .build();
+        
+        assertTrue(securityConfig.isMaskSensitiveFields());
+        assertTrue(securityConfig.isEnableFieldNameValidation());
+        assertEquals(10000, securityConfig.getMaxStringLength());
+        assertTrue(securityConfig.isSensitiveField("password"));
+        assertTrue(securityConfig.isSensitiveField("accessToken"));
+        
+        // 모든 성능 최적화 활성화
+        SerializerConfiguration performanceConfig = SerializerConfiguration.builder()
+            .enableAllPerformanceOptimizations()
+            .build();
+        
+        assertTrue(performanceConfig.isEnableSchemaCache());
+        assertTrue(performanceConfig.isEnableLazyLoading());
+        assertEquals(32, performanceConfig.getMaxDepth());
+        assertEquals(10000, performanceConfig.getSerializationTimeoutMs());
+        
+        // 모든 개발 도구 활성화
+        SerializerConfiguration devToolsConfig = SerializerConfiguration.builder()
+            .enableAllDevelopmentTools()
+            .build();
+        
+        assertTrue(devToolsConfig.isEnableStrictTypeChecking());
+        assertTrue(devToolsConfig.isEnablePerformanceMonitoring());
+        assertTrue(devToolsConfig.isEnableCircularReferenceDetection());
+        assertTrue(devToolsConfig.isPreserveFieldOrder());
+        assertEquals(WritingOptions.json5Pretty(), devToolsConfig.getDefaultWritingOptions());
+    }
+    
+    @Test
+    @DisplayName("toBuilder 메소드 테스트")
+    public void testToBuilder() {
+        SerializerConfiguration original = SerializerConfiguration.builder()
+            .ignoreUnknownProperties()
+            .withMaxDepth(50)
+            .addSensitiveField("test")
+            .build();
+        
+        SerializerConfiguration modified = original.toBuilder()
+            .enableSchemaCache()
+            .withSerializationTimeout(20000)
+            .build();
+        
+        // 원본 설정이 유지되어야 함
+        assertTrue(modified.isIgnoreUnknownProperties());
+        assertEquals(50, modified.getMaxDepth());
+        assertTrue(modified.isSensitiveField("test"));
+        
+        // 새로운 설정이 추가되어야 함
+        assertTrue(modified.isEnableSchemaCache());
+        assertEquals(20000, modified.getSerializationTimeoutMs());
+        
+        // 원본은 변경되지 않아야 함
+        assertFalse(original.isEnableSchemaCache());
+        assertEquals(30000, original.getSerializationTimeoutMs());
+    }
+    
+    @Test
+    @DisplayName("설정 검증 테스트")
+    public void testConfigurationValidation() {
+        // 유효하지 않은 maxDepth
+        assertThrows(IllegalArgumentException.class, () -> {
+            SerializerConfiguration.builder()
+                .withMaxDepth(-1)
+                .build();
+        });
+        
+        // 유효하지 않은 serializationTimeout
+        assertThrows(IllegalArgumentException.class, () -> {
+            SerializerConfiguration.builder()
+                .withSerializationTimeout(-1000)
+                .build();
+        });
+        
+        // 유효하지 않은 maxStringLength
+        assertThrows(IllegalArgumentException.class, () -> {
+            SerializerConfiguration.builder()
+                .withMaxStringLength(0)
+                .build();
+        });
+    }
+    
+    @Test
+    @DisplayName("환경별 기본값 적용 테스트")
+    public void testEnvironmentDefaults() {
+        // DEVELOPMENT 환경
+        SerializerConfiguration devConfig = SerializerConfiguration.builder()
+            .withEnvironmentProfile(SerializerConfiguration.EnvironmentProfile.DEVELOPMENT)
+            .build();
+        assertEquals(WritingOptions.json5Pretty(), devConfig.getDefaultWritingOptions());
+        
+        // PRODUCTION 환경
+        SerializerConfiguration prodConfig = SerializerConfiguration.builder()
+            .withEnvironmentProfile(SerializerConfiguration.EnvironmentProfile.PRODUCTION)
+            .build();
+        assertTrue(prodConfig.isEnableSchemaCache());
+        assertEquals(5000, prodConfig.getSerializationTimeoutMs());
+        
+        // TEST 환경
+        SerializerConfiguration testConfig = SerializerConfiguration.builder()
+            .withEnvironmentProfile(SerializerConfiguration.EnvironmentProfile.TEST)
+            .build();
+        assertTrue(testConfig.isPreserveFieldOrder());
+    }
+    
+    @Test
+    @DisplayName("TypeHandler 관련 설정 테스트")
+    public void testTypeHandlerConfiguration() {
+        SerializerConfiguration config = SerializerConfiguration.getDefault();
+        
+        assertNotNull(config.getTypeHandlerRegistry());
+        
+        // 커스텀 TypeHandler 추가 테스트는 실제 TypeHandler 구현이 있을 때 가능
+        // 현재는 TypeHandlerRegistry가 null이 아닌지만 확인
+    }
+    
+    @Test
+    @DisplayName("모든 getter 메소드 테스트")
+    public void testAllGetterMethods() {
+        SerializerConfiguration config = SerializerConfiguration.builder()
+            .ignoreUnknownProperties(true)
+            .failOnEmptyBeans(true)
+            .useFieldVisibility(true)
+            .includeNullValues(true)
+            .withDefaultWritingOptions(WritingOptions.json())
+            .withMaxDepth(128)
+            .enableCircularReferenceDetection(true)
+            .maskSensitiveFields(true)
+            .withEnvironmentProfile(SerializerConfiguration.EnvironmentProfile.STAGING)
+            .enableStrictTypeChecking(true)
+            .withSerializationTimeout(45000)
+            .enablePerformanceMonitoring(true)
+            .withMaxStringLength(5000)
+            .enableFieldNameValidation(true)
+            .preserveFieldOrder(true)
+            .enableLazyLoading(true)
+            .build();
+        
+        // 모든 getter 메소드 호출 및 검증
+        assertTrue(config.isIgnoreUnknownProperties());
+        assertTrue(config.isFailOnEmptyBeans());
+        assertTrue(config.isUseFieldVisibility());
+        assertTrue(config.isIncludeNullValues());
+        assertEquals(WritingOptions.json(), config.getDefaultWritingOptions());
+        assertEquals(128, config.getMaxDepth());
+        assertTrue(config.isEnableCircularReferenceDetection());
+        assertTrue(config.isMaskSensitiveFields());
+        assertEquals(SerializerConfiguration.EnvironmentProfile.STAGING, config.getEnvironmentProfile());
+        assertTrue(config.isEnableStrictTypeChecking());
+        assertEquals(45000, config.getSerializationTimeoutMs());
+        assertTrue(config.isEnablePerformanceMonitoring());
+        assertEquals(5000, config.getMaxStringLength());
+        assertTrue(config.isEnableFieldNameValidation());
+        assertTrue(config.isPreserveFieldOrder());
+        assertTrue(config.isEnableLazyLoading());
+        
+        assertNotNull(config.getTypeHandlerRegistry());
+        assertNotNull(config.getSensitiveFields());
+    }
+    
+    @Test
+    @DisplayName("불변성 테스트")
+    public void testImmutability() {
+        SerializerConfiguration config = SerializerConfiguration.builder()
+            .addSensitiveField("original")
+            .build();
+        
+        // getSensitiveFields로 얻은 Set을 수정해도 원본에 영향이 없어야 함
+        config.getSensitiveFields().add("modified");
+        assertFalse(config.isSensitiveField("modified"));
+        assertTrue(config.isSensitiveField("original"));
+        
+        // 설정 객체는 불변이어야 함
+        assertEquals(1, config.getSensitiveFields().size());
+    }
+}
