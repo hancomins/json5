@@ -1,6 +1,8 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.*;
+import com.hancomins.json5.serializer.constructor.ConstructorDeserializer;
+import com.hancomins.json5.serializer.constructor.ConstructorAnalyzer;
 
 import java.util.*;
 
@@ -17,6 +19,8 @@ public class DeserializationEngine {
     private final ObjectDeserializer objectDeserializer;
     private final CollectionDeserializer collectionDeserializer;
     private final MapDeserializer mapDeserializer;
+    private final ConstructorDeserializer constructorDeserializer;
+    private final ConstructorAnalyzer constructorAnalyzer;
     private final DeserializationStrategyFactory strategyFactory;
     private final SerializerConfiguration configuration;
     
@@ -29,6 +33,8 @@ public class DeserializationEngine {
         this.objectDeserializer = new ObjectDeserializer();
         this.collectionDeserializer = new CollectionDeserializer();
         this.mapDeserializer = new MapDeserializer();
+        this.constructorDeserializer = new ConstructorDeserializer();
+        this.constructorAnalyzer = new ConstructorAnalyzer();
         this.strategyFactory = DeserializationStrategyFactory.createDefault();
     }
     
@@ -37,6 +43,8 @@ public class DeserializationEngine {
         this.objectDeserializer = new ObjectDeserializer();
         this.collectionDeserializer = new CollectionDeserializer();
         this.mapDeserializer = new MapDeserializer();
+        this.constructorDeserializer = new ConstructorDeserializer();
+        this.constructorAnalyzer = new ConstructorAnalyzer();
         this.strategyFactory = strategyFactory != null ? strategyFactory : DeserializationStrategyFactory.createDefault();
     }
     
@@ -50,13 +58,23 @@ public class DeserializationEngine {
      */
     @SuppressWarnings("unchecked")
     public <T> T deserialize(JSON5Object json5Object, Class<T> clazz) {
-        // 전략 패턴 먼저 시도
+        // 1. 생성자 기반 역직렬화 먼저 시도
+        if (constructorAnalyzer.hasCreatorConstructor(clazz)) {
+            try {
+                return constructorDeserializer.deserialize(json5Object, clazz);
+            } catch (Exception e) {
+                // 생성자 역직렬화 실패 시 기존 방식으로 fallback
+                System.err.println("Constructor deserialization failed, falling back to default: " + e.getMessage());
+            }
+        }
+        
+        // 2. 전략 패턴 시도
         Object strategyResult = tryDeserializeWithStrategy(json5Object, clazz);
         if (strategyResult != null) {
             return (T) strategyResult;
         }
         
-        // 기존 방식으로 처리
+        // 3. 기존 방식으로 처리
         TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
         Object object = typeSchema.newInstance();
         return (T) objectDeserializer.deserialize(json5Object, object);
@@ -236,6 +254,24 @@ public class DeserializationEngine {
     }
     
     /**
+     * ConstructorDeserializer를 반환합니다.
+     * 
+     * @return ConstructorDeserializer
+     */
+    public ConstructorDeserializer getConstructorDeserializer() {
+        return constructorDeserializer;
+    }
+    
+    /**
+     * ConstructorAnalyzer를 반환합니다.
+     * 
+     * @return ConstructorAnalyzer
+     */
+    public ConstructorAnalyzer getConstructorAnalyzer() {
+        return constructorAnalyzer;
+    }
+    
+    /**
      * 컨텍스트와 함께 JSON5Object를 역직렬화합니다.
      * 
      * @param json5Object 역직렬화할 JSON5Object
@@ -256,13 +292,23 @@ public class DeserializationEngine {
             context.setTypeHandlerRegistry(configuration.getTypeHandlerRegistry());
         }
         
-        // 전략 패턴 먼저 시도
+        // 1. 생성자 기반 역직렬화 먼저 시도
+        if (constructorAnalyzer.hasCreatorConstructor(clazz)) {
+            try {
+                return constructorDeserializer.deserialize(json5Object, clazz);
+            } catch (Exception e) {
+                // 생성자 역직렬화 실패 시 기존 방식으로 fallback
+                System.err.println("Constructor deserialization failed, falling back to default: " + e.getMessage());
+            }
+        }
+        
+        // 2. 전략 패턴 시도
         Object strategyResult = tryDeserializeWithStrategy(json5Object, clazz, context);
         if (strategyResult != null) {
             return (T) strategyResult;
         }
         
-        // 기존 방식으로 처리
+        // 3. 기존 방식으로 처리
         TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
         Object object = typeSchema.newInstance();
         return (T) objectDeserializer.deserialize(json5Object, object);
