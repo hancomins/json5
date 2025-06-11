@@ -3,6 +3,8 @@ package com.hancomins.json5.serializer;
 import com.hancomins.json5.*;
 import com.hancomins.json5.serializer.constructor.ConstructorDeserializer;
 import com.hancomins.json5.serializer.constructor.ConstructorAnalyzer;
+import com.hancomins.json5.serializer.polymorphic.PolymorphicDeserializer;
+import com.hancomins.json5.serializer.polymorphic.TypeInfoAnalyzer;
 
 import java.util.*;
 
@@ -21,6 +23,8 @@ public class DeserializationEngine {
     private final MapDeserializer mapDeserializer;
     private final ConstructorDeserializer constructorDeserializer;
     private final ConstructorAnalyzer constructorAnalyzer;
+    private final PolymorphicDeserializer polymorphicDeserializer;
+    private final TypeInfoAnalyzer typeInfoAnalyzer;
     private final DeserializationStrategyFactory strategyFactory;
     private final SerializerConfiguration configuration;
     
@@ -35,6 +39,9 @@ public class DeserializationEngine {
         this.mapDeserializer = new MapDeserializer();
         this.constructorDeserializer = new ConstructorDeserializer();
         this.constructorAnalyzer = new ConstructorAnalyzer();
+        this.polymorphicDeserializer = new PolymorphicDeserializer();
+        this.polymorphicDeserializer.setDeserializationEngine(this);
+        this.typeInfoAnalyzer = new TypeInfoAnalyzer();
         this.strategyFactory = DeserializationStrategyFactory.createDefault();
     }
     
@@ -45,6 +52,9 @@ public class DeserializationEngine {
         this.mapDeserializer = new MapDeserializer();
         this.constructorDeserializer = new ConstructorDeserializer();
         this.constructorAnalyzer = new ConstructorAnalyzer();
+        this.polymorphicDeserializer = new PolymorphicDeserializer();
+        this.polymorphicDeserializer.setDeserializationEngine(this);
+        this.typeInfoAnalyzer = new TypeInfoAnalyzer();
         this.strategyFactory = strategyFactory != null ? strategyFactory : DeserializationStrategyFactory.createDefault();
     }
     
@@ -58,7 +68,17 @@ public class DeserializationEngine {
      */
     @SuppressWarnings("unchecked")
     public <T> T deserialize(JSON5Object json5Object, Class<T> clazz) {
-        // 1. 생성자 기반 역직렬화 먼저 시도
+        // 1. 다형성 타입 확인 및 처리
+        if (typeInfoAnalyzer.isPolymorphicType(clazz)) {
+            try {
+                return polymorphicDeserializer.deserialize(json5Object, clazz);
+            } catch (Exception e) {
+                // 다형성 역직렬화 실패 시 기존 방식으로 fallback
+                System.err.println("Polymorphic deserialization failed, falling back to default: " + e.getMessage());
+            }
+        }
+        
+        // 2. 생성자 기반 역직렬화 시도
         if (constructorAnalyzer.hasCreatorConstructor(clazz)) {
             try {
                 return constructorDeserializer.deserialize(json5Object, clazz);
@@ -68,13 +88,13 @@ public class DeserializationEngine {
             }
         }
         
-        // 2. 전략 패턴 시도
+        // 3. 전략 패턴 시도
         Object strategyResult = tryDeserializeWithStrategy(json5Object, clazz);
         if (strategyResult != null) {
             return (T) strategyResult;
         }
         
-        // 3. 기존 방식으로 처리
+        // 4. 기존 방식으로 처리
         TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
         Object object = typeSchema.newInstance();
         return (T) objectDeserializer.deserialize(json5Object, object);
@@ -292,7 +312,17 @@ public class DeserializationEngine {
             context.setTypeHandlerRegistry(configuration.getTypeHandlerRegistry());
         }
         
-        // 1. 생성자 기반 역직렬화 먼저 시도
+        // 1. 다형성 타입 확인 및 처리
+        if (typeInfoAnalyzer.isPolymorphicType(clazz)) {
+            try {
+                return polymorphicDeserializer.deserialize(json5Object, clazz);
+            } catch (Exception e) {
+                // 다형성 역직렬화 실패 시 기존 방식으로 fallback
+                System.err.println("Polymorphic deserialization failed, falling back to default: " + e.getMessage());
+            }
+        }
+        
+        // 2. 생성자 기반 역직렬화 시도
         if (constructorAnalyzer.hasCreatorConstructor(clazz)) {
             try {
                 return constructorDeserializer.deserialize(json5Object, clazz);
@@ -302,13 +332,13 @@ public class DeserializationEngine {
             }
         }
         
-        // 2. 전략 패턴 시도
+        // 3. 전략 패턴 시도
         Object strategyResult = tryDeserializeWithStrategy(json5Object, clazz, context);
         if (strategyResult != null) {
             return (T) strategyResult;
         }
         
-        // 3. 기존 방식으로 처리
+        // 4. 기존 방식으로 처리
         TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
         Object object = typeSchema.newInstance();
         return (T) objectDeserializer.deserialize(json5Object, object);

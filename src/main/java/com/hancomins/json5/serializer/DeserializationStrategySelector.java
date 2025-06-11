@@ -2,6 +2,7 @@ package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.serializer.constructor.ConstructorAnalyzer;
+import com.hancomins.json5.serializer.polymorphic.TypeInfoAnalyzer;
 
 /**
  * 역직렬화 전략을 선택하는 클래스입니다.
@@ -10,12 +11,14 @@ import com.hancomins.json5.serializer.constructor.ConstructorAnalyzer;
 public class DeserializationStrategySelector {
     
     private final ConstructorAnalyzer constructorAnalyzer;
+    private final TypeInfoAnalyzer typeInfoAnalyzer;
     
     /**
      * DeserializationStrategySelector 생성자
      */
     public DeserializationStrategySelector() {
         this.constructorAnalyzer = new ConstructorAnalyzer();
+        this.typeInfoAnalyzer = new TypeInfoAnalyzer();
     }
     
     /**
@@ -30,10 +33,10 @@ public class DeserializationStrategySelector {
             throw new JSON5SerializerException("Target type cannot be null");
         }
         
-        // 1. 다형성 타입 확인 (추후 구현)
-        // if (TypeInfoAnalyzer.isPolymorphicType(targetType)) {
-        //     return DeserializationStrategy.POLYMORPHIC;
-        // }
+        // 1. 다형성 타입 확인
+        if (typeInfoAnalyzer.isPolymorphicType(targetType)) {
+            return DeserializationStrategy.POLYMORPHIC;
+        }
         
         // 2. 생성자 기반 확인
         if (constructorAnalyzer.hasCreatorConstructor(targetType)) {
@@ -54,7 +57,7 @@ public class DeserializationStrategySelector {
         CONSTRUCTOR,
         
         /**
-         * 다형성 역직렬화 (추후 구현)
+         * 다형성 역직렬화
          */
         POLYMORPHIC,
         
