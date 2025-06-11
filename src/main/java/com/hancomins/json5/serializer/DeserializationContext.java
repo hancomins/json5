@@ -224,6 +224,137 @@ public class DeserializationContext {
         return writingOptions;
     }
     
+    // =========================
+    // 고급 체인 옵션들
+    // =========================
+    
+    /** 엄격한 유효성 검사 여부 */
+    private boolean strictValidation = false;
+    
+    /** 필드별 기본값 맵 */
+    private Map<String, Object> fieldDefaults = new HashMap<>();
+    
+    /**
+     * 엄격한 유효성 검사를 설정합니다.
+     * 
+     * @param strictValidation 엄격한 유효성 검사 여부
+     */
+    public void setStrictValidation(boolean strictValidation) {
+        this.strictValidation = strictValidation;
+    }
+    
+    /**
+     * 엄격한 유효성 검사 여부를 반환합니다.
+     * 
+     * @return 엄격한 유효성 검사 여부
+     */
+    public boolean isStrictValidation() {
+        return strictValidation;
+    }
+    
+    /**
+     * 필드별 기본값들을 설정합니다.
+     * 
+     * @param fieldDefaults 필드별 기본값 맵
+     */
+    public void setFieldDefaults(Map<String, Object> fieldDefaults) {
+        this.fieldDefaults = fieldDefaults != null ? fieldDefaults : new HashMap<>();
+    }
+    
+    /**
+     * 필드별 기본값들을 반환합니다.
+     * 
+     * @return 필드별 기본값 맵
+     */
+    public Map<String, Object> getFieldDefaults() {
+        return fieldDefaults;
+    }
+    
+    /**
+     * 지정된 필드의 기본값을 반환합니다.
+     * 
+     * @param fieldName 필드명
+     * @return 기본값, 없으면 null
+     */
+    public Object getFieldDefault(String fieldName) {
+        return fieldDefaults.get(fieldName);
+    }
+    
+    /**
+     * 지정된 필드에 대한 기본값이 있는지 확인합니다.
+     * 
+     * @param fieldName 필드명
+     * @return 기본값이 있으면 true
+     */
+    public boolean hasFieldDefault(String fieldName) {
+        return fieldDefaults.containsKey(fieldName);
+    }
+    
+    /**
+     * 안전한 값 얻기 - 에러 시 기본값 반환
+     * 
+     * @param json5Object JSON5Object
+     * @param key 키
+     * @param targetType 대상 타입
+     * @param fieldDefault 필드 기본값
+     * @return 값 또는 기본값
+     */
+    public Object getSafeValue(JSON5Object json5Object, String key, Class<?> targetType, Object fieldDefault) {
+        try {
+            if (json5Object == null || !json5Object.has(key)) {
+                return fieldDefault != null ? fieldDefault : defaultValue;
+            }
+            
+            Object value = json5Object.get(key);
+            if (value == null) {
+                return fieldDefault != null ? fieldDefault : defaultValue;
+            }
+            
+            // 타입 체크
+            if (strictTypeChecking && targetType != null && !targetType.isInstance(value)) {
+                if (ignoreError) {
+                    return fieldDefault != null ? fieldDefault : defaultValue;
+                } else {
+                    throw new JSON5SerializerException(
+                        String.format("타입 불일치: 필드 '%s', 기대 타입 %s, 실제 타입 %s", 
+                                    key, targetType.getSimpleName(), value.getClass().getSimpleName()));
+                }
+            }
+            
+            return value;
+            
+        } catch (Exception e) {
+            if (ignoreError) {
+                return fieldDefault != null ? fieldDefault : defaultValue;
+            } else {
+                throw new JSON5SerializerException("필드 " + key + " 처리 중 오류: " + e.getMessage(), e);
+            }
+        }
+    }
+    
+    /**
+     * 필수 필드 검사
+     * 
+     * @param json5Object JSON5Object
+     * @param requiredFields 필수 필드들
+     * @throws JSON5SerializerException 필수 필드가 누락된 경우
+     */
+    public void validateRequiredFields(JSON5Object json5Object, String... requiredFields) {
+        if (!strictValidation || requiredFields == null) {
+            return;
+        }
+        
+        for (String field : requiredFields) {
+            if (!json5Object.has(field)) {
+                if (ignoreError) {
+                    return;
+                } else {
+                    throw new JSON5SerializerException("필수 필드 누락: " + field);
+                }
+            }
+        }
+    }
+    
     /**
      * 디버깅용 문자열 표현
      * 

@@ -22,9 +22,26 @@ public class ObjectDeserializer {
      * @return 역직렬화된 객체
      */
     public <T> T deserialize(JSON5Object json5Object, T targetObject) {
+        return deserialize(json5Object, targetObject, null);
+    }
+    
+    /**
+     * JSON5Object를 대상 객체로 역직렬화 (컨텍스트 포함)
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param targetObject 대상 객체
+     * @param context 역직렬화 컨텍스트 (null 가능)
+     * @param <T> 반환 타입
+     * @return 역직렬화된 객체
+     */
+    public <T> T deserialize(JSON5Object json5Object, T targetObject, DeserializationContext context) {
         TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(targetObject.getClass());
         SchemaObjectNode schemaRoot = typeSchema.getSchemaObjectNode();
-        DeserializationContext context = new DeserializationContext(targetObject, json5Object, typeSchema);
+        
+        // 컨텍스트가 제공되지 않았으면 기본 컨텍스트 생성
+        if (context == null) {
+            context = new DeserializationContext(targetObject, json5Object, typeSchema);
+        }
         
         // 중첩 구조 처리를 위한 스택
         ArrayDeque<ObjectDeserializeItem> deserializeStack = new ArrayDeque<>();

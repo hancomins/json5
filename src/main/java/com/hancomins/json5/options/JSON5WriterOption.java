@@ -165,5 +165,47 @@ public class JSON5WriterOption  implements WritingOptions {
         return this;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        JSON5WriterOption that = (JSON5WriterOption) obj;
+        return pretty == that.pretty &&
+               skipComments == that.skipComments &&
+               isUnprettyArray == that.isUnprettyArray &&
+               space == that.space &&
+               allowUnquoted == that.allowUnquoted &&
+               allowSingleQuotes == that.allowSingleQuotes &&
+               isAllowLineBreak == that.isAllowLineBreak &&
+               java.util.Objects.equals(keyQuote, that.keyQuote) &&
+               java.util.Objects.equals(valueQuote, that.valueQuote) &&
+               java.util.Objects.equals(depthString, that.depthString);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(pretty, skipComments, isUnprettyArray, space, 
+                                     keyQuote, valueQuote, allowUnquoted, allowSingleQuotes, 
+                                     isAllowLineBreak, depthString);
+    }
+
+    @Override
+    public String toString() {
+        return "JSON5WriterOption{" +
+               "pretty=" + pretty +
+               ", skipComments=" + skipComments +
+               ", isUnprettyArray=" + isUnprettyArray +
+               ", space=" + space +
+               ", keyQuote='" + keyQuote + '\'' +
+               ", valueQuote='" + valueQuote + '\'' +
+               ", allowUnquoted=" + allowUnquoted +
+               ", allowSingleQuotes=" + allowSingleQuotes +
+               ", isAllowLineBreak=" + isAllowLineBreak +
+               "}";
+    }
 
 }

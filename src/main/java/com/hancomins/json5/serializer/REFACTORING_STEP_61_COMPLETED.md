@@ -185,7 +185,7 @@ MyClass obj = serializer.forDeserialization()
 
 ## 🚀 다음 단계 준비사항
 
-### 6.2 설정 시스템 도입 (진행 예정)
+### 6.2 설정 시스템 도입
 - ✅ **SerializerConfiguration**: 이미 완료
 - 🔄 **고급 설정 옵션**: 추가 설정 항목 도입 예정
 - 🔄 **환경별 설정**: 개발/운영 환경별 설정 지원 예정

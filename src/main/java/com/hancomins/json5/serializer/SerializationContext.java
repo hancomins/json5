@@ -246,6 +246,147 @@ public class SerializationContext {
         return ignoredFields.contains(fieldName);
     }
     
+    // =========================
+    // 고급 체인 옵션들
+    // =========================
+    
+    /** 유지할 필드들 (설정되면 이 필드들만 직렬화) */
+    private Set<String> onlyFields;
+    
+    /** 최대 직렬화 깊이 */
+    private int maxDepth = -1;
+    
+    /** 최대 문자열 길이 */
+    private int maxStringLength = -1;
+    
+    /** 현재 직렬화 깊이 */
+    private int currentDepth = 0;
+    
+    /**
+     * 유지할 필드들을 설정합니다.
+     * 
+     * @param onlyFields 유지할 필드들
+     */
+    public void setOnlyFields(Set<String> onlyFields) {
+        this.onlyFields = onlyFields;
+    }
+    
+    /**
+     * 유지할 필드들을 반환합니다.
+     * 
+     * @return 유지할 필드들
+     */
+    public Set<String> getOnlyFields() {
+        return onlyFields;
+    }
+    
+    /**
+     * 지정된 필드가 유지되어야 하는지 확인합니다.
+     * onlyFields가 설정되지 않았으면 모든 필드가 유지됩니다.
+     * 
+     * @param fieldName 필드명
+     * @return 유지해야 하면 true
+     */
+    public boolean shouldKeepField(String fieldName) {
+        if (onlyFields == null || onlyFields.isEmpty()) {
+            return !isIgnoredField(fieldName);
+        }
+        return onlyFields.contains(fieldName);
+    }
+    
+    /**
+     * 최대 깊이를 설정합니다.
+     * 
+     * @param maxDepth 최대 깊이
+     */
+    public void setMaxDepth(int maxDepth) {
+        this.maxDepth = maxDepth;
+    }
+    
+    /**
+     * 최대 깊이를 반환합니다.
+     * 
+     * @return 최대 깊이
+     */
+    public int getMaxDepth() {
+        return maxDepth;
+    }
+    
+    /**
+     * 현재 깊이를 증가시킵니다.
+     */
+    public void incrementDepth() {
+        currentDepth++;
+    }
+    
+    /**
+     * 현재 깊이를 감소시킵니다.
+     */
+    public void decrementDepth() {
+        if (currentDepth > 0) {
+            currentDepth--;
+        }
+    }
+    
+    /**
+     * 현재 깊이를 반환합니다.
+     * 
+     * @return 현재 깊이
+     */
+    public int getCurrentDepth() {
+        return currentDepth;
+    }
+    
+    /**
+     * 최대 깊이를 초과했는지 확인합니다.
+     * 
+     * @return 최대 깊이를 초과했으면 true
+     */
+    public boolean isMaxDepthExceeded() {
+        return maxDepth > 0 && currentDepth >= maxDepth;
+    }
+    
+    /**
+     * 최대 문자열 길이를 설정합니다.
+     * 
+     * @param maxStringLength 최대 문자열 길이
+     */
+    public void setMaxStringLength(int maxStringLength) {
+        this.maxStringLength = maxStringLength;
+    }
+    
+    /**
+     * 최대 문자열 길이를 반환합니다.
+     * 
+     * @return 최대 문자열 길이
+     */
+    public int getMaxStringLength() {
+        return maxStringLength;
+    }
+    
+    /**
+     * 문자열이 최대 길이를 초과하는지 확인합니다.
+     * 
+     * @param str 확인할 문자열
+     * @return 최대 길이를 초과하면 true
+     */
+    public boolean isStringTooLong(String str) {
+        return maxStringLength > 0 && str != null && str.length() > maxStringLength;
+    }
+    
+    /**
+     * 문자열을 최대 길이로 자릅니다.
+     * 
+     * @param str 원본 문자열
+     * @return 잘린 문자열
+     */
+    public String truncateString(String str) {
+        if (str == null || maxStringLength <= 0 || str.length() <= maxStringLength) {
+            return str;
+        }
+        return str.substring(0, maxStringLength) + "...";
+    }
+    
     /**
      * 직렬화 작업 항목을 나타내는 내부 클래스입니다.
      */

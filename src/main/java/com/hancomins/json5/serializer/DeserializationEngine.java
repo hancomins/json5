@@ -71,15 +71,9 @@ public class DeserializationEngine {
      * @return 역직렬화된 객체
      */
     public <T> T deserialize(JSON5Object json5Object, T targetObject) {
-        // 전략 패턴 먼저 시도
-        @SuppressWarnings("unchecked")
-        T strategyResult = (T) tryDeserializeWithStrategy(json5Object, targetObject.getClass());
-        if (strategyResult != null) {
-            return strategyResult;
-        }
-        
-        // 기존 방식으로 처리
-        return objectDeserializer.deserialize(json5Object, targetObject);
+        // 기존 객체에 역직렬화할 때는 전략 패턴을 사용하지 않고
+        // 바로 ObjectDeserializer를 사용하여 기존 객체를 업데이트함
+        return objectDeserializer.deserialize(json5Object, targetObject, null);
     }
     
     /**
@@ -294,15 +288,9 @@ public class DeserializationEngine {
             context.setTypeHandlerRegistry(configuration.getTypeHandlerRegistry());
         }
         
-        // 전략 패턴 먼저 시도
-        @SuppressWarnings("unchecked")
-        T strategyResult = (T) tryDeserializeWithStrategy(json5Object, targetObject.getClass(), context);
-        if (strategyResult != null) {
-            return strategyResult;
-        }
-        
-        // 기존 방식으로 처리
-        return objectDeserializer.deserialize(json5Object, targetObject);
+        // 기존 객체에 역직렬화할 때는 전략 패턴을 사용하지 않고
+        // 바로 ObjectDeserializer를 사용하여 기존 객체를 업데이트함
+        return objectDeserializer.deserialize(json5Object, targetObject, context);
     }
     
     /**
