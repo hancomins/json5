@@ -1,6 +1,7 @@
-package com.hancomins.json5.serializer;
-
-import com.hancomins.json5.*;
+import com.hancomins.json5.JSON5Object;
+import com.hancomins.json5.serializer.JSON5Serializer;
+import com.hancomins.json5.serializer.JSON5Type;
+import com.hancomins.json5.serializer.JSON5Value;
 
 /**
  * 간단한 디버깅 클래스 - 테스트 실패 원인 분석
