@@ -251,6 +251,10 @@ public class ObjectDeserializer {
         if (Types.isSingleType(valueType)) {
             // 기본 타입 처리
             Object valueObj = JSON5ElementExtractor.getFrom(json5Element, key, valueType);
+            // 키가 존재하지 않으면 값을 설정하지 않음 (기본값 유지)
+            if (JSON5ElementExtractor.isMissingKey(valueObj)) {
+                return;
+            }
             schemaField.setValue(parent, valueObj);
         } else if ((Types.AbstractObject == valueType || Types.GenericType == valueType) && 
                    schemaField instanceof ObtainTypeValueInvokerGetter) {
@@ -267,32 +271,43 @@ public class ObjectDeserializer {
             handleMapType(parent, schemaField, json5Element, key, context, isArrayType);
         } else if (Types.JSON5Object == valueType) {
             // JSON5Object 타입 처리
-            JSON5Object value = isArrayType ? 
-                ((JSON5Array) json5Element).getJSON5Object((int) key) : 
-                ((JSON5Object) json5Element).getJSON5Object((String) key);
-            schemaField.setValue(parent, value);
+            if (JSON5ElementExtractor.hasKey(json5Element, key)) {
+                JSON5Object value = isArrayType ? 
+                    ((JSON5Array) json5Element).getJSON5Object((int) key) : 
+                    ((JSON5Object) json5Element).getJSON5Object((String) key);
+                schemaField.setValue(parent, value);
+            }
+            // 키가 없으면 아무것도 하지 않음 (기본값 유지)
         } else if (Types.JSON5Array == valueType) {
             // JSON5Array 타입 처리
-            JSON5Array value = isArrayType ? 
-                ((JSON5Array) json5Element).getJSON5Array((int) key) : 
-                ((JSON5Object) json5Element).getJSON5Array((String) key);
-            schemaField.setValue(parent, value);
+            if (JSON5ElementExtractor.hasKey(json5Element, key)) {
+                JSON5Array value = isArrayType ? 
+                    ((JSON5Array) json5Element).getJSON5Array((int) key) : 
+                    ((JSON5Object) json5Element).getJSON5Array((String) key);
+                schemaField.setValue(parent, value);
+            }
+            // 키가 없으면 아무것도 하지 않음 (기본값 유지)
         } else if (Types.JSON5Element == valueType) {
             // JSON5Element 타입 처리
-            Object value = isArrayType ? 
-                ((JSON5Array) json5Element).get((int) key) : 
-                ((JSON5Object) json5Element).get((String) key);
-            if (value instanceof JSON5Element) {
-                schemaField.setValue(parent, value);
-            } else {
-                schemaField.setValue(parent, null);
+            if (JSON5ElementExtractor.hasKey(json5Element, key)) {
+                Object value = isArrayType ? 
+                    ((JSON5Array) json5Element).get((int) key) : 
+                    ((JSON5Object) json5Element).get((String) key);
+                if (value instanceof JSON5Element) {
+                    schemaField.setValue(parent, value);
+                } else {
+                    schemaField.setValue(parent, null);
+                }
             }
+            // 키가 없으면 아무것도 하지 않음 (기본값 유지)
         } else {
-            // 기타 타입은 null로 설정
-            try {
-                schemaField.setValue(parent, null);
-            } catch (Exception ignored) {
-                // 무시
+            // 기타 타입은 키가 존재할 때만 null로 설정
+            if (JSON5ElementExtractor.hasKey(json5Element, key)) {
+                try {
+                    schemaField.setValue(parent, null);
+                } catch (Exception ignored) {
+                    // 무시
+                }
             }
         }
     }
@@ -303,6 +318,12 @@ public class ObjectDeserializer {
     private void handleAbstractOrGenericType(Object parent, SchemaValueAbs schemaField, JSON5Element json5Element,
                                            Object key, DeserializationContext context) {
         Object val = JSON5ElementExtractor.getFrom(json5Element, key, schemaField.getType());
+        
+        // 키가 존재하지 않으면 값을 설정하지 않음 (기본값 유지)
+        if (JSON5ElementExtractor.isMissingKey(val)) {
+            return;
+        }
+        
         Object obj = createOnObtainTypeValue((ObtainTypeValueInvokerGetter) schemaField, parent, context).obtain(val);
         
         if (obj == null) {
@@ -317,6 +338,11 @@ public class ObjectDeserializer {
      */
     private void handleCollectionType(Object parent, SchemaValueAbs schemaField, JSON5Element json5Element,
                                     Object key, DeserializationContext context, boolean isArrayType) {
+        // 키가 존재하지 않으면 아무것도 하지 않음 (기본값 유지)
+        if (!JSON5ElementExtractor.hasKey(json5Element, key)) {
+            return;
+        }
+        
         JSON5Array json5Array = isArrayType ? 
             ((JSON5Array) json5Element).getJSON5Array((int) key) : 
             ((JSON5Object) json5Element).getJSON5Array((String) key);
@@ -351,6 +377,11 @@ public class ObjectDeserializer {
      */
     private void handleObjectType(Object parent, SchemaValueAbs schemaField, JSON5Element json5Element,
                                 Object key, boolean isArrayType) {
+        // 키가 존재하지 않으면 아무것도 하지 않음 (기본값 유지)
+        if (!JSON5ElementExtractor.hasKey(json5Element, key)) {
+            return;
+        }
+        
         JSON5Object json5Obj = isArrayType ? 
             ((JSON5Array) json5Element).getJSON5Object((int) key) : 
             ((JSON5Object) json5Element).getJSON5Object((String) key);
@@ -371,6 +402,11 @@ public class ObjectDeserializer {
      */
     private void handleMapType(Object parent, SchemaValueAbs schemaField, JSON5Element json5Element,
                              Object key, DeserializationContext context, boolean isArrayType) {
+        // 키가 존재하지 않으면 아무것도 하지 않음 (기본값 유지)
+        if (!JSON5ElementExtractor.hasKey(json5Element, key)) {
+            return;
+        }
+        
         JSON5Object json5Obj = isArrayType ? 
             ((JSON5Array) json5Element).getJSON5Object((int) key) : 
             ((JSON5Object) json5Element).getJSON5Object((String) key);

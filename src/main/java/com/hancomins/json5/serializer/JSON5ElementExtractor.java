@@ -11,6 +11,9 @@ import com.hancomins.json5.JSON5Object;
  * 지정된 타입의 값을 안전하게 추출하는 기능을 제공합니다.
  * null 값 처리와 타입별 적절한 메소드 호출을 담당합니다.</p>
  * 
+ * <p>JSON에 해당 키가 존재하지 않는 경우 MISSING_KEY_MARKER를 반환하여
+ * 역직렬화 시 기본값을 유지할 수 있도록 지원합니다.</p>
+ * 
  * <h3>사용 예제:</h3>
  * <pre>{@code
  * JSON5Object json5Object = new JSON5Object();
@@ -40,16 +43,28 @@ import com.hancomins.json5.JSON5Object;
 public final class JSON5ElementExtractor {
     
     /**
+     * JSON에서 해당 키가 존재하지 않음을 나타내는 특별한 마커 객체입니다.
+     * 이 객체가 반환되면 역직렬화 시 해당 필드에 값을 설정하지 않아 기본값을 유지합니다.
+     */
+    public static final Object MISSING_KEY_MARKER = new Object() {
+        @Override
+        public String toString() {
+            return "MISSING_KEY_MARKER";
+        }
+    };
+    
+    /**
      * JSON5Element에서 지정된 키/인덱스와 타입에 해당하는 값을 추출합니다.
      * 
      * <p>JSON5Array의 경우 key는 Integer 타입이어야 하고,
      * JSON5Object의 경우 key는 String 타입이어야 합니다.
+     * 키가 존재하지 않는 경우 MISSING_KEY_MARKER를 반환하고,
      * null 값인 경우 null을 반환합니다.</p>
      * 
      * @param json5 값을 추출할 JSON5Element (JSON5Array 또는 JSON5Object)
      * @param key 추출할 값의 키 (JSON5Object의 경우 String, JSON5Array의 경우 Integer)
      * @param valueType 추출할 값의 타입
-     * @return 추출된 값, null인 경우 null
+     * @return 추출된 값, 키가 없으면 MISSING_KEY_MARKER, null인 경우 null
      * @throws IllegalArgumentException json5가 null이거나 지원되지 않는 타입인 경우
      * @throws ClassCastException key 타입이 json5 타입과 맞지 않는 경우
      */
@@ -63,21 +78,40 @@ public final class JSON5ElementExtractor {
         
         boolean isArrayType = json5 instanceof JSON5Array;
         
-        // null 값 체크
+        // 키 존재 여부 및 null 값 체크
         if (isArrayType) {
             if (!(key instanceof Integer)) {
                 throw new ClassCastException("Key must be Integer for JSON5Array");
             }
             int index = (Integer) key;
-            if (((JSON5Array) json5).isNull(index)) {
-                return null;
+            JSON5Array array = (JSON5Array) json5;
+            
+            // 배열 범위를 벗어나면 키가 없는 것으로 간주
+            if (index < 0 || index >= array.size()) {
+                return MISSING_KEY_MARKER;
+            }
+            
+            // 안전하게 null 체크
+            try {
+                if (array.isNull(index)) {
+                    return null;
+                }
+            } catch (IndexOutOfBoundsException e) {
+                return MISSING_KEY_MARKER;
             }
         } else if (json5 instanceof JSON5Object) {
             if (!(key instanceof String)) {
                 throw new ClassCastException("Key must be String for JSON5Object");
             }
             String stringKey = (String) key;
-            if (((JSON5Object) json5).isNull(stringKey)) {
+            JSON5Object object = (JSON5Object) json5;
+            
+            // 키가 존재하지 않으면 MISSING_KEY_MARKER 반환
+            if (!object.has(stringKey)) {
+                return MISSING_KEY_MARKER;
+            }
+            
+            if (object.isNull(stringKey)) {
                 return null;
             }
         } else {
@@ -161,10 +195,43 @@ public final class JSON5ElementExtractor {
      */
     public static Object getFromSafely(JSON5Element json5, Object key, Types valueType, Object defaultValue) {
         try {
-            return getFrom(json5, key, valueType);
+            Object result = getFrom(json5, key, valueType);
+            if (result == MISSING_KEY_MARKER) {
+                return defaultValue;
+            }
+            return result;
         } catch (Exception e) {
             return defaultValue;
         }
+    }
+    
+    /**
+     * 키가 존재하는지 확인합니다.
+     * 
+     * @param json5 확인할 JSON5Element
+     * @param key 확인할 키
+     * @return 키가 존재하면 true, 그렇지 않으면 false
+     */
+    public static boolean hasKey(JSON5Element json5, Object key) {
+        if (json5 == null || key == null) {
+            return false;
+        }
+        
+        if (json5 instanceof JSON5Array) {
+            if (!(key instanceof Integer)) {
+                return false;
+            }
+            int index = (Integer) key;
+            JSON5Array array = (JSON5Array) json5;
+            return index >= 0 && index < array.size();
+        } else if (json5 instanceof JSON5Object) {
+            if (!(key instanceof String)) {
+                return false;
+            }
+            return ((JSON5Object) json5).has((String) key);
+        }
+        
+        return false;
     }
     
     /**
@@ -185,6 +252,16 @@ public final class JSON5ElementExtractor {
      */
     public static boolean isObject(JSON5Element json5) {
         return json5 instanceof JSON5Object;
+    }
+    
+    /**
+     * 값이 MISSING_KEY_MARKER인지 확인합니다.
+     * 
+     * @param value 확인할 값
+     * @return MISSING_KEY_MARKER이면 true, 그렇지 않으면 false
+     */
+    public static boolean isMissingKey(Object value) {
+        return value == MISSING_KEY_MARKER;
     }
     
     /**
