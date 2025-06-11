@@ -2,11 +2,15 @@ package com.hancomins.json5.serializer.constructor;
 
 import com.hancomins.json5.serializer.JSON5Creator;
 import com.hancomins.json5.serializer.JSON5Property;
+import com.hancomins.json5.serializer.JSON5ValueConstructor;
+import com.hancomins.json5.serializer.JSON5SerializerException;
 import com.hancomins.json5.serializer.MissingValueStrategy;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -134,5 +138,49 @@ public class ConstructorAnalyzer {
                              ", error: " + e.getMessage());
             return null;
         }
+    }
+    
+    /**
+     * 값 공급자 생성자 검증 (기존 로직 + 단일 파라미터 검증)
+     */
+    public ConstructorInfo analyzeValueProviderConstructor(Class<?> clazz) {
+        List<Constructor<?>> constructors = Arrays.stream(clazz.getDeclaredConstructors())
+            .filter(c -> c.isAnnotationPresent(JSON5ValueConstructor.class))
+            .collect(Collectors.toList());
+        
+        if (constructors.isEmpty()) {
+            throw new JSON5SerializerException(
+                "No @JSON5ValueConstructor found in class: " + clazz.getName());
+        }
+        
+        if (constructors.size() > 1) {
+            throw new JSON5SerializerException(
+                "Multiple @JSON5ValueConstructor found in class: " + clazz.getName() + 
+                ". Only one is allowed.");
+        }
+        
+        Constructor<?> constructor = constructors.get(0);
+        
+        // 파라미터 개수 검증 (값 공급자는 정확히 1개만 허용)
+        if (constructor.getParameterCount() != 1) {
+            throw new JSON5SerializerException(
+                "@JSON5ValueConstructor must have exactly one parameter: " + constructor);
+        }
+        
+        // 기존 ConstructorInfo 생성 로직 활용하되 단일 파라미터로 제한
+        constructor.setAccessible(true);
+        return new ConstructorInfo(constructor, 0, Collections.emptyList()); // 값 공급자는 JSON5Property 불필요
+    }
+    
+    /**
+     * 값 공급자 생성자가 있는지 확인
+     */
+    public boolean hasValueProviderConstructor(Class<?> clazz) {
+        if (clazz == null) {
+            return false;
+        }
+        
+        return Arrays.stream(clazz.getDeclaredConstructors())
+            .anyMatch(c -> c.isAnnotationPresent(JSON5ValueConstructor.class));
     }
 }

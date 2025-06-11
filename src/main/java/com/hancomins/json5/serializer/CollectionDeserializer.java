@@ -3,6 +3,8 @@ package com.hancomins.json5.serializer;
 import com.hancomins.json5.*;
 import com.hancomins.json5.options.WritingOptions;
 import com.hancomins.json5.util.DataConverter;
+import com.hancomins.json5.serializer.polymorphic.TypeInfoAnalyzer;
+import com.hancomins.json5.serializer.polymorphic.PolymorphicDeserializer;
 
 import java.util.*;
 
@@ -13,6 +15,14 @@ import java.util.*;
  * 복잡한 로직을 분리하여 컬렉션 역직렬화만을 전담으로 처리합니다.
  */
 public class CollectionDeserializer {
+    
+    private final TypeInfoAnalyzer typeInfoAnalyzer;
+    private final PolymorphicDeserializer polymorphicDeserializer;
+    
+    public CollectionDeserializer() {
+        this.typeInfoAnalyzer = new TypeInfoAnalyzer();
+        this.polymorphicDeserializer = new PolymorphicDeserializer();
+    }
     
     /**
      * JSON5Array를 List로 역직렬화
@@ -102,7 +112,24 @@ public class CollectionDeserializer {
             if (collectionItem.isGeneric() || collectionItem.isAbstractType()) {
                 // 제네릭 또는 추상 타입 처리
                 JSON5Object json5Object = objectItem.json5Array.getJSON5Object(index);
-                Object object = onObtainTypeValue != null ? onObtainTypeValue.obtain(json5Object) : null;
+                Object object = null;
+                
+                // 1. 다형성 타입인지 먼저 확인
+                Class<?> elementType = collectionItem.getValueClass();
+                if (elementType != null && typeInfoAnalyzer.isPolymorphicType(elementType) && json5Object != null) {
+                    try {
+                        object = polymorphicDeserializer.deserialize(json5Object, elementType);
+                    } catch (Exception e) {
+                        // 다형성 역직렬화 실패 시 기존 방식으로 fallback
+                        System.err.println("Polymorphic collection deserialization failed, falling back to @ObtainTypeValue: " + e.getMessage());
+                    }
+                }
+                
+                // 2. 다형성 역직렬화에 실패했거나 다형성 타입이 아닌 경우 기존 방식 사용
+                if (object == null) {
+                    object = onObtainTypeValue != null ? onObtainTypeValue.obtain(json5Object) : null;
+                }
+                
                 objectItem.collectionObject.add(object);
             } else if (collectionItem.getValueClass() != null) {
                 // 기본 값 타입 처리

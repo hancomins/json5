@@ -1,6 +1,8 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.*;
+import com.hancomins.json5.serializer.provider.ValueProviderRegistry;
+import com.hancomins.json5.serializer.provider.ValueProviderSerializer;
 import java.util.*;
 
 /**
@@ -14,6 +16,11 @@ import java.util.*;
  * @since 2.0
  */
 public class ObjectSerializer {
+    
+    // 값 공급자 처리를 위한 컴포넌트
+    private static final ValueProviderRegistry VALUE_PROVIDER_REGISTRY = SerializationEngine.VALUE_PROVIDER_REGISTRY;
+    private static final ValueProviderSerializer VALUE_PROVIDER_SERIALIZER = 
+        new ValueProviderSerializer(VALUE_PROVIDER_REGISTRY);
     
     /**
      * ObjectSerializer를 생성합니다.
@@ -202,6 +209,20 @@ public class ObjectSerializer {
 
     // 기존 JSON5Serializer의 helper 메소드들 복사
     private void putValueInJSON5Element(JSON5Element JSON5Element, ISchemaValue ISchemaValueAbs, Object key, Object value) {
+        // 값 공급자 처리 추가
+        if (value != null && VALUE_PROVIDER_REGISTRY.isValueProvider(value.getClass())) {
+            try {
+                System.out.println("[DEBUG] Found value provider: " + value.getClass().getName() + ", value: " + value);
+                Object serializedValue = VALUE_PROVIDER_SERIALIZER.serialize(value);
+                System.out.println("[DEBUG] Serialized to: " + serializedValue + ", type: " + (serializedValue != null ? serializedValue.getClass() : "null"));
+                value = serializedValue;
+            } catch (Exception e) {
+                // 값 공급자 직렬화 실패 시 기존 방식으로 처리
+                System.err.println("Value provider serialization failed for field '" + key + "': " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
         if(key instanceof String) {
             ((JSON5Object) JSON5Element).put((String) key, value);
             ((JSON5Object) JSON5Element).setCommentForKey((String) key, ISchemaValueAbs.getComment());

@@ -2,6 +2,10 @@ package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.*;
 import com.hancomins.json5.util.DataConverter;
+import com.hancomins.json5.serializer.polymorphic.TypeInfoAnalyzer;
+import com.hancomins.json5.serializer.polymorphic.PolymorphicDeserializer;
+import com.hancomins.json5.serializer.provider.ValueProviderRegistry;
+import com.hancomins.json5.serializer.provider.ValueProviderDeserializer;
 
 import java.util.*;
 
@@ -12,6 +16,19 @@ import java.util.*;
  * 객체 역직렬화만을 전담으로 처리합니다.
  */
 public class ObjectDeserializer {
+    
+    private final TypeInfoAnalyzer typeInfoAnalyzer;
+    private final PolymorphicDeserializer polymorphicDeserializer;
+    
+    // 값 공급자 처리를 위한 컴포넌트
+    private static final ValueProviderRegistry VALUE_PROVIDER_REGISTRY = SerializationEngine.VALUE_PROVIDER_REGISTRY;
+    private static final ValueProviderDeserializer VALUE_PROVIDER_DESERIALIZER = 
+        new ValueProviderDeserializer(VALUE_PROVIDER_REGISTRY);
+    
+    public ObjectDeserializer() {
+        this.typeInfoAnalyzer = new TypeInfoAnalyzer();
+        this.polymorphicDeserializer = new PolymorphicDeserializer();
+    }
     
     /**
      * JSON5Object를 대상 객체로 역직렬화
@@ -324,12 +341,29 @@ public class ObjectDeserializer {
             return;
         }
         
-        Object obj = createOnObtainTypeValue((ObtainTypeValueInvokerGetter) schemaField, parent, context).obtain(val);
+        Object obj = null;
         
-        if (obj == null) {
-            obj = schemaField.newInstance();
-            obj = dynamicCasting(obj, val);
+        // 1. 다형성 타입인지 먼저 확인
+        Class<?> fieldType = schemaField.getValueTypeClass();
+        if (fieldType != null && typeInfoAnalyzer.isPolymorphicType(fieldType) && val instanceof JSON5Object) {
+            try {
+                obj = polymorphicDeserializer.deserialize((JSON5Object) val, fieldType);
+            } catch (Exception e) {
+                // 다형성 역직렬화 실패 시 기존 방식으로 fallback
+                System.err.println("Polymorphic deserialization failed, falling back to @ObtainTypeValue: " + e.getMessage());
+            }
         }
+        
+        // 2. 다형성 역직렬화에 실패했거나 다형성 타입이 아닌 경우 기존 방식 사용
+        if (obj == null) {
+            obj = createOnObtainTypeValue((ObtainTypeValueInvokerGetter) schemaField, parent, context).obtain(val);
+            
+            if (obj == null) {
+                obj = schemaField.newInstance();
+                obj = dynamicCasting(obj, val);
+            }
+        }
+        
         schemaField.setValue(parent, obj);
     }
     
@@ -382,6 +416,28 @@ public class ObjectDeserializer {
             return;
         }
         
+        // 값 공급자 처리 추가
+        Class<?> fieldType = schemaField.getValueTypeClass();
+        if (VALUE_PROVIDER_REGISTRY.isValueProvider(fieldType)) {
+            try {
+                Object value = isArrayType ? 
+                    ((JSON5Array) json5Element).get((int) key) : 
+                    ((JSON5Object) json5Element).get((String) key);
+                
+                if (value != null) {
+                    Object deserializedObject = VALUE_PROVIDER_DESERIALIZER.deserialize(value, fieldType);
+                    schemaField.setValue(parent, deserializedObject);
+                } else {
+                    schemaField.setValue(parent, null);
+                }
+                return;
+            } catch (Exception e) {
+                // 값 공급자 역직렬화 실패 시 기존 방식으로 처리
+                System.err.println("Value provider deserialization failed for field '" + key + "': " + e.getMessage());
+            }
+        }
+        
+        // 기존 객체 타입 처리
         JSON5Object json5Obj = isArrayType ? 
             ((JSON5Array) json5Element).getJSON5Object((int) key) : 
             ((JSON5Object) json5Element).getJSON5Object((String) key);

@@ -1,6 +1,8 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.*;
+import com.hancomins.json5.serializer.provider.ValueProviderRegistry;
+import com.hancomins.json5.serializer.provider.ValueProviderSerializer;
 import java.util.*;
 
 /**
@@ -33,6 +35,11 @@ import java.util.*;
  * @see MapSerializer
  */
 public class SerializationEngine {
+    
+    // 값 공급자 관련 컴포넌트 (클래스 상단에 추가)
+    public static final ValueProviderRegistry VALUE_PROVIDER_REGISTRY = new ValueProviderRegistry();
+    private static final ValueProviderSerializer VALUE_PROVIDER_SERIALIZER = 
+        new ValueProviderSerializer(VALUE_PROVIDER_REGISTRY);
     
     private final ObjectSerializer objectSerializer;
     private final CollectionSerializer collectionSerializer;
@@ -88,6 +95,15 @@ public class SerializationEngine {
     public JSON5Object serialize(Object obj) {
         Objects.requireNonNull(obj, "obj is null");
         
+        // 값 공급자 처리 시도
+        Object serializedValue = trySerializeValueProvider(obj);
+        if (serializedValue != null && serializedValue != obj) {
+            // 값 공급자로 직렬화된 경우, 결과를 JSON5Object로 래핑
+            JSON5Object wrapper = new JSON5Object();
+            wrapper.put("value", serializedValue);
+            return wrapper;
+        }
+        
         // Strategy 패턴 적용 시도
         JSON5Element result = serializeWithStrategy(obj);
         if (result instanceof JSON5Object) {
@@ -138,6 +154,36 @@ public class SerializationEngine {
         }
         
         return null;
+    }
+    
+    /**
+     * 값 공급자 직렬화 시도
+     */
+    private Object trySerializeValueProvider(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        
+        Class<?> clazz = obj.getClass();
+        if (VALUE_PROVIDER_REGISTRY.isValueProvider(clazz)) {
+            try {
+                return VALUE_PROVIDER_SERIALIZER.serialize(obj);
+            } catch (Exception e) {
+                // 값 공급자 직렬화 실패 시 null 반환하여 기존 방식으로 처리
+                System.err.println("Value provider serialization failed for " + 
+                    clazz.getName() + ": " + e.getMessage());
+                return null;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 값 공급자 수동 등록
+     */
+    public static void registerValueProvider(Class<?> providerClass) {
+        VALUE_PROVIDER_REGISTRY.registerValueProvider(providerClass);
     }
     
     /**

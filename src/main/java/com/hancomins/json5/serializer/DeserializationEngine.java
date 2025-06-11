@@ -5,6 +5,8 @@ import com.hancomins.json5.serializer.constructor.ConstructorDeserializer;
 import com.hancomins.json5.serializer.constructor.ConstructorAnalyzer;
 import com.hancomins.json5.serializer.polymorphic.PolymorphicDeserializer;
 import com.hancomins.json5.serializer.polymorphic.TypeInfoAnalyzer;
+import com.hancomins.json5.serializer.provider.ValueProviderRegistry;
+import com.hancomins.json5.serializer.provider.ValueProviderDeserializer;
 
 import java.util.*;
 
@@ -17,6 +19,11 @@ import java.util.*;
  * 4.4 단계에서 Strategy 패턴을 적용하여 타입별 역직렬화 전략을 지원합니다.
  */
 public class DeserializationEngine {
+    
+    // 값 공급자 관련 컴포넌트 (데직렬화엔진과 동일한 인스턴스 공유)
+    private static final ValueProviderRegistry VALUE_PROVIDER_REGISTRY = SerializationEngine.VALUE_PROVIDER_REGISTRY;
+    private static final ValueProviderDeserializer VALUE_PROVIDER_DESERIALIZER = 
+        new ValueProviderDeserializer(VALUE_PROVIDER_REGISTRY);
     
     private final ObjectDeserializer objectDeserializer;
     private final CollectionDeserializer collectionDeserializer;
@@ -68,12 +75,23 @@ public class DeserializationEngine {
      */
     @SuppressWarnings("unchecked")
     public <T> T deserialize(JSON5Object json5Object, Class<T> clazz) {
+        // 값 공급자 역직렬화 시도
+        if (VALUE_PROVIDER_REGISTRY.isValueProvider(clazz)) {
+            try {
+                Object value = extractValueForValueProvider(json5Object);
+                return VALUE_PROVIDER_DESERIALIZER.deserialize(value, clazz);
+            } catch (Exception e) {
+                // 값 공급자 역직렬화 실패 시 기존 방식으로 처리
+                System.err.println("Value provider deserialization failed for " + 
+                    clazz.getName() + ": " + e.getMessage());
+            }
+        }
+        
         // 1. 다형성 타입 확인 및 처리
         if (typeInfoAnalyzer.isPolymorphicType(clazz)) {
             try {
                 return polymorphicDeserializer.deserialize(json5Object, clazz);
             } catch (Exception e) {
-                // 다형성 역직렬화 실패 시 기존 방식으로 fallback
                 System.err.println("Polymorphic deserialization failed, falling back to default: " + e.getMessage());
             }
         }
@@ -83,7 +101,6 @@ public class DeserializationEngine {
             try {
                 return constructorDeserializer.deserialize(json5Object, clazz);
             } catch (Exception e) {
-                // 생성자 역직렬화 실패 시 기존 방식으로 fallback
                 System.err.println("Constructor deserialization failed, falling back to default: " + e.getMessage());
             }
         }
@@ -209,6 +226,24 @@ public class DeserializationEngine {
         }
         
         return null;
+    }
+    
+    /**
+     * 값 공급자를 위한 값 추출
+     */
+    private Object extractValueForValueProvider(JSON5Object json5Object) {
+        // 단순 값인 경우와 래핑된 값인 경우 모두 처리
+        if (json5Object.has("value")) {
+            return json5Object.get("value");
+        }
+        
+        // 단일 키-값 쌍인 경우 값 반환
+        if (json5Object.size() == 1) {
+            return json5Object.values().iterator().next();
+        }
+        
+        // 복잡한 객체인 경우 JSON5Object 자체 반환
+        return json5Object;
     }
     
     /**

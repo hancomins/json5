@@ -366,6 +366,30 @@ public class JSON5Serializer {
     public DeserializationEngine getDeserializationEngine() {
         return deserializationEngine;
     }
+    
+    // ============== 값 공급자 관련 메서드들 ==============
+    
+    /**
+     * 값 공급자 수동 등록 (선택사항)
+     */
+    public static void registerValueProvider(Class<?> providerClass) {
+        SerializationEngine.registerValueProvider(providerClass);
+        // DeserializationEngine은 동일한 레지스트리 인스턴스 공유
+    }
+    
+    /**
+     * 값 공급자 여부 확인
+     */
+    public static boolean isValueProvider(Class<?> clazz) {
+        try {
+            Class<?> registryClass = Class.forName("com.hancomins.json5.serializer.provider.ValueProviderRegistry");
+            Object registry = registryClass.getDeclaredConstructor().newInstance();
+            java.lang.reflect.Method isValueProviderMethod = registryClass.getMethod("isValueProvider", Class.class);
+            return (Boolean) isValueProviderMethod.invoke(registry, clazz);
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     // ============== 기존 내부 클래스들 (하위 호환성을 위해 유지) ==============
 

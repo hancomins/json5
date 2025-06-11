@@ -9,8 +9,13 @@ public class SchemaFieldNormal extends SchemaField {
     protected SchemaFieldNormal(TypeSchema typeSchema, Field field, String path) {
         super(typeSchema, field, path);
 
-        if(this.types() != Types.JSON5Object && this.types() != Types.JSON5Array &&  this.types() == Types.Object && getField().getType().getAnnotation(JSON5Type.class) == null)  {
-            throw new JSON5SerializerException("Object type " + this.field.getType().getName() + " is not annotated with @JSON5Type");
+        if(this.types() != Types.JSON5Object && this.types() != Types.JSON5Array &&  this.types() == Types.Object) {
+            boolean hasJSON5Type = getField().getType().getAnnotation(JSON5Type.class) != null;
+            boolean isValueProvider = getField().getType().getAnnotation(JSON5ValueProvider.class) != null;
+            
+            if (!hasJSON5Type && !isValueProvider) {
+                throw new JSON5SerializerException("Object type " + this.field.getType().getName() + " is not annotated with @JSON5Type or @JSON5ValueProvider");
+            }
         }
     }
 
