@@ -87,9 +87,10 @@ class MapKeyTypeTest {
         permissions.put(UserRole.ADMIN, Arrays.asList("all"));
         permissions.put(UserRole.USER, Arrays.asList("read"));
         
-        // When - 직렬화
+        // When - 직렬화 (Phase 3 TypeReference 사용)
         MapSerializer serializer = new MapSerializer();
-        JSON5Object serialized = serializer.serializeMapWithGenericKey(permissions, List.class);
+        JSON5Object serialized = serializer.serializeWithTypeReference(permissions,
+            new JSON5TypeReference<Map<UserRole, List<String>>>() {});
         
         // Then - Key가 String으로 변환되어야 함
         assertTrue(serialized.has("ADMIN"));
@@ -97,11 +98,10 @@ class MapKeyTypeTest {
         assertTrue(serialized.get("ADMIN") instanceof JSON5Array);
         assertTrue(serialized.get("USER") instanceof JSON5Array);
         
-        // When - 역직렬화
+        // When - 역직렬화 (Phase 3 TypeReference 사용)
         MapDeserializer deserializer = new MapDeserializer();
-        @SuppressWarnings("unchecked")
-        Map<UserRole, List> deserialized = (Map<UserRole, List>) deserializer.deserializeWithKeyType(
-            serialized, UserRole.class, List.class);
+        Map<UserRole, List<String>> deserialized = deserializer.deserializeWithTypeReference(serialized,
+            new JSON5TypeReference<Map<UserRole, List<String>>>() {});
         
         // Then
         assertEquals(2, deserialized.size());
@@ -122,9 +122,10 @@ class MapKeyTypeTest {
         userNames.put(2, "Bob");
         userNames.put(100, "Charlie");
         
-        // When - 직렬화
+        // When - 직렬화 (Phase 3 TypeReference 사용)
         MapSerializer serializer = new MapSerializer();
-        JSON5Object serialized = serializer.serializeMapWithGenericKey(userNames, String.class);
+        JSON5Object serialized = serializer.serializeWithTypeReference(userNames,
+            new JSON5TypeReference<Map<Integer, String>>() {});
         
         // Then - Key가 String으로 변환되어야 함
         assertTrue(serialized.has("1"));
@@ -134,10 +135,10 @@ class MapKeyTypeTest {
         assertEquals("Bob", serialized.getString("2"));
         assertEquals("Charlie", serialized.getString("100"));
         
-        // When - 역직렬화
+        // When - 역직렬화 (Phase 3 TypeReference 사용)
         MapDeserializer deserializer = new MapDeserializer();
-        Map<Integer, String> deserialized = deserializer.deserializeWithKeyType(
-            serialized, Integer.class, String.class);
+        Map<Integer, String> deserialized = deserializer.deserializeWithTypeReference(serialized,
+            new JSON5TypeReference<Map<Integer, String>>() {});
         
         // Then
         assertEquals(3, deserialized.size());
@@ -154,9 +155,10 @@ class MapKeyTypeTest {
         statusMap.put(1000L, true);
         statusMap.put(2000L, false);
         
-        // When - 직렬화
+        // When - 직렬화 (Phase 3 TypeReference 사용)
         MapSerializer serializer = new MapSerializer();
-        JSON5Object serialized = serializer.serializeMapWithGenericKey(statusMap, Boolean.class);
+        JSON5Object serialized = serializer.serializeWithTypeReference(statusMap,
+            new JSON5TypeReference<Map<Long, Boolean>>() {});
         
         // Then
         assertTrue(serialized.has("1000"));
@@ -164,10 +166,10 @@ class MapKeyTypeTest {
         assertEquals(true, serialized.getBoolean("1000"));
         assertEquals(false, serialized.getBoolean("2000"));
         
-        // When - 역직렬화
+        // When - 역직렬화 (Phase 3 TypeReference 사용)
         MapDeserializer deserializer = new MapDeserializer();
-        Map<Long, Boolean> deserialized = deserializer.deserializeWithKeyType(
-            serialized, Long.class, Boolean.class);
+        Map<Long, Boolean> deserialized = deserializer.deserializeWithTypeReference(serialized,
+            new JSON5TypeReference<Map<Long, Boolean>>() {});
         
         // Then
         assertEquals(2, deserialized.size());

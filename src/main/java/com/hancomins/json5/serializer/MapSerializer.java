@@ -116,6 +116,32 @@ public class MapSerializer {
     }
     
     /**
+     * TypeReference를 사용한 Map 직렬화
+     * 
+     * 사용법:
+     * JSON5Object result = serializer.serializeWithTypeReference(map,
+     *     new JSON5TypeReference<Map<UserRole, List<String>>>() {});
+     */
+    public <T> JSON5Object serializeWithTypeReference(T object, JSON5TypeReference<T> typeRef) {
+        if (!typeRef.isMapType()) {
+            throw new JSON5SerializerException("TypeReference must be a Map type");
+        }
+        
+        if (!(object instanceof Map)) {
+            throw new JSON5SerializerException("Object must be a Map instance");
+        }
+        
+        @SuppressWarnings("unchecked")
+        Map<?, ?> map = (Map<?, ?>) object;
+        
+        MapTypeInfo typeInfo = typeRef.analyzeMapType();
+        Class<?> valueClass = typeInfo.getValueClass();
+        
+        // 기존 serializeMapWithGenericKey 메서드 재활용
+        return serializeMapInternal(map, valueClass);
+    }
+    
+    /**
      * Map 값의 유효성을 검증합니다.
      * 
      * @param valueType 값 타입

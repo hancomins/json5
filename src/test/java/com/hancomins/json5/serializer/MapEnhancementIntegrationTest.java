@@ -21,9 +21,10 @@ class MapEnhancementIntegrationTest {
         rolePermissions.put("admin", Arrays.asList("read", "write", "delete"));
         rolePermissions.put("user", Arrays.asList("read"));
         
-        // When - 직렬화
+        // When - 직렬화 (Phase 3 TypeReference 사용)
         MapSerializer serializer = new MapSerializer();
-        JSON5Object serialized = serializer.serializeMap(rolePermissions, List.class);
+        JSON5Object serialized = serializer.serializeWithTypeReference(rolePermissions,
+            new JSON5TypeReference<Map<String, List<String>>>() {});
         
         // Then - 직렬화 검증
         assertTrue(serialized.has("admin"));
@@ -31,10 +32,10 @@ class MapEnhancementIntegrationTest {
         assertNotNull(serialized.get("admin"));
         assertNotNull(serialized.get("user"));
         
-        // When - 역직렬화  
+        // When - 역직렬화 (Phase 3 TypeReference 사용)
         MapDeserializer deserializer = new MapDeserializer();
-        @SuppressWarnings("unchecked")
-        Map<String, List> deserialized = (Map<String, List>) deserializer.deserialize(serialized, List.class);
+        Map<String, List<String>> deserialized = deserializer.deserializeWithTypeReference(serialized,
+            new JSON5TypeReference<Map<String, List<String>>>() {});
         
         // Then - 역직렬화 검증
         assertEquals(2, deserialized.size());
@@ -43,13 +44,13 @@ class MapEnhancementIntegrationTest {
         assertEquals(3, deserialized.get("admin").size());
         assertEquals(1, deserialized.get("user").size());
         
-        // List 내용 검증
-        List adminList = deserialized.get("admin");
+        // List 내용 검증 (이제 제네릭 타입이 보존됨)
+        List<String> adminList = deserialized.get("admin");
         assertTrue(adminList.contains("read"));
         assertTrue(adminList.contains("write"));
         assertTrue(adminList.contains("delete"));
         
-        List userList = deserialized.get("user");
+        List<String> userList = deserialized.get("user");
         assertTrue(userList.contains("read"));
     }
     
@@ -106,20 +107,20 @@ class MapEnhancementIntegrationTest {
         complexMap.put(UserRole.USER, Arrays.asList("read_only"));
         complexMap.put(UserRole.GUEST, Arrays.asList());
         
-        // When - 직렬화
+        // When - 직렬화 (Phase 3 TypeReference 사용)
         MapSerializer serializer = new MapSerializer();
-        JSON5Object serialized = serializer.serializeMapWithGenericKey(complexMap, List.class);
+        JSON5Object serialized = serializer.serializeWithTypeReference(complexMap,
+            new JSON5TypeReference<Map<UserRole, List<String>>>() {});
         
         // Then - 직렬화 검증
         assertTrue(serialized.has("ADMIN"));
         assertTrue(serialized.has("USER"));
         assertTrue(serialized.has("GUEST"));
         
-        // When - 역직렬화
+        // When - 역직렬화 (Phase 3 TypeReference 사용)
         MapDeserializer deserializer = new MapDeserializer();
-        @SuppressWarnings("unchecked")
-        Map<UserRole, List> deserialized = (Map<UserRole, List>) deserializer.deserializeWithKeyType(
-            serialized, UserRole.class, List.class);
+        Map<UserRole, List<String>> deserialized = deserializer.deserializeWithTypeReference(serialized,
+            new JSON5TypeReference<Map<UserRole, List<String>>>() {});
         
         // Then - 역직렬화 검증
         assertEquals(3, deserialized.size());
@@ -127,12 +128,12 @@ class MapEnhancementIntegrationTest {
         assertEquals(1, deserialized.get(UserRole.USER).size());
         assertEquals(0, deserialized.get(UserRole.GUEST).size());
         
-        // List 내용 검증
-        List adminList = deserialized.get(UserRole.ADMIN);
+        // List 내용 검증 (이제 제네릭 타입이 보존됨)
+        List<String> adminList = deserialized.get(UserRole.ADMIN);
         assertTrue(adminList.contains("all_permissions"));
         assertTrue(adminList.contains("manage_users"));
         
-        List userList = deserialized.get(UserRole.USER);
+        List<String> userList = deserialized.get(UserRole.USER);
         assertTrue(userList.contains("read_only"));
     }
     

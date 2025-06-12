@@ -3,6 +3,7 @@ package com.hancomins.json5.serializer;
 import com.hancomins.json5.*;
 import com.hancomins.json5.util.DataConverter;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -271,6 +272,143 @@ public class MapDeserializer {
                 "Failed to convert value to type " + valueType.getName(), e);
             return null;
         }
+    }
+    
+    /**
+     * TypeReference를 사용한 완전한 제네릭 타입 지원 역직렬화
+     * 
+     * 사용법:
+     * Map<UserRole, List<String>> result = deserializer.deserializeWithTypeReference(json,
+     *     new JSON5TypeReference<Map<UserRole, List<String>>>() {});
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T deserializeWithTypeReference(JSON5Object json5Object, JSON5TypeReference<T> typeRef) {
+        if (!typeRef.isMapType()) {
+            throw new JSON5SerializerException("TypeReference must be a Map type");
+        }
+        
+        MapTypeInfo typeInfo = typeRef.analyzeMapType();
+        
+        Class<?> keyClass = typeInfo.getKeyClass();
+        Class<?> valueClass = typeInfo.getValueClass();
+        
+        // Key 타입 지원 여부 확인
+        if (!MapKeyConverter.isSupportedKeyType(keyClass)) {
+            throw new JSON5SerializerException("Unsupported Map key type: " + keyClass.getName());
+        }
+        
+        Map<Object, Object> result = new HashMap<>();
+        
+        for (String keyStr : json5Object.keySet()) {
+            // Key 변환
+            Object convertedKey;
+            try {
+                convertedKey = MapKeyConverter.convertStringToKey(keyStr, keyClass);
+                if (convertedKey == null) {
+                    CatchExceptionProvider.getInstance().catchException(
+                        "Failed to convert key: " + keyStr, new RuntimeException("Key conversion returned null"));
+                    continue;
+                }
+            } catch (Exception e) {
+                CatchExceptionProvider.getInstance().catchException(
+                    "Failed to convert key '" + keyStr + "' to type " + keyClass.getName(), e);
+                continue;
+            }
+            
+            // Value 변환 (제네릭 타입 정보 활용)
+            Object jsonValue = json5Object.get(keyStr);
+            Object convertedValue = convertValueWithTypeInfo(jsonValue, typeInfo);
+            
+            result.put(convertedKey, convertedValue);
+        }
+        
+        return (T) result;
+    }
+    
+    /**
+     * 제네릭 타입 정보를 활용한 값 변환
+     */
+    private Object convertValueWithTypeInfo(Object jsonValue, MapTypeInfo typeInfo) {
+        if (jsonValue == null) {
+            return null;
+        }
+        
+        Class<?> valueClass = typeInfo.getValueClass();
+        
+        // Collection 처리 - 제네릭 요소 타입 활용
+        if (typeInfo.isValueCollection()) {
+            if (jsonValue instanceof JSON5Array) {
+                return deserializeCollectionWithElementType(
+                    (JSON5Array) jsonValue, valueClass, typeInfo.getValueElementType());
+            }
+            return null;
+        }
+        
+        // 중첩 Map 처리
+        if (typeInfo.isValueNestedMap()) {
+            if (jsonValue instanceof JSON5Object) {
+                // 재귀적으로 중첩 Map 처리 (Phase 4에서 확장 예정)
+                return deserializeNestedMap((JSON5Object) jsonValue, typeInfo.getValueType());
+            }
+            return null;
+        }
+        
+        // 기본 타입 변환
+        try {
+            return DataConverter.convertValue(valueClass, jsonValue);
+        } catch (Exception e) {
+            CatchExceptionProvider.getInstance().catchException(
+                "Failed to convert value to type " + valueClass.getName(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * Collection을 요소 타입 정보와 함께 역직렬화
+     */
+    private Object deserializeCollectionWithElementType(JSON5Array jsonArray, Class<?> collectionClass, Type elementType) {
+        CollectionDeserializer collectionDeserializer = new CollectionDeserializer();
+        
+        // 요소 타입 결정
+        Class<?> elementClass = elementType != null ? (Class<?>) elementType : Object.class;
+        
+        try {
+            // List로 역직렬화 (CollectionDeserializer는 기본적으로 List 반환)
+            List<?> list = collectionDeserializer.deserializeToList(
+                jsonArray, elementClass, null, true, null);
+            
+            // 필요시 다른 Collection 타입으로 변환
+            return convertToTargetCollectionType(list, collectionClass);
+        } catch (Exception e) {
+            CatchExceptionProvider.getInstance().catchException(
+                "Failed to deserialize collection with element type: " + elementClass.getName(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * List를 목표 Collection 타입으로 변환
+     */
+    private Object convertToTargetCollectionType(List<?> list, Class<?> targetCollectionClass) {
+        if (targetCollectionClass.isAssignableFrom(List.class)) {
+            return list;
+        } else if (targetCollectionClass.isAssignableFrom(Set.class)) {
+            return new HashSet<>(list);
+        } else if (targetCollectionClass.isAssignableFrom(Collection.class)) {
+            return list; // 기본값으로 List 반환
+        } else {
+            // 다른 Collection 타입들도 필요시 추가
+            return list;
+        }
+    }
+    
+    /**
+     * 중첩 Map 처리 (Phase 4에서 상세 구현 예정)
+     */
+    private Object deserializeNestedMap(JSON5Object jsonObject, Type nestedMapType) {
+        // Phase 4에서 구현
+        // 현재는 기본 Map으로 처리
+        return jsonObject;
     }
     
     /**
