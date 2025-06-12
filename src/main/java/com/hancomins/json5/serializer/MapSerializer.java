@@ -23,23 +23,57 @@ public class MapSerializer {
      * @return 직렬화된 JSON5Object
      */
     public JSON5Object serializeMap(Map<String, ?> map, Class<?> valueType) {
+        // 기존 String Key Map 처리 (하위 호환성 보장)
+        return serializeMapInternal(map, valueType);
+    }
+    
+    /**
+     * 다양한 Key 타입을 지원하는 Map 직렬화 (신규 메서드)
+     * 
+     * @param map 직렬화할 Map
+     * @param valueType Map 값의 타입 (null 가능)
+     * @return 직렬화된 JSON5Object
+     */
+    public JSON5Object serializeMapWithGenericKey(Map<?, ?> map, Class<?> valueType) {
+        return serializeMapInternal(map, valueType);
+    }
+    
+    /**
+     * 내부 Map 직렬화 로직 (Key 타입 자동 감지)
+     */
+    private JSON5Object serializeMapInternal(Map<?, ?> map, Class<?> valueType) {
         JSON5Object json5Object = new JSON5Object();
-        Set<? extends Map.Entry<String, ?>> entries = map.entrySet();
+        Set<? extends Map.Entry<?, ?>> entries = map.entrySet();
         Types types = valueType == null ? null : Types.of(valueType);
         
-        for (Map.Entry<String, ?> entry : entries) {
+        for (Map.Entry<?, ?> entry : entries) {
+            Object key = entry.getKey();
             Object value = entry.getValue();
-            String key = entry.getKey();
             
-            // 값 타입이 지정되지 않은 경우 실제 값의 타입 사용
+            // Key 변환 처리 (MapKeyConverter 활용)
+            String keyStr;
+            try {
+                keyStr = MapKeyConverter.convertKeyToString(key);
+                if (keyStr == null) {
+                    CatchExceptionProvider.getInstance().catchException(
+                        "Map key is null, skipping entry", new RuntimeException("Null key found"));
+                    continue;
+                }
+            } catch (Exception e) {
+                CatchExceptionProvider.getInstance().catchException(
+                    "Failed to convert map key: " + (key != null ? key.getClass().getName() : "null"), e);
+                continue; // 변환 실패한 엔트리는 건너뛰기
+            }
+            
+            // 값 타입이 지정되지 않은 경우 실제 값의 타입 사용  
             if (value != null && valueType == null) {
                 valueType = value.getClass();
-                validateMapValue(valueType, key);
+                validateMapValue(valueType, keyStr);
                 types = Types.of(valueType);
             }
             
             Object serializedValue = serializeMapValue(value, types);
-            json5Object.put(key, serializedValue);
+            json5Object.put(keyStr, serializedValue);
         }
         
         return json5Object;
@@ -90,9 +124,6 @@ public class MapSerializer {
      */
     private void validateMapValue(Class<?> valueType, String key) {
         ISchemaValue.assertValueType(valueType, null);
-        
-        if (key == null) {
-            throw new JSON5SerializerException("Map key type is not String. Please use String key.");
-        }
+        // Key 검증 제거 - 이제 MapKeyConverter에서 처리됨
     }
 }

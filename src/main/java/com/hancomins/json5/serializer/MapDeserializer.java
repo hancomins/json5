@@ -1,6 +1,7 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.*;
+import com.hancomins.json5.util.DataConverter;
 
 import java.util.*;
 
@@ -190,6 +191,84 @@ public class MapDeserializer {
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    /**
+     * 새로운 메서드 추가 - 제네릭 Key 타입 지원
+     */
+    @SuppressWarnings("unchecked")
+    public <K, V> Map<K, V> deserializeWithKeyType(JSON5Object json5Object, 
+                                                   Class<K> keyType, Class<V> valueType) {
+        // Key 타입 지원 여부 확인
+        if (!MapKeyConverter.isSupportedKeyType(keyType)) {
+            throw new JSON5SerializerException(
+                "Unsupported Map key type: " + keyType.getName());
+        }
+        
+        // Value 타입 검증
+        validateValueType(valueType);
+        
+        Map<K, V> result = new HashMap<>();
+        
+        for (String keyStr : json5Object.keySet()) {
+            // String Key를 목표 Key 타입으로 변환
+            K convertedKey;
+            try {
+                convertedKey = MapKeyConverter.convertStringToKey(keyStr, keyType);
+                if (convertedKey == null) {
+                    CatchExceptionProvider.getInstance().catchException(
+                        "Failed to convert key: " + keyStr, new RuntimeException("Key conversion returned null"));
+                    continue;
+                }
+            } catch (Exception e) {
+                CatchExceptionProvider.getInstance().catchException(
+                    "Failed to convert key '" + keyStr + "' to type " + keyType.getName(), e);
+                continue; // 변환 실패한 키는 건너뛰기
+            }
+            
+            // Value 변환 처리
+            Object jsonValue = json5Object.get(keyStr);
+            V convertedValue = convertValue(jsonValue, valueType);
+            
+            result.put(convertedKey, convertedValue);
+        }
+        
+        return result;
+    }
+    
+    // Value 변환 메서드 추가
+    @SuppressWarnings("unchecked")
+    private <V> V convertValue(Object jsonValue, Class<V> valueType) {
+        if (jsonValue == null) {
+            return null;
+        }
+        
+        // Collection 처리
+        if (Collection.class.isAssignableFrom(valueType)) {
+            if (jsonValue instanceof JSON5Array) {
+                CollectionDeserializer collectionDeserializer = new CollectionDeserializer();
+                try {
+                    List<?> list = collectionDeserializer.deserializeToList(
+                        (JSON5Array) jsonValue, Object.class, null, true, null);
+                    return (V) list;
+                } catch (Exception e) {
+                    CatchExceptionProvider.getInstance().catchException(
+                        "Failed to deserialize collection value", e);
+                    return null;
+                }
+            }
+            return null;
+        }
+        
+        // 기본 타입 변환 (DataConverter 활용)
+        try {
+            Object converted = DataConverter.convertValue(valueType, jsonValue);
+            return (V) converted;
+        } catch (Exception e) {
+            CatchExceptionProvider.getInstance().catchException(
+                "Failed to convert value to type " + valueType.getName(), e);
             return null;
         }
     }
