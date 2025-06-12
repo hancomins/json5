@@ -1,4 +1,4 @@
-# JSON5 Serializer Complete User Guide
+# JSON5 User Guide
 
 # 한국어 버전 바로가기
  - [JSON5 Serializer 사용자 가이드 (한국어)](README.KO.md)
