@@ -4,6 +4,7 @@ import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.serializer.JSON5SerializerException;
 import com.hancomins.json5.serializer.JSON5Serializer;
 import com.hancomins.json5.serializer.DeserializationEngine;
+import com.hancomins.json5.serializer.path.JSON5PathExtractor;
 
 /**
  * 다형성 역직렬화를 수행합니다.
@@ -135,12 +136,28 @@ public class PolymorphicDeserializer {
     
     /**
      * JSON에서 타입 값을 추출합니다.
+     * JSON5PathExtractor를 사용하여 중첩 경로를 지원합니다.
      * @param json5Object JSON 객체
      * @param typeInfo 타입 정보
      * @return 타입 값, 없으면 null
      */
     private String extractTypeValue(JSON5Object json5Object, TypeInfo typeInfo) {
-        return typeResolver.hasTypeInformation(json5Object, typeInfo) ? 
-               json5Object.getString(typeInfo.getTypeProperty()) : null;
+        String typeProperty = typeInfo.getTypeProperty();
+        
+        // JSON5PathExtractor를 사용하여 중첩 경로에서 값 추출
+        Object value = JSON5PathExtractor.extractValue(json5Object, typeProperty);
+        
+        if (JSON5PathExtractor.isMissingValue(value)) {
+            return null;
+        }
+        
+        // 값을 문자열로 변환
+        if (value instanceof String) {
+            return (String) value;
+        } else if (value != null) {
+            return value.toString();
+        }
+        
+        return null;
     }
 }
