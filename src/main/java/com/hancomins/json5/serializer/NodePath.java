@@ -18,31 +18,8 @@ public class NodePath {
 
 
     public static SchemaObjectNode makeSchema(TypeSchema targetTypeSchema, SchemaValueAbs parentFieldRack) {
-        List<SchemaValueAbs> fieldRacks = searchAllJSON5ValueFields(targetTypeSchema, targetTypeSchema.getType());
-        SchemaObjectNode objectNode = new SchemaObjectNode().setBranchNode(false);
-
-        for(SchemaValueAbs fieldRack : fieldRacks) {
-            fieldRack.setParentFiled(parentFieldRack);
-            String path = fieldRack.getPath();
-            if(fieldRack.getType() == Types.Object) {
-                TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(fieldRack.getValueTypeClass());
-                SchemaObjectNode childTree = makeSchema(typeSchema,fieldRack);
-                childTree.setComment(fieldRack.getComment());
-                childTree.setAfterComment(fieldRack.getAfterComment());
-                childTree.addParentFieldRack(fieldRack);
-                childTree.setBranchNode(false);
-                SchemaElementNode elementNode = makeSubTree(path, childTree);
-                elementNode.setBranchNode(false);
-                objectNode.merge(elementNode);
-                continue;
-            }
-            SchemaElementNode elementNode = makeSubTree(path, fieldRack);
-            objectNode.merge(elementNode);
-        }
-        if(parentFieldRack == null) {
-            objectNode.setBranchNode(false);
-        }
-        return objectNode;
+        // SchemaFactory를 사용하여 Schema 생성 위임
+        return SchemaFactory.getInstance().createSchema(targetTypeSchema, parentFieldRack);
     }
 
 
@@ -187,60 +164,68 @@ public class NodePath {
 
 
     public static SchemaElementNode makeSubTree(String path, ISchemaNode value) {
-        List<PathItem> list = PathItem.parseMultiPath2(path);
-        SchemaElementNode rootNode = new SchemaObjectNode();
-        SchemaElementNode schemaNode = rootNode;
-        //noinspection ForLoopReplaceableByForEach
-        for(int i = 0, n = list.size(); i < n; ++i) {
-            PathItem pathItem = list.get(i);
-            if(pathItem.isEndPoint()) {
-                putNode(schemaNode, pathItem, value);
-                break;
-            }
-            schemaNode = obtainOrCreateChild(schemaNode, pathItem);
-        }
-        return rootNode;
+        // SchemaFactory를 사용하여 SubTree 생성 위임
+        return SchemaFactory.getInstance().createSubTree(path, value);
     }
 
 
     public Object get(String path) {
-        List<PathItem> pathItemList = PathItem.parseMultiPath2(path);
-        Object parents = node;
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0, n = pathItemList.size(); i < n; ++i) {
-            PathItem pathItem = pathItemList.get(i);
-            if (pathItem.isEndPoint()) {
-                if (pathItem.isInArray()) {
-                    if(pathItem.isObject()) {
-                        SchemaObjectNode endPointObject = ((SchemaArrayNode) parents).getObjectNode(pathItem.getIndex());
-                        if(endPointObject == null) return null;
-                        return endPointObject.get(pathItem.getName());
+        // JSON5PathExtractor와 동일한 파싱 방식 사용하여 일관성 확보
+        if (path == null || path.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            List<PathItem> pathItemList = PathItem.parseMultiPath2(path);
+            Object parents = node;
+            
+            //noinspection ForLoopReplaceableByForEach
+            for (int i = 0, n = pathItemList.size(); i < n; ++i) {
+                PathItem pathItem = pathItemList.get(i);
+                if (pathItem.isEndPoint()) {
+                    if (pathItem.isInArray()) {
+                        if(pathItem.isObject()) {
+                            SchemaObjectNode endPointObject = ((SchemaArrayNode) parents).getObjectNode(pathItem.getIndex());
+                            if(endPointObject == null) return null;
+                            return endPointObject.get(pathItem.getName());
+                        }
+                        else {
+                            return ((SchemaArrayNode)parents).get(pathItem.getIndex());
+                        }
+                    } else {
+                        return ((SchemaObjectNode) parents).get(pathItem.getName());
                     }
-                    else {
-                        return ((SchemaArrayNode)parents).get(pathItem.getIndex());
-                    }
-                } else {
-                    return ((SchemaObjectNode) parents).get(pathItem.getName());
                 }
-            }
-            else if((parents instanceof SchemaObjectNode && pathItem.isInArray()) || (parents instanceof SchemaArrayNode && !pathItem.isInArray())) {
-                return null;
-            }
-            else {
-                if (pathItem.isInArray()) {
-                    assert parents instanceof SchemaArrayNode;
-                    parents = ((SchemaArrayNode) parents).get(pathItem.getIndex());
-                    if(pathItem.isObject() && parents instanceof SchemaObjectNode) {
+                else if((parents instanceof SchemaObjectNode && pathItem.isInArray()) || (parents instanceof SchemaArrayNode && !pathItem.isInArray())) {
+                    return null;
+                }
+                else {
+                    if (pathItem.isInArray()) {
+                        assert parents instanceof SchemaArrayNode;
+                        parents = ((SchemaArrayNode) parents).get(pathItem.getIndex());
+                        if(pathItem.isObject() && parents instanceof SchemaObjectNode) {
+                            parents = ((SchemaObjectNode) parents).get(pathItem.getName());
+                        }
+                    } else {
+                        assert parents instanceof SchemaObjectNode;
                         parents = ((SchemaObjectNode) parents).get(pathItem.getName());
                     }
-                } else {
-                    assert parents instanceof SchemaObjectNode;
-                    parents = ((SchemaObjectNode) parents).get(pathItem.getName());
+                    if(parents == null) return null;
                 }
-                if(parents == null) return null;
             }
+            return null;
+        } catch (Exception e) {
+            // 파싱 실패 시 null 반환 (기존 동작 유지)
+            return null;
         }
-        return null;
+    }
+    
+    /**
+     * 경로가 존재하는지 확인합니다.
+     * JSON5PathExtractor와 일관된 인터페이스 제공
+     */
+    public boolean has(String path) {
+        return get(path) != null;
     }
 
 }

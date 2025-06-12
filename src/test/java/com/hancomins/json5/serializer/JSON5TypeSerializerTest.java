@@ -5,6 +5,7 @@ import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.options.WritingOptions;
 import org.junit.jupiter.api.Test;
 
+
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -616,8 +617,8 @@ public class JSON5TypeSerializerTest {
         System.out.println(json5Object.toString(WritingOptions.json5()));
         assertEquals(27, json5Object.getJSON5Object("nickname").getInt("ageReal"));
         assertEquals(29, json5Object.getJSON5Object("nickname").getInt("age"));
-        assertEquals(json5Object.getCommentForKey("nickname"), "닉네임 오브젝트.");
-        assertEquals(json5Object.getCommentAfterKey("nickname"), "닉네임 오브젝트 끝.");
+        assertEquals("닉네임 오브젝트.", json5Object.getCommentForKey("nickname"));
+        assertEquals("닉네임 오브젝트 끝.", json5Object.getCommentAfterKey("nickname"));
 
 
         String json5 = json5Object.toString(WritingOptions.json5());

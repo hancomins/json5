@@ -29,11 +29,18 @@ public interface ISchemaValue extends ISchemaNode {
                 throw new JSON5ObjectException("Array type '" + valueType.getName() + "' of field '" + parentPath + "' is not supported");
             }
         }
-        if(type == Types.Object && valueType.getAnnotation(JSON5Type.class) == null)  {
-            if(parentPath != null) {
-                throw new JSON5ObjectException("Object type '" + valueType.getName() + "' is not annotated with @JSON5Type");
-            } else  {
-                throw new JSON5ObjectException("Object type '" + valueType.getName() + "' of field '" + parentPath + "' is not annotated with @JSON5Type");
+        
+        // 값 공급자 처리 추가: @JSON5ValueProvider 어노테이션이 있으면 허용
+        if(type == Types.Object) {
+            boolean hasJSON5Type = valueType.getAnnotation(JSON5Type.class) != null;
+            boolean isValueProvider = valueType.getAnnotation(JSON5ValueProvider.class) != null;
+            
+            if (!hasJSON5Type && !isValueProvider) {
+                if(parentPath != null) {
+                    throw new JSON5ObjectException("Object type '" + valueType.getName() + "' is not annotated with @JSON5Type or @JSON5ValueProvider");
+                } else  {
+                    throw new JSON5ObjectException("Object type '" + valueType.getName() + "' of field '" + parentPath + "' is not annotated with @JSON5Type or @JSON5ValueProvider");
+                }
             }
         }
     }
@@ -47,7 +54,15 @@ public interface ISchemaValue extends ISchemaNode {
         if(valueType.isArray() && type != Types.ByteArray) {
             return false;
         }
-        return type != Types.Object || valueType.getAnnotation(JSON5Type.class) != null;
+        
+        // 값 공급자 처리 추가
+        if(type == Types.Object) {
+            boolean hasJSON5Type = valueType.getAnnotation(JSON5Type.class) != null;
+            boolean isValueProvider = valueType.getAnnotation(JSON5ValueProvider.class) != null;
+            return hasJSON5Type || isValueProvider;
+        }
+        
+        return true;
     }
 
 }

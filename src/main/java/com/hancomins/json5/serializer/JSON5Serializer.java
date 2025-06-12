@@ -6,13 +6,195 @@ import com.hancomins.json5.JSON5Element;
 import com.hancomins.json5.options.WritingOptions;
 import com.hancomins.json5.util.DataConverter;
 
-
 import java.util.*;
 
+/**
+ * JSON5 직렬화/역직렬화를 위한 메인 클래스입니다.
+ * 
+ * <p>이 클래스는 Java 객체와 JSON5 형식 간의 변환을 담당합니다.
+ * 기존의 static 메소드 기반 API와 새로운 인스턴스 기반 Fluent API를 모두 제공합니다.</p>
+ * 
+ * <h3>기본 사용법:</h3>
+ * <pre>{@code
+ * // 기존 방식 (하위 호환성 유지)
+ * JSON5Object json = JSON5Serializer.toJSON5Object(myObject);
+ * MyClass obj = JSON5Serializer.fromJSON5Object(json, MyClass.class);
+ * 
+ * // 새로운 Fluent API
+ * JSON5Serializer serializer = JSON5Serializer.builder()
+ *     .ignoreUnknownProperties()
+ *     .enableSchemaCache()
+ *     .build();
+ * 
+ * JSON5Object json = serializer.forSerialization()
+ *     .includeNullValues()
+ *     .serialize(myObject);
+ * }</pre>
+ * 
+ * @author ice3x2
+ * @version 1.1
+ * @since 1.0
+ */
 public class JSON5Serializer {
 
-    private JSON5Serializer() {}
 
+
+    // 기본 인스턴스 (singleton)
+    private static final JSON5Serializer DEFAULT_INSTANCE = new JSON5Serializer(SerializerConfiguration.getDefault());
+    
+    // 인스턴스 필드들
+    private final SerializationEngine serializationEngine;
+    private final DeserializationEngine deserializationEngine;
+    private final SerializerConfiguration configuration;
+
+    /**
+     * 기본 생성자 (내부 사용용 - 하위 호환성)
+     */
+    private JSON5Serializer() {
+        this(SerializerConfiguration.getDefault());
+    }
+
+
+    public static void addOnCatchExceptionListener(OnCatchExceptionListener listener) {
+        CatchExceptionProvider.getInstance().addOnCatchException(listener);
+    }
+
+    /**
+     * 설정을 받는 생성자
+     * 
+     * @param configuration 직렬화 설정
+     */
+    public JSON5Serializer(SerializerConfiguration configuration) {
+        this.configuration = configuration;
+        this.serializationEngine = new SerializationEngine(configuration);
+        this.deserializationEngine = new DeserializationEngine(configuration);
+    }
+
+    /**
+     * 기본 인스턴스를 반환합니다.
+     * 
+     * @return 기본 JSON5Serializer 인스턴스
+     */
+    public static JSON5Serializer getInstance() {
+        return DEFAULT_INSTANCE;
+    }
+
+    /**
+     * Builder를 통해 JSON5Serializer를 생성합니다.
+     * 
+     * @return 새로운 JSON5SerializerBuilder 인스턴스
+     */
+    public static JSON5SerializerBuilder builder() {
+        return new JSON5SerializerBuilder();
+    }
+
+    /**
+     * 직렬화를 위한 Builder를 반환합니다.
+     * 
+     * @return SerializationBuilder 인스턴스
+     */
+    public SerializationBuilder forSerialization() {
+        return new SerializationBuilder(this);
+    }
+
+    /**
+     * 역직렬화를 위한 Builder를 반환합니다.
+     * 
+     * @return DeserializationBuilder 인스턴스
+     */
+    public DeserializationBuilder forDeserialization() {
+        return new DeserializationBuilder(this);
+    }
+
+    // ============== 인스턴스 메소드들 (새로운 API) ==============
+
+    /**
+     * 객체를 JSON5Object로 직렬화합니다.
+     * 
+     * @param obj 직렬화할 객체
+     * @return 직렬화된 JSON5Object
+     * @throws JSON5SerializerException 직렬화 중 오류가 발생한 경우
+     */
+    public JSON5Object serialize(Object obj) {
+        Objects.requireNonNull(obj, "obj is null");
+        return serializationEngine.serialize(obj);
+    }
+
+    /**
+     * 컨텍스트와 함께 객체를 직렬화합니다.
+     * 
+     * @param obj 직렬화할 객체
+     * @param context 직렬화 컨텍스트
+     * @return 직렬화된 JSON5Object
+     * @throws JSON5SerializerException 직렬화 중 오류가 발생한 경우
+     */
+    public JSON5Object serialize(Object obj, SerializationContext context) {
+        Objects.requireNonNull(obj, "obj is null");
+        return serializationEngine.serialize(obj, context);
+    }
+
+    /**
+     * JSON5Object를 지정된 클래스의 객체로 역직렬화합니다.
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param clazz 대상 클래스
+     * @param <T> 대상 타입
+     * @return 역직렬화된 객체
+     * @throws JSON5SerializerException 역직렬화 중 오류가 발생한 경우
+     */
+    public <T> T deserialize(JSON5Object json5Object, Class<T> clazz) {
+        return deserializationEngine.deserialize(json5Object, clazz);
+    }
+
+    /**
+     * 컨텍스트와 함께 JSON5Object를 역직렬화합니다.
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param clazz 대상 클래스
+     * @param context 역직렬화 컨텍스트
+     * @param <T> 대상 타입
+     * @return 역직렬화된 객체
+     * @throws JSON5SerializerException 역직렬화 중 오류가 발생한 경우
+     */
+    public <T> T deserialize(JSON5Object json5Object, Class<T> clazz, DeserializationContext context) {
+        return deserializationEngine.deserialize(json5Object, clazz, context);
+    }
+
+    /**
+     * JSON5Object를 기존 객체에 역직렬화합니다.
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param targetObject 대상 객체
+     * @param <T> 대상 타입
+     * @return 역직렬화된 객체
+     * @throws JSON5SerializerException 역직렬화 중 오류가 발생한 경우
+     */
+    public <T> T deserialize(JSON5Object json5Object, T targetObject) {
+        return deserializationEngine.deserialize(json5Object, targetObject);
+    }
+
+    /**
+     * 컨텍스트와 함께 JSON5Object를 기존 객체에 역직렬화합니다.
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param targetObject 대상 객체
+     * @param context 역직렬화 컨텍스트
+     * @param <T> 대상 타입
+     * @return 역직렬화된 객체
+     * @throws JSON5SerializerException 역직렬화 중 오류가 발생한 경우
+     */
+    public <T> T deserialize(JSON5Object json5Object, T targetObject, DeserializationContext context) {
+        return deserializationEngine.deserialize(json5Object, targetObject, context);
+    }
+
+    // ============== Static 메소드들 (기존 API - 하위 호환성 유지) ==============
+
+    /**
+     * 클래스가 직렬화 가능한지 확인합니다.
+     * 
+     * @param clazz 확인할 클래스
+     * @return 직렬화 가능하면 true
+     */
     public static boolean serializable(Class<?> clazz) {
         if(TypeSchemaMap.getInstance().hasTypeInfo(clazz)) {
             return true;
@@ -24,888 +206,199 @@ public class JSON5Serializer {
         return !(clazz.isInterface() || java.lang.reflect.Modifier.isAbstract(clazz.getModifiers()));
     }
 
+    /**
+     * 객체를 JSON5Object로 직렬화합니다. (기존 API)
+     * 
+     * @param obj 직렬화할 객체
+     * @return 직렬화된 JSON5Object
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다: {@code JSON5Serializer.getInstance().serialize(obj)}
+     */
+    @Deprecated
     public static JSON5Object toJSON5Object(Object obj) {
-        Objects.requireNonNull(obj, "obj is null");
-        Class<?> clazz = obj.getClass();
-        TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
-        return serializeTypeElement(typeSchema,obj);
+        return getInstance().serialize(obj);
     }
 
-    private static JSON5Object serializeTypeElement(TypeSchema typeSchema, final Object rootObject) {
-        Class<?> type = typeSchema.getType();
-        /*if(rootObject.getClass() != type) {
-            throw new JSON5SerializerException("Type mismatch error. " + type.getName() + "!=" + rootObject.getClass().getName());
-        }
-        else*/ if(rootObject == null) {
-            return null;
-        }
-        SchemaObjectNode schemaRoot = typeSchema.getSchemaObjectNode();
-
-        HashMap<Integer, Object> parentObjMap = new HashMap<>();
-        JSON5Element JSON5Element = new JSON5Object();
-        String comment = typeSchema.getComment();
-        String commentAfter = typeSchema.getCommentAfter();
-        if(comment != null) {
-            JSON5Element.setHeaderComment(comment);
-        }
-        if(commentAfter != null) {
-            JSON5Element.setFooterComment(commentAfter);
-        }
-        JSON5Object root = (JSON5Object) JSON5Element;
-        ArrayDeque<ObjectSerializeDequeueItem> objectSerializeDequeueItems = new ArrayDeque<>();
-        Iterator<Object> iter = schemaRoot.keySet().iterator();
-        SchemaObjectNode schemaNode = schemaRoot;
-        ObjectSerializeDequeueItem currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, JSON5Element);
-        objectSerializeDequeueItems.add(currentObjectSerializeDequeueItem);
-
-        while(iter.hasNext()) {
-            Object key = iter.next();
-            ISchemaNode node = schemaNode.get(key);
-            if(node instanceof SchemaObjectNode) {
-                schemaNode = (SchemaObjectNode)node;
-                iter = schemaNode.keySet().iterator();
-                List<SchemaValueAbs> parentschemaField = schemaNode.getParentSchemaFieldList();
-                int nullCount = parentschemaField.size();
-
-                // 부모 필드들의 값을 가져온다.
-                for(SchemaValueAbs parentSchemaValueAbs : parentschemaField) {
-                    int id = parentSchemaValueAbs.getId();
-                    if(parentObjMap.containsKey(id)) {
-                        continue;
-                    }
-                    // 부모 필드의 부모 필드가 없으면 rootObject 에서 값을 가져온다.
-                    SchemaField grandschemaField = parentSchemaValueAbs.getParentField();
-                    Object parentObj = null;
-                    if (grandschemaField == null) {
-                        parentObj = parentSchemaValueAbs.getValue(rootObject);
-                    }
-                    else {
-                        Object grandObj = parentObjMap.get(grandschemaField.getId());
-                        if(grandObj != null) {
-                            parentObj = parentSchemaValueAbs.getValue(grandObj);
-                        }
-                    }
-                    if(parentObj != null) {
-                        parentObjMap.put(id, parentObj);
-                        nullCount--;
-                    }
-                }
-
-                if(!schemaNode.isBranchNode() && nullCount > 0) {
-                    if(key instanceof String) {
-                        ((JSON5Object) JSON5Element).put((String) key,null);
-                    } else {
-                        assert JSON5Element instanceof JSON5Array;
-                        ((JSON5Array) JSON5Element).set((Integer) key,null);
-                    }
-                    while (iter.hasNext())  {
-                        iter.next();
-                    }
-                } else {
-                    if(key instanceof String) {
-                        JSON5Object currentObject = ((JSON5Object) JSON5Element);
-                        JSON5Element childElement = currentObject.getJSON5Object((String) key);
-                        if (childElement == null) {
-                                childElement = (schemaNode instanceof SchemaArrayNode) ? new JSON5Array() : new JSON5Object();
-                                currentObject.put((String) key, childElement);
-                                currentObject.setCommentForKey((String) key, schemaNode.getComment());
-                                currentObject.setCommentAfterKey((String) key, schemaNode.getAfterComment());
-                                JSON5Element = childElement;
-                        }
-
-                    } else {
-                        if(!(JSON5Element instanceof JSON5Array)) {
-                            throw new JSON5SerializerException("Invalide path. '" + key + "' is not array index." +  "(JSON5Element is not JSON5Array. JSON5Element=" + JSON5Element +  ")");
-                        }
-                        JSON5Array currentObject = ((JSON5Array) JSON5Element);
-                        JSON5Array currentArray = ((JSON5Array) JSON5Element);
-                        JSON5Element childElement = (JSON5Element) currentArray.get((Integer) key);
-                        if(childElement == null) {
-
-                                childElement = (schemaNode instanceof SchemaArrayNode) ? new JSON5Array() : new JSON5Object();
-                                currentObject.set((int) key, childElement);
-                                JSON5Element = childElement;
-
-                        }
-                    }
-                    objectSerializeDequeueItems.add(new ObjectSerializeDequeueItem(iter, schemaNode, JSON5Element));
-                }
-            }
-            else if(node instanceof SchemaFieldNormal || SchemaMethod.isSchemaMethodGetter(node)) {
-                SchemaValueAbs schemaValueAbs = (SchemaValueAbs)node;
-                Object parent = obtainParentObjects(parentObjMap, schemaValueAbs, rootObject);
-                if(parent != null) {
-                    Object value = schemaValueAbs.getValue(parent);
-                    putValueInJSON5Element(JSON5Element, schemaValueAbs, key, value);
-                }
-            } else if(node instanceof ISchemaMapValue) {
-                SchemaValueAbs schemaMap = (SchemaValueAbs)node;
-                Object parent = obtainParentObjects(parentObjMap, schemaMap, rootObject);
-                if(parent != null) {
-                    Object value = schemaMap.getValue(parent);
-                    if(value != null) {
-                        @SuppressWarnings("unchecked")
-                        JSON5Object json5Object = mapObjectToJSON5Object((Map<String, ?>) value, ((ISchemaMapValue)schemaMap).getElementType());
-                        putValueInJSON5Element(JSON5Element, schemaMap, key, json5Object);
-                    } else {
-                        putValueInJSON5Element(JSON5Element, schemaMap, key, null);
-                    }
-                }
-
-            }
-            else if(node instanceof ISchemaArrayValue) {
-                ISchemaArrayValue ISchemaArrayValue = (ISchemaArrayValue)node;
-                Object parent = obtainParentObjects(parentObjMap, (SchemaValueAbs) ISchemaArrayValue, rootObject);
-                if(parent != null) {
-                    Object value = ISchemaArrayValue.getValue(parent);
-                    if(value != null) {
-                        JSON5Array JSON5Array = collectionObjectToSONArrayKnownSchema((Collection<?>)value, ISchemaArrayValue);
-                        putValueInJSON5Element(JSON5Element, ISchemaArrayValue, key, JSON5Array);
-                    } else {
-                        putValueInJSON5Element(JSON5Element, ISchemaArrayValue, key, null);
-                    }
-                }
-            }
-            while(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
-                ObjectSerializeDequeueItem objectSerializeDequeueItem = objectSerializeDequeueItems.getFirst();
-                iter = objectSerializeDequeueItem.keyIterator;
-                schemaNode = (SchemaObjectNode) objectSerializeDequeueItem.ISchemaNode;
-                JSON5Element = objectSerializeDequeueItem.resultElement;
-                if(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
-                    objectSerializeDequeueItems.removeFirst();
-                }
-            }
-        }
-        return root;
+    /**
+     * TypeSchema 기반 직렬화 (기존 API)
+     * 
+     * @param typeSchema 타입 스키마
+     * @param rootObject 루트 객체
+     * @return 직렬화된 JSON5Object
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다
+     */
+    @Deprecated
+    public static JSON5Object serializeTypeElement(TypeSchema typeSchema, final Object rootObject) {
+        return getInstance().serializationEngine.serializeTypeElement(typeSchema, rootObject);
     }
 
-
-    private static void putValueInJSON5Element(JSON5Element JSON5Element, ISchemaValue ISchemaValueAbs, Object key, Object value) {
-        if(key instanceof String) {
-            ((JSON5Object) JSON5Element).put((String) key, value);
-            ((JSON5Object) JSON5Element).setCommentForKey((String) key, ISchemaValueAbs.getComment());
-            ((JSON5Object) JSON5Element).setCommentAfterKey((String) key, ISchemaValueAbs.getAfterComment());
-        }
-        else {
-            if(!(JSON5Element instanceof JSON5Array)) {
-                throw new JSON5SerializerException("Invalide path. '" + key + "' is not array index." +  "(JSON5Element is not JSON5Array. JSON5Element=" + JSON5Element +  ")");
-            }
-            ((JSON5Array) JSON5Element).set((int)key, value);
-            ((JSON5Array) JSON5Element).setCommentForValue((int)key, ISchemaValueAbs.getComment()) ;
-            ((JSON5Array) JSON5Element).setCommentAfterValue((int)key, ISchemaValueAbs.getAfterComment());
-        }
-    }
-
+    /**
+     * Map을 JSON5Object로 변환합니다. (기존 API)
+     * 
+     * @param map 변환할 Map
+     * @return 변환된 JSON5Object
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다
+     */
+    @Deprecated
     public static JSON5Object mapToJSON5Object(Map<String, ?> map) {
-        return mapObjectToJSON5Object(map, null);
+        return getInstance().serializationEngine.serializeMap(map, null);
     }
 
+    /**
+     * Collection을 JSON5Array로 변환합니다. (기존 API)
+     * 
+     * @param collection 변환할 Collection
+     * @return 변환된 JSON5Array
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다
+     */
+    @Deprecated
     public static JSON5Array collectionToJSON5Array(Collection<?> collection) {
-        return collectionObjectToJSON5Array(collection, null);
+        return getInstance().serializationEngine.serializeCollection(collection, null);
     }
 
-
-
+    /**
+     * JSON5Array를 List로 변환합니다. (기존 API)
+     * 
+     * @param json5Array 변환할 JSON5Array
+     * @param valueType 값 타입
+     * @param <T> 값 타입
+     * @return 변환된 List
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다
+     */
+    @Deprecated
     public static <T> List<T> json5ArrayToList(JSON5Array json5Array, Class<T> valueType) {
         return json5ArrayToList(json5Array, valueType, null, false, null);
     }
 
+    /**
+     * JSON5Array를 List로 변환합니다. (기존 API)
+     * 
+     * @param json5Array 변환할 JSON5Array
+     * @param valueType 값 타입
+     * @param ignoreError 오류 무시 여부
+     * @param <T> 값 타입
+     * @return 변환된 List
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다
+     */
+    @Deprecated
     public static <T> List<T> json5ArrayToList(JSON5Array json5Array, Class<T> valueType, boolean ignoreError) {
         return json5ArrayToList(json5Array, valueType, null, ignoreError, null);
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * JSON5Array를 List로 변환합니다. (기존 API)
+     * 
+     * @param json5Array 변환할 JSON5Array
+     * @param valueType 값 타입
+     * @param writingOptions WritingOptions
+     * @param ignoreError 오류 무시 여부
+     * @param defaultValue 기본값
+     * @param <T> 값 타입
+     * @return 변환된 List
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다
+     */
+    @Deprecated
     public static <T> List<T> json5ArrayToList(JSON5Array json5Array, Class<T> valueType, WritingOptions writingOptions, boolean ignoreError, T defaultValue) {
-        Types types = Types.of(valueType);
-        if(valueType.isPrimitive()) {
-            if(ignoreError) {
-                return null;
-            }
-            throw new JSON5SerializerException("valueType is primitive type. valueType=" + valueType.getName());
-        } else if(Collection.class.isAssignableFrom(valueType)) {
-            if(ignoreError) {
-                return null;
-            }
-            throw new JSON5SerializerException("valueType is java.util.Collection type. Use a class that wraps your Collection.  valueType=" + valueType.getName());
-        }  else if(Map.class.isAssignableFrom(valueType)) {
-            if(ignoreError) {
-                return null;
-            }
-            throw new JSON5SerializerException("valueType is java.util.Map type. Use a class that wraps your Map.  valueType=" + valueType.getName());
-        } else if(valueType.isArray() && Types.ByteArray != types) {
-            if(ignoreError) {
-                return null;
-            }
-            throw new JSON5SerializerException("valueType is Array type. ArrayType cannot be used. valueType=" + valueType.getName());
-        }
-        ArrayList<T> result = new ArrayList<T>();
-        for(int i = 0, n = json5Array.size(); i < n; ++i) {
-            Object value = json5Array.get(i);
-            if(value == null) {
-                result.add(defaultValue);
-            }
-            else if(Number.class.isAssignableFrom(valueType)) {
-                try {
-                    Number no = DataConverter.toBoxingNumberOfType(value, (Class<? extends Number>) valueType);
-                    result.add((T) no);
-                } catch (NumberFormatException e) {
-                    if(ignoreError) {
-                        result.add(defaultValue);
-                        continue;
-                    }
-                    throw new JSON5SerializerException("valueType is Number type. But value is not Number type. valueType=" + valueType.getName());
-                }
-            } else if(Boolean.class == valueType) {
-                if(value.getClass() == Boolean.class) {
-                    result.add((T)value);
-                } else {
-                    result.add("true".equals(value.toString()) ? (T)Boolean.TRUE : (T)Boolean.FALSE);
-                }
-            } else if(Character.class == valueType) {
-                try {
-                    if (value.getClass() == Character.class) {
-                        result.add((T) value);
-                    } else {
-                        result.add((T) (Character) DataConverter.toChar(value));
-                    }
-                } catch (NumberFormatException e) {
-                    if(ignoreError) {
-                        result.add(defaultValue);
-                        continue;
-                    }
-                    throw new JSON5SerializerException("valueType is Character type. But value is not Character type. valueType=" + valueType.getName());
-                }
-            } else if(valueType == String.class) {
-                if(writingOptions != null && value instanceof JSON5Element) {
-                    result.add((T)((JSON5Element) value).toString(writingOptions));
-                } else {
-                    result.add((T) value.toString());
-                }
-            } else if(value instanceof JSON5Object && JSON5Serializer.serializable(valueType)) {
-                try {
-                    value = JSON5Serializer.fromJSON5Object((JSON5Object) value, valueType);
-                } catch (JSON5Exception e) {
-                    if(ignoreError) {
-                        result.add(defaultValue);
-                        continue;
-                    }
-                    throw e;
-                }
-                result.add((T)value);
-            }
-        }
-        return result;
+        return getInstance().deserializationEngine.deserializeToList(json5Array, valueType, writingOptions, ignoreError, defaultValue);
     }
-
-
-    private static JSON5Object mapObjectToJSON5Object(Map<String, ?> map, Class<?> valueType) {
-        JSON5Object json5Object = new JSON5Object();
-        Set<? extends Map.Entry<String, ?>> entries = map.entrySet();
-        Types types = valueType == null ? null : Types.of(valueType);
-        for(Map.Entry<String, ?> entry : entries) {
-            Object value = entry.getValue();
-            String key = entry.getKey();
-            if(value != null && valueType == null) {
-                valueType = value.getClass();
-                ISchemaValue.assertValueType(valueType, null);
-                types = Types.of(valueType);
-                //noinspection DataFlowIssue
-                if(!(key instanceof String)) {
-                    throw new JSON5SerializerException("Map key type is not String. Please use String key.");
-                }
-            }
-            if(value instanceof Collection<?>) {
-                JSON5Array JSON5Array = collectionObjectToJSON5Array((Collection<?>)value, null);
-                json5Object.put(key, JSON5Array);
-            } else if(value instanceof Map<?, ?>) {
-                @SuppressWarnings("unchecked")
-                JSON5Object childObject = mapObjectToJSON5Object((Map<String, ?>)value, null);
-                json5Object.put(key, childObject);
-            } else if(types == Types.Object) {
-                if(value == null) {
-                    json5Object.put(key, null);
-                }
-                else {
-                    Types type = Types.of(value.getClass());
-                    if(Types.isSingleType(type)) {
-                        json5Object.put(key, value);
-                    } else {
-                        JSON5Object childObject = toJSON5Object(value);
-                        json5Object.put(key, childObject);
-                    }
-                }
-            }
-            else {
-                json5Object.put(entry.getKey(), value);
-            }
-        }
-        return json5Object;
-    }
-
-
-
-
-    private static JSON5Array collectionObjectToJSON5Array(Collection<?> collection, Class<?> valueType) {
-        JSON5Array JSON5Array = new JSON5Array();
-        Types types = valueType == null ? null : Types.of(valueType);
-        for(Object object : collection) {
-            if(object instanceof Collection<?>) {
-                JSON5Array childArray = collectionObjectToJSON5Array((Collection<?>)object, null);
-                JSON5Array.add(childArray);
-            } else if(object instanceof Map<?, ?>) {
-                @SuppressWarnings("unchecked")
-                JSON5Object childObject = mapObjectToJSON5Object((Map<String, ?>)object, null);
-                JSON5Array.add(childObject);
-            } else if(types == Types.Object) {
-                JSON5Object childObject = toJSON5Object(object);
-                JSON5Array.add(childObject);
-            }
-            else {
-                JSON5Array.add(object);
-            }
-        }
-        return JSON5Array;
-
-    }
-
-
-
-    private static JSON5Array collectionObjectToSONArrayKnownSchema(Collection<?> collection, ISchemaArrayValue ISchemaArrayValue) {
-        JSON5Array resultJSON5Array = new JSON5Array();
-        JSON5Array JSON5Array = resultJSON5Array;
-        Iterator<?> iter = collection.iterator();
-        TypeSchema objectValueTypeSchema = ISchemaArrayValue.getObjectValueTypeElement();
-        Deque<ArraySerializeDequeueItem> arraySerializeDequeueItems = new ArrayDeque<>();
-        ArraySerializeDequeueItem currentArraySerializeDequeueItem = new ArraySerializeDequeueItem(iter, JSON5Array);
-        arraySerializeDequeueItems.add(currentArraySerializeDequeueItem);
-        boolean isGeneric = ISchemaArrayValue.isGenericTypeValue();
-        boolean isAbstractObject = ISchemaArrayValue.getEndpointValueType() == Types.AbstractObject;
-        while(iter.hasNext()) {
-            Object object = iter.next();
-            if(object instanceof Collection<?>) {
-                JSON5Array childArray = new JSON5Array();
-                JSON5Array.add(childArray);
-                JSON5Array = childArray;
-                iter = ((Collection<?>)object).iterator();
-                currentArraySerializeDequeueItem = new ArraySerializeDequeueItem(iter, JSON5Array);
-                arraySerializeDequeueItems.add(currentArraySerializeDequeueItem);
-            } else if(objectValueTypeSchema == null) {
-                if(isGeneric || isAbstractObject) {
-                    object = object == null ? null :  JSON5Serializer.toJSON5Object(object);
-                }
-                JSON5Array.add(object);
-            } else {
-                if(object == null)  {
-                    JSON5Array.add(null);
-                } else {
-                    JSON5Object childObject = serializeTypeElement(objectValueTypeSchema, object);
-                    JSON5Array.add(childObject);
-                }
-            }
-            while(!iter.hasNext() && !arraySerializeDequeueItems.isEmpty()) {
-                ArraySerializeDequeueItem arraySerializeDequeueItem = arraySerializeDequeueItems.getFirst();
-                iter = arraySerializeDequeueItem.iterator;
-                JSON5Array = arraySerializeDequeueItem.JSON5Array;
-                if(!iter.hasNext() && !arraySerializeDequeueItems.isEmpty()) {
-                    arraySerializeDequeueItems.removeFirst();
-                }
-            }
-        }
-        return resultJSON5Array;
-
-    }
-
-
-    private static Object obtainParentObjects(Map<Integer, Object> parentsMap, SchemaValueAbs schemaField, Object rootObject) {
-        SchemaField parentschemaField = schemaField.getParentField();
-        if(parentschemaField == null) {
-            return rootObject;
-        }
-        int parentId = parentschemaField.getId();
-        return parentsMap.get(parentId);
-    }
-
 
     /**
-     * JSON5Object 를 Map<String, T> 로 변환한다.
+     * JSON5Object를 Map으로 변환합니다. (기존 API)
+     * 
      * @param json5Object 변환할 JSON5Object
-     * @param valueType Map 의 value 타입 클래스
+     * @param valueType 값 타입
+     * @param <T> 값 타입
      * @return 변환된 Map
-     * @param <T> Map 의 value 타입
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다
      */
+    @Deprecated
     @SuppressWarnings({"unchecked", "unused"})
     public static <T> Map<String, T> fromJSON5ObjectToMap(JSON5Object json5Object, Class<T> valueType) {
-        Types types = Types.of(valueType);
-        if(valueType.isPrimitive()) {
-            throw new JSON5SerializerException("valueType is primitive type. valueType=" + valueType.getName());
-        } else if(Collection.class.isAssignableFrom(valueType)) {
-            throw new JSON5SerializerException("valueType is java.util.Collection type. Use a class that wraps your Collection.  valueType=" + valueType.getName());
-        }  else if(Collection.class.isAssignableFrom(valueType)) {
-            throw new JSON5SerializerException("valueType is java.util.Map type. Use a class that wraps your Map.  valueType=" + valueType.getName());
-        } else if(valueType.isArray() && Types.ByteArray != types) {
-            throw new JSON5SerializerException("valueType is Array type. ArrayType cannot be used. valueType=" + valueType.getName());
-        }
-        return (Map<String, T>) fromJSON5ObjectToMap(null, json5Object, valueType,null);
-
-    }
-
-    private static interface OnObtainTypeValue {
-        Object obtain(Object target);
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static  Map<?, ?> fromJSON5ObjectToMap(Map target, JSON5Object json5Object, Class valueType, OnObtainTypeValue onObtainTypeValue) {
-        Types types = Types.of(valueType);
-        if(target == null) {
-            target = new HashMap<>();
-        }
-
-        Map finalTarget = target;
-        if(onObtainTypeValue != null) {
-            json5Object.keySet().forEach(key -> {
-                Object childInJson5Object = json5Object.get(key);
-                if(childInJson5Object == null) {
-                    finalTarget.put(key, null);
-                    return;
-                }
-                Object targetChild = onObtainTypeValue.obtain(childInJson5Object);
-                if(targetChild == null) {
-                    finalTarget.put(key, null);
-                    return;
-                }
-                Types targetChildTypes = Types.of(targetChild.getClass());
-                if(childInJson5Object instanceof JSON5Object && !Types.isSingleType(targetChildTypes)) {
-                    fromJSON5Object((JSON5Object) childInJson5Object, targetChild);
-                }
-                finalTarget.put(key, targetChild);
-
-            });
-        }
-        else if(Types.isSingleType(types)) {
-            json5Object.keySet().forEach(key -> {
-                Object value = Utils.getFrom(json5Object, key, types);
-                finalTarget.put(key, value);
-            });
-        } else if(types == Types.Object) {
-            json5Object.keySet().forEach(key -> {
-                JSON5Object child = json5Object.getJSON5Object(key, null);
-                if(child != null) {
-                    Object  targetChild = fromJSON5Object(child, valueType);
-                    finalTarget.put(key, targetChild);
-                } else {
-                    finalTarget.put(key, null);
-                }
-            });
-        } else if(types == Types.JSON5Object) {
-            json5Object.keySet().forEach(key -> {
-                JSON5Object child = json5Object.getJSON5Object(key, null);
-                if(child != null) finalTarget.put(key, child);
-                else finalTarget.put(key, null);
-            });
-        } else if(types == Types.JSON5Array) {
-            json5Object.keySet().forEach(key -> {
-                JSON5Array child = json5Object.getJSON5Array(key, null);
-                if(child != null) finalTarget.put(key, child);
-                else finalTarget.put(key, null);
-            });
-        } else if(types == Types.JSON5Element) {
-            json5Object.keySet().forEach(key -> {
-                Object child = json5Object.get(key);
-                if(child instanceof JSON5Element) finalTarget.put(key, child);
-                else finalTarget.put(key, null);
-            });
-        }
-
-        return target;
-
-    }
-
-
-
-
-    @SuppressWarnings("unchecked")
-    public static<T> T fromJSON5Object(JSON5Object json5Object, Class<T> clazz) {
-        TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(clazz);
-        Object object = typeSchema.newInstance();
-        return (T) fromJSON5Object(json5Object, object);
-    }
-
-
-    private static JSON5Element getChildElement(SchemaElementNode schemaElementNode, JSON5Element JSON5Element, Object key) {
-        if(key instanceof String) {
-            JSON5Object json5Object = (JSON5Object) JSON5Element;
-            return schemaElementNode instanceof  SchemaArrayNode ? json5Object.getJSON5Array((String) key) :  json5Object.getJSON5Object((String) key) ;
-        } else {
-            JSON5Array JSON5Array = (JSON5Array) JSON5Element;
-            return schemaElementNode instanceof SchemaArrayNode ?  JSON5Array.getJSON5Array((int) key) :  JSON5Array.getJSON5Object((int) key);
-        }
-
-    }
-
-    public static<T> T fromJSON5Object(final JSON5Object json5Object, T targetObject) {
-        TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(targetObject.getClass());
-        SchemaObjectNode schemaRoot = typeSchema.getSchemaObjectNode();
-        HashMap<Integer, Object> parentObjMap = new HashMap<>();
-        JSON5Element JSON5Element = json5Object;
-        ArrayDeque<ObjectSerializeDequeueItem> objectSerializeDequeueItems = new ArrayDeque<>();
-        Iterator<Object> iter = schemaRoot.keySet().iterator();
-        SchemaObjectNode schemaNode = schemaRoot;
-        ObjectSerializeDequeueItem currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, json5Object);
-        objectSerializeDequeueItems.add(currentObjectSerializeDequeueItem);
-        while(iter.hasNext()) {
-            Object key = iter.next();
-            ISchemaNode node = schemaNode.get(key);
-            JSON5Element parentsJSON5 = JSON5Element;
-            if(node instanceof SchemaElementNode) {
-                boolean nullValue = false;
-                JSON5Element childElement = getChildElement((SchemaElementNode) node, JSON5Element, key);
-                if(key instanceof String) {
-                    JSON5Object parentObject = (JSON5Object) JSON5Element;
-                    if(childElement == null) {
-                        if(parentObject.isNull((String) key)) {
-                            nullValue = true;
-                        } else {
-                            continue;
-                        }
-                    }
-                } else {
-                    assert JSON5Element instanceof JSON5Array;
-                    JSON5Array parentArray = (JSON5Array) JSON5Element;
-                    int index = (Integer)key;
-                    if(childElement == null) {
-                        if(parentArray.size() <= index || parentArray.isNull(index)) {
-                            nullValue = true;
-                        } else {
-                            continue;
-                        }
-                    }
-                }
-
-                JSON5Element = childElement;
-                schemaNode = (SchemaObjectNode)node;
-                List<SchemaValueAbs> parentSchemaFieldList = schemaNode.getParentSchemaFieldList();
-                for(SchemaValueAbs parentSchemaField : parentSchemaFieldList) {
-                    getOrCreateParentObject(parentSchemaField, parentObjMap, targetObject, nullValue, parentsJSON5, json5Object);
-                }
-                iter = schemaNode.keySet().iterator();
-                currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, JSON5Element);
-                objectSerializeDequeueItems.add(currentObjectSerializeDequeueItem);
-            }
-            else if(node instanceof SchemaValueAbs && ((SchemaValueAbs)node).types() != Types.Object) {
-                SchemaValueAbs schemaField = (SchemaValueAbs) node;
-                SchemaValueAbs parentField = schemaField.getParentField();
-                if(JSON5Element != null) {
-                    Object obj = getOrCreateParentObject(parentField, parentObjMap, targetObject, parentsJSON5, json5Object);
-                    setValueTargetFromJSON5Objects(obj, schemaField, JSON5Element, key, json5Object);
-                }
-            }
-            while(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
-                ObjectSerializeDequeueItem objectSerializeDequeueItem = objectSerializeDequeueItems.getFirst();
-                iter = objectSerializeDequeueItem.keyIterator;
-                schemaNode = (SchemaObjectNode) objectSerializeDequeueItem.ISchemaNode;
-                JSON5Element = objectSerializeDequeueItem.resultElement;
-                if(!iter.hasNext() && !objectSerializeDequeueItems.isEmpty()) {
-                    objectSerializeDequeueItems.removeFirst();
-                }
-            }
-        }
-        return targetObject;
-    }
-
-    private static Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, JSON5Element JSON5Element, JSON5Object rootJSON5) {
-        return getOrCreateParentObject(parentSchemaField, parentObjMap, root, false, JSON5Element, rootJSON5);
-    }
-
-    private static Object getOrCreateParentObject(SchemaValueAbs parentSchemaField, HashMap<Integer, Object> parentObjMap, Object root, boolean setNull, JSON5Element json5Element, JSON5Object rootJSON5) {
-        if(parentSchemaField == null) return root;
-
-        int id = parentSchemaField.getId();
-        Object parent = parentObjMap.get(id);
-        if (parent != null) {
-            return parent;
-        }
-        ArrayList<SchemaValueAbs>  pedigreeList = new ArrayList<>();
-        while(parentSchemaField != null) {
-            pedigreeList.add(parentSchemaField);
-            parentSchemaField = parentSchemaField.getParentField();
-        }
-        Collections.reverse(pedigreeList);
-        parent = root;
-        SchemaValueAbs last = pedigreeList.get(pedigreeList.size() - 1);
-        for(SchemaValueAbs schemaField : pedigreeList) {
-           int parentId = schemaField.getId();
-           Object child = parentObjMap.get(parentId);
-           if(setNull && child == null && schemaField == last) {
-                schemaField.setValue(parent, null);
-           }
-           else if(!setNull && child == null) {
-                if(schemaField instanceof ObtainTypeValueInvokerGetter) {
-                    // TODO 앞으로 제네릭 또는 interface 나 추상 클래스로만 사용 가능하도록 변경할 것.
-                    ObtainTypeValueInvoker obtainTypeValueInvoker = ((ObtainTypeValueInvokerGetter)schemaField).getObtainTypeValueInvoker();
-                    if(obtainTypeValueInvoker != null) {
-                        OnObtainTypeValue onObtainTypeValue = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parent, rootJSON5);
-                        child = onObtainTypeValue.obtain(json5Element);
-                    }
-                }
-                if(child == null) {
-                   child = schemaField.newInstance();
-                }
-                parentObjMap.put(parentId, child);
-                schemaField.setValue(parent, child);
-           }
-           parent = child;
-        }
-        return parent;
-
-    }
-
-
-    private static void setValueTargetFromJSON5Objects(Object parents, SchemaValueAbs schemaField, JSON5Element json5, Object key, JSON5Object root) {
-        List<SchemaValueAbs> schemaValueAbsList = schemaField.getAllSchemaValueList();
-        for(SchemaValueAbs schemaValueAbs : schemaValueAbsList) {
-            setValueTargetFromJSON5Object(parents, schemaValueAbs, json5, key,root);
-        }
+        return getInstance().deserializationEngine.deserializeToMap(json5Object, valueType);
     }
 
     /**
-     * Object의 타입을 읽어서 실제 타입으로 캐스팅한다.
-     * @param value Object 타입의 값
-     * @param realValue 실제 타입의 값
-     * @return
+     * JSON5Object를 객체로 역직렬화합니다. (기존 API)
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param clazz 대상 클래스
+     * @param <T> 대상 타입
+     * @return 역직렬화된 객체
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다: {@code JSON5Serializer.getInstance().deserialize(json5Object, clazz)}
      */
-    private static Object dynamicCasting(Object value, Object realValue) {
-        if(value == null) return null;
-        Class<?> valueClas = value.getClass();
-        Types valueType = Types.of(value.getClass());
-        if(valueClas.isEnum()) {
-            try {
-                //noinspection unchecked
-                return Enum.valueOf((Class<? extends Enum>) valueClas,realValue.toString());
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        if(Types.isSingleType(valueType) || Types.isJSON5Type(valueType)) {
-            return DataConverter.convertValue(valueClas, realValue);
-        } else if(Types.Object == valueType) {
-            JSON5Object json5Obj = realValue instanceof JSON5Object ? (JSON5Object) realValue : null;
-            if(json5Obj != null) {
-                fromJSON5Object(json5Obj, value);
-                return value;
-            }
-        }
-        return null;
+    @Deprecated
+    @SuppressWarnings("unchecked")
+    public static<T> T fromJSON5Object(JSON5Object json5Object, Class<T> clazz) {
+        return getInstance().deserialize(json5Object, clazz);
     }
 
-    private static void setValueTargetFromJSON5Object(Object parents, SchemaValueAbs schemaField, final JSON5Element json5, Object key, JSON5Object root) {
-        boolean isArrayType = json5 instanceof JSON5Array;
-
-        /*Object value = isArrayType ? ((JSON5Array) json5).get((int)key) : ((JSON5Object)json5).get((String)key);
-        //todo null 값에 대하여 어떻게 할 것인지 고민해봐야함.
-        if(value == null) {
-            boolean isNull = isArrayType ? ((JSON5Array) json5).isNull((int)key) : ((JSON5Object)json5).isNull((String)key);
-            if(isNull && !schemaField.isPrimitive()) {
-                try {
-                    schemaField.setValue(parents, null);
-                } catch (Exception ignored) {}
-            }
-            return;
-        }*/
-        Types valueType = schemaField.getType();
-        if(Types.isSingleType(valueType)) {
-            Object valueObj = Utils.getFrom(json5, key, valueType);
-            schemaField.setValue(parents, valueObj);
-        } else if((Types.AbstractObject == valueType || Types.GenericType == valueType) && schemaField instanceof ObtainTypeValueInvokerGetter) {
-            Object val = Utils.getFrom(json5, key, valueType);
-
-            Object obj = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parents, root).obtain(val) ;//on == null ? null : onObtainTypeValue.obtain(json5 instanceof JSON5Object ? (JSON5Object) json5 : null);
-            if(obj == null) {
-                obj = schemaField.newInstance();
-                obj = dynamicCasting(obj, val);
-            }
-            schemaField.setValue(parents, obj);
-        }
-        else if(Types.Collection == valueType) {
-            JSON5Array JSON5Array = isArrayType ? ((JSON5Array) json5).getJSON5Array((int)key) : ((JSON5Object)json5).getJSON5Array((String)key);
-            if(JSON5Array != null) {
-                OnObtainTypeValue onObtainTypeValue = null;
-                boolean isGenericOrAbsType = ((ISchemaArrayValue)schemaField).isGenericTypeValue() || ((ISchemaArrayValue)schemaField).isAbstractType();
-                if(isGenericOrAbsType) {
-                    onObtainTypeValue = makeOnObtainTypeValue((ObtainTypeValueInvokerGetter)schemaField, parents, root);
-                }
-                json5ArrayToCollectionObject(JSON5Array, (ISchemaArrayValue)schemaField, parents, onObtainTypeValue);
-            } else if(isArrayType ? ((JSON5Array) json5).isNull((int)key) : ((JSON5Object)json5).isNull((String)key)) {
-                try {
-                    schemaField.setValue(parents, null);
-                } catch (Exception ignored) {}
-            }
-        } else if(Types.Object == valueType) {
-            JSON5Object json5Obj = isArrayType ? ((JSON5Array) json5).getJSON5Object((int)key) : ((JSON5Object)json5).getJSON5Object((String)key);
-            if(json5Obj != null) {
-                Object target = schemaField.newInstance();
-                fromJSON5Object(json5Obj, target);
-                schemaField.setValue(parents, target);
-            } else if(isArrayType ? ((JSON5Array) json5).isNull((int)key) : ((JSON5Object)json5).isNull((String)key)) {
-                schemaField.setValue(parents, null);
-            }
-        } else if(Types.Map == valueType) {
-            JSON5Object json5Obj = isArrayType ? ((JSON5Array) json5).getJSON5Object((int)key) : ((JSON5Object)json5).getJSON5Object((String)key);
-            if(json5Obj != null) {
-                Object target = schemaField.newInstance();
-                Class<?> type = ((ISchemaMapValue)schemaField).getElementType();
-                boolean isGenericOrAbstract = ((ISchemaMapValue)schemaField).isGenericValue() || ((ISchemaMapValue)schemaField).isAbstractType();
-                OnObtainTypeValue onObtainTypeValue = null;
-                if(isGenericOrAbstract) {
-                    onObtainTypeValue = makeOnObtainTypeValue( (ObtainTypeValueInvokerGetter)schemaField, parents, root);
-                }
-                fromJSON5ObjectToMap((Map<?, ?>) target, json5Obj, type, onObtainTypeValue);
-                schemaField.setValue(parents, target);
-            } else if(isArrayType ? ((JSON5Array) json5).isNull((int)key) : ((JSON5Object)json5).isNull((String)key)) {
-                schemaField.setValue(parents, null);
-            }
-        } else if(Types.JSON5Object == valueType) {
-            JSON5Object value = isArrayType ? ((JSON5Array) json5).getJSON5Object((int)key) : ((JSON5Object)json5).getJSON5Object((String)key);
-            schemaField.setValue(parents, value);
-        } else if(Types.JSON5Array == valueType) {
-            JSON5Array value = isArrayType ? ((JSON5Array) json5).getJSON5Array((int)key) : ((JSON5Object)json5).getJSON5Array((String)key);
-            schemaField.setValue(parents, value);
-        } else if(Types.JSON5Element == valueType) {
-            Object value = isArrayType ? ((JSON5Array) json5).get((int)key) : ((JSON5Object)json5).get((String)key);
-            if(value instanceof JSON5Element) {
-                schemaField.setValue(parents, value);
-            } else {
-                schemaField.setValue(parents, null);
-            }
-        }
-        else {
-            try {
-                schemaField.setValue(parents, null);
-            } catch (Exception ignored) {}
-        }
-
+    /**
+     * JSON5Object를 기존 객체에 역직렬화합니다. (기존 API)
+     * 
+     * @param json5Object 역직렬화할 JSON5Object
+     * @param targetObject 대상 객체
+     * @param <T> 대상 타입
+     * @return 역직렬화된 객체
+     * @deprecated 새로운 인스턴스 기반 API 사용을 권장합니다: {@code JSON5Serializer.getInstance().deserialize(json5Object, targetObject)}
+     */
+    @Deprecated
+    public static<T> T fromJSON5Object(final JSON5Object json5Object, T targetObject) {
+        return getInstance().deserialize(json5Object, targetObject);
     }
 
+    // ============== Getter 메소드들 ==============
 
-    private static OnObtainTypeValue makeOnObtainTypeValue(ObtainTypeValueInvokerGetter obtainTypeValueInvokerGetter,Object parents, JSON5Object root) {
-        return (json5ObjectOrValue) -> {
-            ObtainTypeValueInvoker invoker = obtainTypeValueInvokerGetter.getObtainTypeValueInvoker();
-            if(invoker == null ) {
-                if(obtainTypeValueInvokerGetter.isIgnoreError()) {
-                    return null;
-                }
-                throw new JSON5SerializerException("To deserialize a generic, abstract or interface type you must have a @ObtainTypeValue annotated method. target=" + obtainTypeValueInvokerGetter.targetPath());
-            }
-            try {
-                Object obj = invoker.obtain(parents, json5ObjectOrValue instanceof JSON5Object ? (JSON5Object) json5ObjectOrValue : new JSON5Object().put("$value", json5ObjectOrValue), root);
-                if (obj != null && invoker.isDeserializeAfter()) {
-                    obj = dynamicCasting(obj, json5ObjectOrValue);
-                }
-                return obj;
-            } catch (RuntimeException e) {
-                if(obtainTypeValueInvokerGetter.isIgnoreError()) {
-                    return null;
-                }
-                throw e;
-            }
-        };
+    /**
+     * 현재 설정을 반환합니다.
+     * 
+     * @return SerializerConfiguration
+     */
+    public SerializerConfiguration getConfiguration() {
+        return configuration;
     }
 
-
-
-
-    private static Object optValueInJSON5Array(JSON5Array JSON5Array, int index, ISchemaArrayValue ISchemaArrayValue) {
-
-        switch (ISchemaArrayValue.getEndpointValueType()) {
-            case Byte:
-                return JSON5Array.getByte(index);
-            case Short:
-                return JSON5Array.getShort(index);
-            case Integer:
-                return JSON5Array.getInt(index);
-            case Long:
-                return JSON5Array.getLong(index);
-            case Float:
-                return JSON5Array.getFloat(index);
-            case Double:
-                return JSON5Array.getDouble(index);
-            case Boolean:
-                return JSON5Array.getBoolean(index);
-            case Character:
-                return JSON5Array.getChar(index, '\0');
-            case String:
-                return JSON5Array.getString(index);
-            case JSON5Array:
-                return JSON5Array.getJSON5Array(index);
-            case JSON5Object:
-                return JSON5Array.getJSON5Object(index);
-            case Object:
-                JSON5Object json5Object = JSON5Array.getJSON5Object(index);
-                if(json5Object != null) {
-                    Object target = ISchemaArrayValue.getObjectValueTypeElement().newInstance();
-                    fromJSON5Object(json5Object, target);
-                    return target;
-                }
-        }
-        return null;
+    /**
+     * SerializationEngine을 반환합니다.
+     * 
+     * @return SerializationEngine
+     */
+    public SerializationEngine getSerializationEngine() {
+        return serializationEngine;
     }
 
-
-    @SuppressWarnings({"rawtypes", "ReassignedVariable", "unchecked"})
-    private static void json5ArrayToCollectionObject(JSON5Array JSON5Array, ISchemaArrayValue ISchemaArrayValue, Object parent, OnObtainTypeValue onObtainTypeValue) {
-        List<CollectionItems> collectionItems = ISchemaArrayValue.getCollectionItems();
-        int collectionItemIndex = 0;
-        final int collectionItemSize = collectionItems.size();
-        if(collectionItemSize == 0) {
-            return;
+    /**
+     * DeserializationEngine을 반환합니다.
+     * 
+     * @return DeserializationEngine
+     */
+    public DeserializationEngine getDeserializationEngine() {
+        return deserializationEngine;
+    }
+    
+    // ============== 값 공급자 관련 메서드들 ==============
+    
+    /**
+     * 값 공급자 수동 등록 (선택사항)
+     */
+    public static void registerValueProvider(Class<?> providerClass) {
+        SerializationEngine.registerValueProvider(providerClass);
+        // DeserializationEngine은 동일한 레지스트리 인스턴스 공유
+    }
+    
+    /**
+     * 값 공급자 여부 확인
+     */
+    public static boolean isValueProvider(Class<?> clazz) {
+        try {
+            Class<?> registryClass = Class.forName("com.hancomins.json5.serializer.provider.ValueProviderRegistry");
+            Object registry = registryClass.getDeclaredConstructor().newInstance();
+            java.lang.reflect.Method isValueProviderMethod = registryClass.getMethod("isValueProvider", Class.class);
+            return (Boolean) isValueProviderMethod.invoke(registry, clazz);
+        } catch (Exception e) {
+            return false;
         }
-        CollectionItems collectionItem = collectionItems.get(collectionItemIndex);
-        ArrayList<ArraySerializeDequeueItem> arraySerializeDequeueItems = new ArrayList<>();
-        ArraySerializeDequeueItem objectItem = new ArraySerializeDequeueItem(JSON5Array,collectionItem.newInstance());
-        int end = objectItem.getEndIndex();
-        arraySerializeDequeueItems.add(objectItem);
-
-        for(int index = 0; index <= end; ++index) {
-            objectItem.setArrayIndex(index);
-            if(collectionItem.isGeneric() || collectionItem.isAbstractType()) {
-                JSON5Object json5Object = objectItem.JSON5Array.getJSON5Object(index);
-                Object object = onObtainTypeValue.obtain(json5Object);
-                objectItem.collectionObject.add(object);
-            }
-            else if (collectionItem.getValueClass() != null) {
-                Object value = optValueInJSON5Array(objectItem.JSON5Array, index, ISchemaArrayValue);
-                objectItem.collectionObject.add(value);
-            } else {
-                JSON5Array inArray = objectItem.JSON5Array.getJSON5Array(index);
-                if (inArray == null) {
-                    objectItem.collectionObject.add(null);
-                } else {
-                    collectionItem = collectionItems.get(++collectionItemIndex);
-                    Collection newCollection = collectionItem.newInstance();
-                    objectItem.collectionObject.add(newCollection);
-                    ArraySerializeDequeueItem newArraySerializeDequeueItem = new ArraySerializeDequeueItem(inArray, newCollection);
-                    arraySerializeDequeueItems.add(newArraySerializeDequeueItem);
-                    index = -1;
-                    end = newArraySerializeDequeueItem.getEndIndex();
-                    objectItem = newArraySerializeDequeueItem;
-                }
-            }
-            while (index == end) {
-                arraySerializeDequeueItems.remove(arraySerializeDequeueItems.size() - 1);
-                if (arraySerializeDequeueItems.isEmpty()) {
-                    break;
-                }
-                objectItem = arraySerializeDequeueItems.get(arraySerializeDequeueItems.size() - 1);
-                index = objectItem.index;
-                end = objectItem.arraySize - 1;
-                collectionItem = collectionItems.get(--collectionItemIndex);
-            }
-        }
-        ISchemaArrayValue.setValue(parent, objectItem.collectionObject);
     }
 
-
-
-
+    // ============== 기존 내부 클래스들 (하위 호환성을 위해 유지) ==============
 
     @SuppressWarnings("rawtypes")
     private static class ArraySerializeDequeueItem {
@@ -930,17 +423,12 @@ public class JSON5Serializer {
             return arraySize - 1;
         }
 
-
-
         /**
          * 역직렬화에서 사용됨.
-         *
          */
         private void setArrayIndex(int index) {
             this.index = index;
         }
-
-
     }
 
     private static class ObjectSerializeDequeueItem {
@@ -954,5 +442,4 @@ public class JSON5Serializer {
             this.resultElement = resultElement;
         }
     }
-
 }

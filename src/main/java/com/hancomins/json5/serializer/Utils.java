@@ -1,207 +1,111 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Element;
-import com.hancomins.json5.JSON5Array;
-import com.hancomins.json5.JSON5Object;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.math.BigDecimal;
 
+/**
+ * JSON5 Serializer의 유틸리티 메소드들을 제공하는 클래스입니다.
+ * 
+ * <p><strong>주의:</strong> 이 클래스의 모든 메소드들은 deprecated되었습니다.
+ * 새로운 코드에서는 다음의 전용 클래스들을 사용하시기 바랍니다:</p>
+ * <ul>
+ *   <li>{@link TypeConverter} - 타입 변환 관련 기능</li>
+ *   <li>{@link PrimitiveTypeConverter} - Primitive 타입 변환</li>
+ *   <li>{@link JSON5ElementExtractor} - JSON5Element에서 값 추출</li>
+ * </ul>
+ * 
+ * <p>이 클래스는 하위 호환성을 위해 유지되며, 향후 버전에서 제거될 예정입니다.</p>
+ * 
+ * @author ice3x2
+ * @version 1.1
+ * @since 1.0
+ * @deprecated 2.0에서 deprecated됨. 대신 {@link TypeConverter}, {@link PrimitiveTypeConverter}, {@link JSON5ElementExtractor}를 사용하세요.
+ */
+@Deprecated
 public class Utils {
 
+    /**
+     * Primitive 타입을 Boxed 타입으로 변환합니다.
+     * 
+     * @param primitiveType 변환할 primitive 타입
+     * @return 해당하는 Boxed 타입
+     * @deprecated 2.0에서 deprecated됨. 대신 {@link PrimitiveTypeConverter#primitiveTypeToBoxedType(Class)}를 사용하세요.
+     */
+    @Deprecated
     static Class<?> primitiveTypeToBoxedType(Class<?> primitiveType) {
-        if (primitiveType == int.class) {
-            return Integer.class;
-        } else if (primitiveType == long.class) {
-            return Long.class;
-        } else if (primitiveType == float.class) {
-            return Float.class;
-        } else if (primitiveType == double.class) {
-            return Double.class;
-        } else if (primitiveType == boolean.class) {
-            return Boolean.class;
-        } else if (primitiveType == char.class) {
-            return Character.class;
-        } else if (primitiveType == byte.class) {
-            return Byte.class;
-        } else if (primitiveType == short.class) {
-            return Short.class;
-        } else if (primitiveType == void.class) {
-            return Void.class;
-        } else {
-            return primitiveType;
-        }
+        return PrimitiveTypeConverter.primitiveTypeToBoxedType(primitiveType);
     }
 
-
-    @SuppressWarnings({"rawtypes", "ReassignedVariable", "unchecked"})
-    static Object convertCollectionValue(Object origin, List<CollectionItems> resultCollectionItemsList, Types returnType) throws InvocationTargetException, InstantiationException, IllegalAccessException {
-        if(origin == null) {
-            return null;
-        }
-        Collection resultCollectionOfCurrent = resultCollectionItemsList.get(0).collectionConstructor.newInstance();
-        Collection result = resultCollectionOfCurrent;
-        ArrayDeque<Iterator> collectionIterators = new ArrayDeque<>();
-        ArrayDeque<Collection> resultCollections = new ArrayDeque<>();
-        int collectionItemIndex = 0;
-
-        Iterator currentIterator = ((Collection<?>)origin).iterator();
-        resultCollections.add(resultCollectionOfCurrent);
-        collectionIterators.add(currentIterator);
-        while(currentIterator.hasNext()) {
-            Object next = currentIterator.next();
-            if(next instanceof Collection) {
-                ++collectionItemIndex;
-                Collection newCollection = resultCollectionItemsList.get(collectionItemIndex).collectionConstructor.newInstance();
-                resultCollections.add(newCollection);
-                resultCollectionOfCurrent.add(newCollection);
-                resultCollectionOfCurrent = newCollection;
-                currentIterator = ((Collection<?>)next).iterator();
-                collectionIterators.add(currentIterator);
-            } else {
-                resultCollectionOfCurrent.add(convertValue(next,returnType));
-            }
-
-            while(!currentIterator.hasNext()) {
-                collectionIterators.removeLast();
-                if(collectionIterators.isEmpty()) {
-                    return result;
-                }
-                --collectionItemIndex;
-                resultCollections.removeLast();
-                resultCollectionOfCurrent =  resultCollections.getLast();
-                currentIterator = collectionIterators.getLast();
-            }
-
-        }
-
-        return result;
-
+    /**
+     * 컬렉션 값을 지정된 타입으로 변환합니다.
+     * 
+     * @param origin 변환할 원본 컬렉션
+     * @param resultCollectionItemsList 결과 컬렉션의 타입 정보
+     * @param returnType 최종 요소의 타입
+     * @return 변환된 컬렉션
+     * @throws InvocationTargetException 컬렉션 생성자 호출 시 예외
+     * @throws InstantiationException 컬렉션 인스턴스 생성 시 예외
+     * @throws IllegalAccessException 컬렉션 생성자 접근 시 예외
+     * @deprecated 2.0에서 deprecated됨. 대신 {@link TypeConverter#convertCollectionValue(Object, List, Types)}를 사용하세요.
+     */
+    @Deprecated
+    static Object convertCollectionValue(Object origin, List<CollectionItems> resultCollectionItemsList, Types returnType)
+            throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        return TypeConverter.convertCollectionValue(origin, resultCollectionItemsList, returnType);
     }
 
+    /**
+     * 값을 지정된 타입으로 변환합니다.
+     * 
+     * @param origin 변환할 원본 값
+     * @param returnType 변환할 대상 타입
+     * @return 변환된 값, 변환 실패 시 null
+     * @deprecated 2.0에서 deprecated됨. 대신 {@link TypeConverter#convertValue(Object, Types)}를 사용하세요.
+     */
+    @Deprecated
     static Object convertValue(Object origin, Types returnType) {
-        try {
-            if(origin instanceof String) {
-                return convertValueFromString((String)origin,returnType);
-            } else if(origin instanceof Number) {
-                return convertValueFromNumber((Number)origin,returnType);
-            }
-
-        } catch (NumberFormatException ignored) {
-        }
-        return null;
+        return TypeConverter.convertValue(origin, returnType);
     }
 
+    /**
+     * String 값을 지정된 타입으로 변환합니다.
+     * 
+     * @param origin 변환할 문자열
+     * @param returnType 변환할 대상 타입
+     * @return 변환된 값, 변환 실패 시 null
+     * @deprecated 2.0에서 deprecated됨. 대신 {@link TypeConverter#convertValueFromString(String, Types)}를 사용하세요.
+     */
+    @Deprecated
     static Object convertValueFromString(String origin, Types returnType) {
-        if(origin == null) {
-            return null;
-        }
-        if(returnType == Types.String) {
-            return origin;
-        } else if(returnType == Types.Byte) {
-            return Byte.valueOf(origin);
-        } else if(returnType == Types.Short) {
-            return Short.valueOf(origin);
-        } else if(returnType == Types.Integer) {
-            return Integer.valueOf(origin);
-        } else if(returnType == Types.Long) {
-            return Long.valueOf(origin);
-        } else if(returnType == Types.Float) {
-            return Float.valueOf(origin);
-        } else if(returnType == Types.Double) {
-            return Double.valueOf(origin);
-        } else if(returnType == Types.Character) {
-            return origin.charAt(0);
-        } else if(returnType == Types.Boolean) {
-            return Boolean.valueOf(origin);
-        } else if(returnType == Types.BigDecimal) {
-            return new java.math.BigDecimal(origin);
-        } else if(returnType == Types.BigInteger) {
-            return new java.math.BigInteger(origin);
-        }
-
-
-        return null;
-
+        return TypeConverter.convertValueFromString(origin, returnType);
     }
 
+    /**
+     * Number 값을 지정된 타입으로 변환합니다.
+     * 
+     * @param origin 변환할 Number 값
+     * @param returnType 변환할 대상 타입
+     * @return 변환된 값, 변환 실패 시 null
+     * @deprecated 2.0에서 deprecated됨. 대신 {@link TypeConverter#convertValueFromNumber(Number, Types)}를 사용하세요.
+     */
+    @Deprecated
     static Object convertValueFromNumber(Number origin, Types returnType) {
-        if(origin == null) {
-            return null;
-        }
-        if(origin instanceof BigDecimal && returnType == Types.BigDecimal) {
-            return origin;
-        } else if(origin instanceof Double && returnType == Types.Double) {
-            return origin;
-        } else if(origin instanceof Float && returnType == Types.Float) {
-            return origin;
-        } else if(origin instanceof Long && returnType == Types.Long) {
-            return origin;
-        } else if(origin instanceof Integer && returnType == Types.Integer) {
-            return origin;
-        } else if(origin instanceof Short && returnType == Types.Short) {
-            return origin;
-        } else if(origin instanceof Byte && returnType == Types.Byte) {
-            return origin;
-        }
-
-        if(returnType == Types.Byte) {
-            return origin.byteValue();
-        } else if(returnType == Types.Short) {
-            return origin.shortValue();
-        } else if(returnType == Types.Integer) {
-            return origin.intValue();
-        } else if(returnType == Types.Long) {
-            return origin.longValue();
-        } else if(returnType == Types.Float) {
-            return origin.floatValue();
-        } else if(returnType == Types.Double) {
-            return origin.doubleValue();
-        } else if(returnType == Types.Character) {
-            return (char)origin.intValue();
-        } else if(returnType == Types.Boolean) {
-            return origin.intValue() != 0;
-        } else if(returnType == Types.BigDecimal) {
-            return new java.math.BigDecimal(origin.toString());
-        } else if(returnType == Types.BigInteger) {
-            return new java.math.BigInteger(origin.toString());
-        } else if(returnType == Types.String) {
-            return origin.toString();
-        } else if(returnType == Types.ByteArray) {
-            return new byte[]{origin.byteValue()};
-        }
-        return null;
+        return TypeConverter.convertValueFromNumber(origin, returnType);
     }
 
+    /**
+     * JSON5Element에서 지정된 키/인덱스와 타입에 해당하는 값을 추출합니다.
+     * 
+     * @param json5 값을 추출할 JSON5Element
+     * @param key 추출할 값의 키
+     * @param valueType 추출할 값의 타입
+     * @return 추출된 값, null인 경우 null
+     * @deprecated 2.0에서 deprecated됨. 대신 {@link JSON5ElementExtractor#getFrom(JSON5Element, Object, Types)}를 사용하세요.
+     */
+    @Deprecated
     static Object getFrom(JSON5Element json5, Object key, Types valueType) {
-        boolean isArrayType = json5 instanceof JSON5Array;
-        if(isArrayType && ((JSON5Array)json5).isNull((int)key)) {
-            return null;
-        } else if(!isArrayType && ((JSON5Object)json5).isNull((String)key)) {
-            return null;
-        }
-        if(Types.Boolean == valueType) {
-            return isArrayType ? ((JSON5Array) json5).getBoolean((int)key) : ((JSON5Object)json5).getBoolean((String)key);
-        } else if(Types.Byte == valueType) {
-            return  isArrayType ? ((JSON5Array) json5).getByte((int)key) : ((JSON5Object)json5).getByte((String)key);
-        } else if(Types.Character == valueType) {
-            return  isArrayType ? ((JSON5Array) json5).getChar((int)key, '\0') : ((JSON5Object)json5).getChar((String)key, '\0');
-        } else if(Types.Short == valueType) {
-            return  isArrayType ? ((JSON5Array) json5).getShort((int)key) : ((JSON5Object)json5).getShort((String)key);
-        } else if(Types.Integer == valueType) {
-            return  isArrayType ? ((JSON5Array) json5).getInt((int)key) : ((JSON5Object)json5).getInt((String)key);
-        } else if(Types.Float == valueType) {
-            return  isArrayType ? ((JSON5Array) json5).getFloat((int)key) : ((JSON5Object)json5).getFloat((String)key);
-        } else if(Types.Double == valueType) {
-            return  isArrayType ? ((JSON5Array) json5).getDouble((int)key) : ((JSON5Object)json5).getDouble((String)key);
-        } else if(Types.String == valueType) {
-            return  isArrayType ? ((JSON5Array) json5).getString((int)key) : ((JSON5Object)json5).getString((String)key);
-        }  else if(Types.ByteArray == valueType) {
-            return  isArrayType ? ((JSON5Array) json5).getByteArray((int)key) : ((JSON5Object)json5).getByteArray((String)key);
-        } else {
-            return  isArrayType ? ((JSON5Array) json5).get((int)key) : ((JSON5Object)json5).opt((String)key);
-        }
+        return JSON5ElementExtractor.getFrom(json5, key, valueType);
     }
-
 }

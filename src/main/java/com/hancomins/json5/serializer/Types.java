@@ -6,7 +6,7 @@ import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.container.ArrayDataContainer;
 import com.hancomins.json5.container.BaseDataContainer;
 
-enum Types {
+public enum Types {
     Byte,
     Short,
     Integer,
@@ -28,8 +28,6 @@ enum Types {
     Collection,
     GenericType;
 
-
-
     static boolean isPrimitivableType(Types type) {
         return type == Byte || type == Short || type == Integer || type == Long || type == Float || type == Double || type == Boolean || type == Character;
     }
@@ -42,8 +40,53 @@ enum Types {
         return type == JSON5Element || type == JSON5Object || type == JSON5Array;
     }
 
+    /**
+     * 타입이 복잡한 타입인지 확인합니다.
+     * 복잡한 타입은 기본형이나 단순 타입이 아닌 객체, 컬렉션, 맵 등을 의미합니다.
+     */
+    static boolean isComplexType(Types type) {
+        return type == Object || type == Collection || type == Map || 
+               type == AbstractObject || type == GenericType;
+    }
 
+    /**
+     * 타입이 특별한 처리가 필요한지 확인합니다.
+     */
+    static boolean requiresSpecialHandling(Types type) {
+        return type == AbstractObject || type == GenericType ||
+               type == JSON5Element || type == JSON5Object || type == JSON5Array;
+    }
 
+    /**
+     * 타입의 카테고리를 반환합니다.
+     */
+    static TypeCategory getCategory(Types type) {
+        if (isPrimitivableType(type)) {
+            return TypeCategory.PRIMITIVE;
+        } else if (type == String || type == ByteArray || type == BigDecimal || type == BigInteger) {
+            return TypeCategory.WRAPPER;
+        } else if (type == Collection) {
+            return TypeCategory.COLLECTION;
+        } else if (type == Map) {
+            return TypeCategory.MAP;
+        } else if (isJSON5Type(type)) {
+            return TypeCategory.SPECIAL;
+        } else {
+            return TypeCategory.OBJECT;
+        }
+    }
+
+    /**
+     * 타입 카테고리를 정의하는 enum입니다.
+     */
+    enum TypeCategory {
+        PRIMITIVE,  // 기본형
+        WRAPPER,    // 래퍼형 및 단순 타입
+        COLLECTION, // 컬렉션 타입
+        MAP,        // 맵 타입
+        OBJECT,     // 일반 객체
+        SPECIAL     // JSON5Element 등 특수 타입
+    }
 
     static Types of(Class<?> type) {
         /*if(type.isAnonymousClass()) {
@@ -95,8 +138,5 @@ enum Types {
         } else {
             return Object;
         }
-
-
     }
-
 }

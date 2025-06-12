@@ -1,13 +1,13 @@
 package com.hancomins.json5;
 
-
+import com.hancomins.json5.serializer.path.JSON5PathExtractor;
 import java.util.List;
 
 public class JSON5Path {
 
     private final JSON5Element JSON5Element;
 
-    protected JSON5Path(JSON5Element JSON5Element) {
+    public JSON5Path(JSON5Element JSON5Element) {
         this.JSON5Element = JSON5Element;
     }
 
@@ -366,50 +366,16 @@ public class JSON5Path {
     }
 
     public boolean has(String path) {
-        return get(path) != null;
+        // JSON5PathExtractor 사용으로 통합
+        return JSON5PathExtractor.pathExists(this.JSON5Element, path);
     }
 
 
 
     public Object get(String path) {
-        List<PathItem> pathItemList = PathItem.parseMultiPath2(path);
-        Object parents = JSON5Element;
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0, n = pathItemList.size(); i < n; ++i) {
-            PathItem pathItem = pathItemList.get(i);
-
-            if (pathItem.isEndPoint()) {
-                if (pathItem.isInArray()) {
-                    if(pathItem.isObject()) {
-                        JSON5Object endPointObject = ((JSON5Array) parents).getJSON5Object(pathItem.getIndex());
-                        if(endPointObject == null) return null;
-                        return endPointObject.opt(pathItem.getName());
-                    }
-                    else {
-                        return ((JSON5Array)parents).get(pathItem.getIndex());
-                    }
-                } else {
-                    return ((JSON5Object) parents).opt(pathItem.getName());
-                }
-            }
-            else if((parents instanceof JSON5Object && pathItem.isInArray()) || (parents instanceof JSON5Array && !pathItem.isInArray())) {
-                return null;
-            }
-            else {
-                if (pathItem.isInArray()) {
-                    assert parents instanceof JSON5Array;
-                    parents = ((JSON5Array) parents).get(pathItem.getIndex());
-                    if(pathItem.isObject() && parents instanceof JSON5Object) {
-                        parents = ((JSON5Object) parents).opt(pathItem.getName());
-                    }
-                } else {
-                    assert parents instanceof JSON5Object;
-                    parents = ((JSON5Object) parents).opt(pathItem.getName());
-                }
-                if(parents == null) return null;
-            }
-        }
-        return null;
+        // JSON5PathExtractor 사용으로 통합
+        Object result = JSON5PathExtractor.extractValue(this.JSON5Element, path);
+        return JSON5PathExtractor.isMissingValue(result) ? null : result;
     }
 
 }

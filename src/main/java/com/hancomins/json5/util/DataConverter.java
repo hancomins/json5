@@ -587,6 +587,58 @@ public class DataConverter {
 	}
 
 
+	/**
+	 * 두 타입 간 변환이 가능한지 확인합니다.
+	 */
+	public static boolean canConvert(Class<?> fromType, Class<?> toType) {
+		if (fromType == null || toType == null) {
+			return false;
+		}
+		
+		// 동일한 타입이거나 할당 가능한 경우
+		if (toType.isAssignableFrom(fromType)) {
+			return true;
+		}
+		
+		// 기존 convertValue가 지원하는 타입들인지 확인
+		try {
+			Object testValue = getDefaultTestValue(fromType);
+			Object result = convertValue(toType, testValue);
+			return result != null;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * 안전한 타입 변환을 수행합니다.
+	 */
+	public static Object convertSafely(Class<?> targetType, Object value, Object defaultValue) {
+		try {
+			Object result = convertValue(targetType, value);
+			return result != null ? result : defaultValue;
+		} catch (Exception e) {
+			return defaultValue;
+		}
+	}
+	
+	/**
+	 * 타입별 기본 테스트 값을 반환합니다.
+	 */
+	private static Object getDefaultTestValue(Class<?> type) {
+		if (type == String.class) return "";
+		if (type == Integer.class || type == int.class) return 0;
+		if (type == Long.class || type == long.class) return 0L;
+		if (type == Double.class || type == double.class) return 0.0;
+		if (type == Float.class || type == float.class) return 0.0f;
+		if (type == Boolean.class || type == boolean.class) return false;
+		if (type == Character.class || type == char.class) return '\0';
+		if (type == Byte.class || type == byte.class) return (byte) 0;
+		if (type == Short.class || type == short.class) return (short) 0;
+		if (type == byte[].class) return new byte[0];
+		return null;
+	}
+
 	public interface OnConvertFail {
 		void onFail(Object value, Class<?> type);
 	}

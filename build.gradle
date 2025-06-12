@@ -123,7 +123,7 @@ dependencies {
 
 }
 
-test.onlyIf { !project.hasProperty("skipTests") || project.skipTests == "true" } // skipTests 속성이 true인 경우 테스트를 건너뜀
+// test.onlyIf { !project.hasProperty("skipTests") || project.skipTests != "true" } // skipTests 속성이 true인 경우 테스트를 건너뜀
 
 
 task jarJavadoc(type: Jar, dependsOn: javadoc) {
@@ -266,7 +266,7 @@ build.dependsOn(jarSources)
 
 
 test {
-    //useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 
