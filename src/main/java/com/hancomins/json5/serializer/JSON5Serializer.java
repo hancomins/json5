@@ -3,6 +3,7 @@ package com.hancomins.json5.serializer;
 import com.hancomins.json5.*;
 import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.JSON5Element;
+import com.hancomins.json5.container.json5.JSON5Parser;
 import com.hancomins.json5.options.WritingOptions;
 import com.hancomins.json5.util.DataConverter;
 
@@ -143,6 +144,20 @@ public class JSON5Serializer {
      * @throws JSON5SerializerException 역직렬화 중 오류가 발생한 경우
      */
     public <T> T deserialize(JSON5Object json5Object, Class<T> clazz) {
+        return deserializationEngine.deserialize(json5Object, clazz);
+    }
+
+    /**
+     * JSON5 문자열을 지정된 클래스의 객체로 역직렬화합니다.
+     *
+     * @param json5String 역직렬화할 JSON5 문자열
+     * @param clazz 대상 클래스
+     * @param <T> 대상 타입
+     * @return 역직렬화된 객체
+     * @throws JSON5SerializerException 역직렬화 중 오류가 발생한 경우
+     */
+    public <T> T deserialize(String json5String, Class<T> clazz) {
+        JSON5Object json5Object = new JSON5Object(json5String);
         return deserializationEngine.deserialize(json5Object, clazz);
     }
 
