@@ -12,7 +12,7 @@ import java.util.List;
  * and SchemaCache are working correctly.</p>
  * 
  * @author JSON5 Team
- * @version 2.0
+ * @version 1.2
  * @since 2.0
  */
 public class RefactoringStep2Validator {

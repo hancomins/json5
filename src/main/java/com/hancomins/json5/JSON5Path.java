@@ -7,7 +7,7 @@ public class JSON5Path {
 
     private final JSON5Element JSON5Element;
 
-    protected JSON5Path(JSON5Element JSON5Element) {
+    public JSON5Path(JSON5Element JSON5Element) {
         this.JSON5Element = JSON5Element;
     }
 

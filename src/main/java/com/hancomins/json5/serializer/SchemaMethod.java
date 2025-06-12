@@ -122,8 +122,8 @@ class SchemaMethod extends SchemaValueAbs implements ObtainTypeValueInvokerGette
     @Override
     public ObtainTypeValueInvoker getObtainTypeValueInvoker() {
         if(obtainTypeValueInvoker == null) {
-            System.out.println(methodGetter.getName());
-            System.out.println(methodSetter.getName());
+            //System.out.println(methodGetter.getName());
+            //System.out.println(methodSetter.getName());
         }
 
         if(obtainTypeValueInvoker != null) {

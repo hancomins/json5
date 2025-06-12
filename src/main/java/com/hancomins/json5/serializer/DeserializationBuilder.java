@@ -44,8 +44,8 @@ import java.util.HashMap;
  *     .deserialize(json, MyClass.class);
  * }</pre>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class DeserializationBuilder {

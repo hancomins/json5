@@ -1,10 +1,6 @@
 package com.hancomins.json5.serializer.constructor;
 
-import com.hancomins.json5.serializer.JSON5Creator;
-import com.hancomins.json5.serializer.JSON5Property;
-import com.hancomins.json5.serializer.JSON5ValueConstructor;
-import com.hancomins.json5.serializer.JSON5SerializerException;
-import com.hancomins.json5.serializer.MissingValueStrategy;
+import com.hancomins.json5.serializer.*;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
@@ -134,8 +130,8 @@ public class ConstructorAnalyzer {
             
         } catch (Exception e) {
             // 분석 중 오류 발생 시 null 반환
-            System.err.println("Failed to analyze constructor: " + constructor.getName() + 
-                             ", error: " + e.getMessage());
+            CatchExceptionProvider.getInstance().catchException("Failed to analyze constructor: " + constructor.getName() +
+                             ", error: " + e.getMessage(),e);
             return null;
         }
     }

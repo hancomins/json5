@@ -15,8 +15,8 @@ package com.hancomins.json5.serializer;
  *   <li>필드 접근 권한 오류 시</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class SerializationException extends JSON5SerializerException {

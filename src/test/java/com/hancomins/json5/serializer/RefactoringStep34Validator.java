@@ -13,8 +13,8 @@ import java.util.List;
  * <p>직렬화 전략 인터페이스의 구현과 SerializationEngine의 
  * 전략 패턴 적용을 검증합니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.2
  * @since 2.0
  */
 public class RefactoringStep34Validator {

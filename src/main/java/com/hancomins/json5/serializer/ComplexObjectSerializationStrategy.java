@@ -22,8 +22,8 @@ import java.util.Map;
  *   <li>기타 복합 객체</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  * @see SerializationStrategy
  * @see PrimitiveSerializationStrategy

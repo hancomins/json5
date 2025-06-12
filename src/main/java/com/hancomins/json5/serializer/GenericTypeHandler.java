@@ -18,8 +18,8 @@ import java.util.*;
  *   <li>WildcardType 및 GenericArrayType 지원</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class GenericTypeHandler implements TypeHandler {

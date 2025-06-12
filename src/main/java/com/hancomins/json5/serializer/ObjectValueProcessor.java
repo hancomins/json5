@@ -14,8 +14,8 @@ import com.hancomins.json5.JSON5Element;
  *   <li>제네릭 타입 (GenericType)</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class ObjectValueProcessor implements ValueProcessor {

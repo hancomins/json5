@@ -9,13 +9,11 @@ import java.util.List;
  * 기본값 유지 기능의 데모 예제입니다.
  */
 public class KeepDefaultValueDemo {
-    
-    @JSON5Type
+
     public static class Person {
         @JSON5Value
         private String name = "Unknown";
-        
-        @JSON5Value
+
         private int age = 18;
         
         @JSON5Value

@@ -6,8 +6,8 @@ package com.hancomins.json5.serializer;
  * <p>이 인터페이스는 Schema 생성 성능을 향상시키기 위해
  * 생성된 Schema들을 메모리에 캐시하는 기능을 제공합니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public interface SchemaCache {

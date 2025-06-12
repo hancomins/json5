@@ -7,8 +7,8 @@ package com.hancomins.json5.serializer;
  * 모든 필드는 static final로 선언되어 있으며, 인스턴스화를 방지하기 위해
  * private 생성자를 가집니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public final class SerializerConstants {

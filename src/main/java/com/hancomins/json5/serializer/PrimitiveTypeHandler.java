@@ -1,11 +1,5 @@
 package com.hancomins.json5.serializer;
 
-import com.hancomins.json5.JSON5Element;
-import com.hancomins.json5.JSON5Object;
-import com.hancomins.json5.JSON5Array;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 /**
  * 기본형 타입(primitive, wrapper, String, enum, byte[])을 처리하는 TypeHandler입니다.
  * 
@@ -18,8 +12,8 @@ import java.math.BigInteger;
  *   <li>큰 수: BigDecimal, BigInteger</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class PrimitiveTypeHandler implements TypeHandler {
@@ -59,6 +53,7 @@ public class PrimitiveTypeHandler implements TypeHandler {
         throw new SerializationException("PrimitiveTypeHandler cannot handle type: " + value.getClass().getName());
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public Object handleDeserialization(Object element, Class<?> targetType, 
                                       DeserializationContext context) throws DeserializationException {
@@ -77,6 +72,7 @@ public class PrimitiveTypeHandler implements TypeHandler {
             // enum 처리
             if (targetType.isEnum()) {
                 if (element instanceof String) {
+                    //noinspection rawtypes
                     @SuppressWarnings("unchecked")
                     Class<? extends Enum> enumClass = (Class<? extends Enum>) targetType;
                     return Enum.valueOf(enumClass, (String) element);

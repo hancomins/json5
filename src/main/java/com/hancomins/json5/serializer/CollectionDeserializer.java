@@ -121,7 +121,7 @@ public class CollectionDeserializer {
                         object = polymorphicDeserializer.deserialize(json5Object, elementType);
                     } catch (Exception e) {
                         // 다형성 역직렬화 실패 시 기존 방식으로 fallback
-                        System.err.println("Polymorphic collection deserialization failed, falling back to @ObtainTypeValue: " + e.getMessage());
+                        CatchExceptionProvider.getInstance().catchException( "Polymorphic collection deserialization failed, falling back to @ObtainTypeValue", e);
                     }
                 }
                 

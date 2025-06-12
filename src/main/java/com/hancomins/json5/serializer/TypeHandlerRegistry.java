@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * <p>Thread-safe하며 동시성 환경에서 안전하게 사용할 수 있습니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class TypeHandlerRegistry {

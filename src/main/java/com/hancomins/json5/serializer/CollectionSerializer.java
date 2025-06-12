@@ -9,8 +9,8 @@ import java.util.*;
  * <p>현재 구현에서는 안정성을 위해 기존 JSON5Serializer의 
  * deprecated 메소드들을 그대로 사용합니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class CollectionSerializer {

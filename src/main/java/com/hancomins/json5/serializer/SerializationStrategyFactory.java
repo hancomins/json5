@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * }
  * }</pre>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  * @see SerializationStrategy
  * @see PrimitiveSerializationStrategy

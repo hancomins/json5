@@ -122,7 +122,7 @@ public class ObjectDeserializer {
             Class<?> fieldType = firstParentField.getValueTypeClass();
             
             if (VALUE_PROVIDER_REGISTRY.isValueProvider(fieldType)) {
-                System.out.println("[DEBUG] Handling value provider field in handleSchemaElementNode: " + key + ", type: " + fieldType.getName());
+                //System.out.println("[DEBUG] Handling value provider field in handleSchemaElementNode: " + key + ", type: " + fieldType.getName());
                 // 값 공급자인 경우 SchemaValueAbs로 처리
                 handleSchemaValueNode(key, firstParentField, currentElement, context);
                 return;
@@ -364,7 +364,8 @@ public class ObjectDeserializer {
                 obj = polymorphicDeserializer.deserialize((JSON5Object) val, fieldType);
             } catch (Exception e) {
                 // 다형성 역직렬화 실패 시 기존 방식으로 fallback
-                System.err.println("Polymorphic deserialization failed, falling back to @ObtainTypeValue: " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException("Polymorphic deserialization failed, falling back to @ObtainTypeValue: " + e.getMessage(), e);
+
             }
         }
         
@@ -447,7 +448,7 @@ public class ObjectDeserializer {
                 return;
             } catch (Exception e) {
                 // 값 공급자 역직렬화 실패 시 기존 방식으로 처리
-                System.err.println("Value provider deserialization failed for field '" + key + "': " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException("Value provider deserialization failed for field '" + key + "': " + e.getMessage(), e);
             }
         }
         

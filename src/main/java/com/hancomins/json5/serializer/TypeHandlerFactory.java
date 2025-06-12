@@ -10,8 +10,8 @@ package com.hancomins.json5.serializer;
  *   <li>미리 정의된 설정의 TypeHandlerRegistry 제공</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class TypeHandlerFactory {

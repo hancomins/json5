@@ -1,7 +1,6 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Object;
-import com.hancomins.json5.JSON5Array;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,8 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * <p>Map의 키는 반드시 String이어야 하며, 값은 모든 타입을 지원합니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class MapTypeHandler implements TypeHandler {

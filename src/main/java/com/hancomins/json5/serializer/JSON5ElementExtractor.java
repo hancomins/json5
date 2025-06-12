@@ -36,8 +36,8 @@ import com.hancomins.json5.JSON5Object;
  *   <li>기타 - 일반 Object로 추출</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public final class JSON5ElementExtractor {

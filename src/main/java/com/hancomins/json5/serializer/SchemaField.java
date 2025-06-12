@@ -82,7 +82,7 @@ public abstract class SchemaField extends SchemaValueAbs implements ObtainTypeVa
             }
             return value;
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+
             return null;
         }
     }

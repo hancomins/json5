@@ -13,8 +13,8 @@ import java.util.Map;
  * 
  * <p>SerializationEngine 및 관련 클래스들이 올바르게 동작하는지 확인합니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.2
  * @since 2.0
  */
 public class RefactoringStep31Validator {

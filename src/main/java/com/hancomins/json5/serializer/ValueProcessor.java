@@ -6,8 +6,8 @@ package com.hancomins.json5.serializer;
  * <p>이 인터페이스는 SchemaValueAbs의 복잡한 getValue/setValue 로직을
  * 타입별로 분리하여 단일 책임 원칙을 준수하도록 합니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public interface ValueProcessor {

@@ -1,6 +1,5 @@
 package com.hancomins.json5.serializer;
 
-import com.hancomins.json5.JSON5Array;
 import com.hancomins.json5.JSON5Element;
 import com.hancomins.json5.JSON5Object;
 
@@ -19,8 +18,8 @@ import com.hancomins.json5.JSON5Object;
  *   <li>BigDecimal, BigInteger</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  * @see SerializationStrategy
  * @see ComplexObjectSerializationStrategy

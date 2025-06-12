@@ -1,7 +1,6 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Element;
-import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.options.WritingOptions;
 import java.util.*;
 
@@ -11,8 +10,8 @@ import java.util.*;
  * <p>직렬화 중에 필요한 상태 정보들을 담고 있으며, 순환 참조 방지를 위한
  * 부모 객체 맵과 중첩된 직렬화 작업을 위한 스택을 관리합니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class SerializationContext {

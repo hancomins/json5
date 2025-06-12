@@ -9,8 +9,8 @@ import java.util.*;
  * <p>Map&lt;String, ?&gt; 형태의 맵을 JSON5Object로 변환하는 로직을 처리합니다.
  * 다양한 값 타입을 지원하며, 중첩된 Map과 Collection도 처리할 수 있습니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class MapSerializer {

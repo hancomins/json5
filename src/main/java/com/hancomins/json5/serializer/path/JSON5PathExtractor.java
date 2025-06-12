@@ -32,8 +32,8 @@ public class JSON5PathExtractor {
         }
         
         try {
-            // PathItem을 사용한 고도화된 경로 파싱
-            List<PathItem> pathItems = PathItem.parseMultiPath2(path);
+            // PathExtractorUtils를 사용하여 캐싱된 파싱 수행
+            List<PathItem> pathItems = PathExtractorUtils.parseStandardPath(path);
             Object current = json5Element;
             
             for (PathItem pathItem : pathItems) {
@@ -253,17 +253,14 @@ public class JSON5PathExtractor {
     
     /**
      * PathItem 리스트를 반환합니다. (고급 사용자용)
+     * PathExtractorUtils의 캐싱 기능을 활용합니다.
      * 
      * @param path 파싱할 경로
      * @return PathItem 리스트
      */
     public static List<PathItem> parseToPathItems(String path) {
-        if (path == null || path.trim().isEmpty()) {
-            throw new IllegalArgumentException("Path cannot be null or empty");
-        }
-        
         try {
-            List<PathItem> items = PathItem.parseMultiPath2(path);
+            List<PathItem> items = PathExtractorUtils.parseStandardPath(path);
             if (items.isEmpty()) {
                 throw new IllegalArgumentException("Path resulted in empty PathItem list: " + path);
             }
@@ -274,5 +271,19 @@ public class JSON5PathExtractor {
             }
             throw new IllegalArgumentException("Invalid path format: " + path, e);
         }
+    }
+    
+    /**
+     * 성능 통계 정보를 반환합니다.
+     */
+    public static String getPerformanceStats() {
+        return PathExtractorUtils.getCacheStats();
+    }
+    
+    /**
+     * 캐시를 지웁니다. (테스트 용도)
+     */
+    public static void clearCache() {
+        PathExtractorUtils.clearCache();
     }
 }

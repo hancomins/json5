@@ -16,8 +16,8 @@ import java.util.Map;
  *   <li>새로운 예외 클래스들의 기능</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.2
  * @since 2.0
  */
 public class RefactoringStep12Validator {

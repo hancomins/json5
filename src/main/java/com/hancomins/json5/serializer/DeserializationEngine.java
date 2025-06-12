@@ -81,9 +81,7 @@ public class DeserializationEngine {
                 Object value = extractValueForValueProvider(json5Object);
                 return VALUE_PROVIDER_DESERIALIZER.deserialize(value, clazz);
             } catch (Exception e) {
-                // 값 공급자 역직렬화 실패 시 기존 방식으로 처리
-                System.err.println("Value provider deserialization failed for " + 
-                    clazz.getName() + ": " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException("Value provider deserialization failed for " + clazz.getName() + ": " + e.getMessage(), e);
             }
         }
         
@@ -92,7 +90,7 @@ public class DeserializationEngine {
             try {
                 return polymorphicDeserializer.deserialize(json5Object, clazz);
             } catch (Exception e) {
-                System.err.println("Polymorphic deserialization failed, falling back to default: " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException("Polymorphic deserialization failed, falling back to default: " + e.getMessage(),e);
             }
         }
         
@@ -101,7 +99,7 @@ public class DeserializationEngine {
             try {
                 return constructorDeserializer.deserialize(json5Object, clazz);
             } catch (Exception e) {
-                System.err.println("Constructor deserialization failed, falling back to default: " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException("Constructor deserialization failed, falling back to default: " + e.getMessage(), e);
             }
         }
         
@@ -353,7 +351,8 @@ public class DeserializationEngine {
                 return polymorphicDeserializer.deserialize(json5Object, clazz);
             } catch (Exception e) {
                 // 다형성 역직렬화 실패 시 기존 방식으로 fallback
-                System.err.println("Polymorphic deserialization failed, falling back to default: " + e.getMessage());
+
+                CatchExceptionProvider.getInstance().catchException( "Polymorphic deserialization failed, falling back to default: " + e.getMessage(), e);
             }
         }
         
@@ -363,7 +362,7 @@ public class DeserializationEngine {
                 return constructorDeserializer.deserialize(json5Object, clazz);
             } catch (Exception e) {
                 // 생성자 역직렬화 실패 시 기존 방식으로 fallback
-                System.err.println("Constructor deserialization failed, falling back to default: " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException( "Constructor deserialization failed, falling back to default: " + e.getMessage(), e);
             }
         }
         

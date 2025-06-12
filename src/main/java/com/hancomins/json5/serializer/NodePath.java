@@ -170,43 +170,62 @@ public class NodePath {
 
 
     public Object get(String path) {
-        List<PathItem> pathItemList = PathItem.parseMultiPath2(path);
-        Object parents = node;
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0, n = pathItemList.size(); i < n; ++i) {
-            PathItem pathItem = pathItemList.get(i);
-            if (pathItem.isEndPoint()) {
-                if (pathItem.isInArray()) {
-                    if(pathItem.isObject()) {
-                        SchemaObjectNode endPointObject = ((SchemaArrayNode) parents).getObjectNode(pathItem.getIndex());
-                        if(endPointObject == null) return null;
-                        return endPointObject.get(pathItem.getName());
+        // JSON5PathExtractor와 동일한 파싱 방식 사용하여 일관성 확보
+        if (path == null || path.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            List<PathItem> pathItemList = PathItem.parseMultiPath2(path);
+            Object parents = node;
+            
+            //noinspection ForLoopReplaceableByForEach
+            for (int i = 0, n = pathItemList.size(); i < n; ++i) {
+                PathItem pathItem = pathItemList.get(i);
+                if (pathItem.isEndPoint()) {
+                    if (pathItem.isInArray()) {
+                        if(pathItem.isObject()) {
+                            SchemaObjectNode endPointObject = ((SchemaArrayNode) parents).getObjectNode(pathItem.getIndex());
+                            if(endPointObject == null) return null;
+                            return endPointObject.get(pathItem.getName());
+                        }
+                        else {
+                            return ((SchemaArrayNode)parents).get(pathItem.getIndex());
+                        }
+                    } else {
+                        return ((SchemaObjectNode) parents).get(pathItem.getName());
                     }
-                    else {
-                        return ((SchemaArrayNode)parents).get(pathItem.getIndex());
-                    }
-                } else {
-                    return ((SchemaObjectNode) parents).get(pathItem.getName());
                 }
-            }
-            else if((parents instanceof SchemaObjectNode && pathItem.isInArray()) || (parents instanceof SchemaArrayNode && !pathItem.isInArray())) {
-                return null;
-            }
-            else {
-                if (pathItem.isInArray()) {
-                    assert parents instanceof SchemaArrayNode;
-                    parents = ((SchemaArrayNode) parents).get(pathItem.getIndex());
-                    if(pathItem.isObject() && parents instanceof SchemaObjectNode) {
+                else if((parents instanceof SchemaObjectNode && pathItem.isInArray()) || (parents instanceof SchemaArrayNode && !pathItem.isInArray())) {
+                    return null;
+                }
+                else {
+                    if (pathItem.isInArray()) {
+                        assert parents instanceof SchemaArrayNode;
+                        parents = ((SchemaArrayNode) parents).get(pathItem.getIndex());
+                        if(pathItem.isObject() && parents instanceof SchemaObjectNode) {
+                            parents = ((SchemaObjectNode) parents).get(pathItem.getName());
+                        }
+                    } else {
+                        assert parents instanceof SchemaObjectNode;
                         parents = ((SchemaObjectNode) parents).get(pathItem.getName());
                     }
-                } else {
-                    assert parents instanceof SchemaObjectNode;
-                    parents = ((SchemaObjectNode) parents).get(pathItem.getName());
+                    if(parents == null) return null;
                 }
-                if(parents == null) return null;
             }
+            return null;
+        } catch (Exception e) {
+            // 파싱 실패 시 null 반환 (기존 동작 유지)
+            return null;
         }
-        return null;
+    }
+    
+    /**
+     * 경로가 존재하는지 확인합니다.
+     * JSON5PathExtractor와 일관된 인터페이스 제공
+     */
+    public boolean has(String path) {
+        return get(path) != null;
     }
 
 }

@@ -12,8 +12,8 @@ import com.hancomins.json5.JSON5Object;
  *   <li>기본형, 컬렉션, 맵이 아닌 모든 객체</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class ObjectTypeHandler implements TypeHandler {

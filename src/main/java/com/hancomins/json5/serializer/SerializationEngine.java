@@ -27,8 +27,8 @@ import java.util.*;
  *   <li>제네릭 타입 및 추상 타입/인터페이스</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 1.0
  * @see ObjectSerializer
  * @see CollectionSerializer
@@ -148,7 +148,7 @@ public class SerializationEngine {
             } catch (Exception e) {
                 // 전략 실행 중 오류 발생 시 기존 방식으로 fallback
                 // 로그는 남기되 예외는 던지지 않음
-                System.err.println("Strategy serialization failed for " + obj.getClass().getName() + ": " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException("Strategy serialization failed for " + obj.getClass().getName() + ": " + e.getMessage(),e);
                 return null;
             }
         }
@@ -170,8 +170,7 @@ public class SerializationEngine {
                 return VALUE_PROVIDER_SERIALIZER.serialize(obj);
             } catch (Exception e) {
                 // 값 공급자 직렬화 실패 시 null 반환하여 기존 방식으로 처리
-                System.err.println("Value provider serialization failed for " + 
-                    clazz.getName() + ": " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException("Value provider serialization failed for " + clazz.getName() + ": " + e.getMessage(),e);
                 return null;
             }
         }
@@ -388,7 +387,7 @@ public class SerializationEngine {
             try {
                 return strategy.serialize(obj, context);
             } catch (Exception e) {
-                System.err.println("Strategy serialization failed for " + obj.getClass().getName() + ": " + e.getMessage());
+                CatchExceptionProvider.getInstance().catchException("Strategy serialization failed for " + obj.getClass().getName() + ": " + e.getMessage(),e);
                 return null;
             }
         }

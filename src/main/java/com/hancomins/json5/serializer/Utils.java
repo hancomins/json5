@@ -1,12 +1,9 @@
 package com.hancomins.json5.serializer;
 
 import com.hancomins.json5.JSON5Element;
-import com.hancomins.json5.JSON5Array;
-import com.hancomins.json5.JSON5Object;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.math.BigDecimal;
 
 /**
  * JSON5 Serializer의 유틸리티 메소드들을 제공하는 클래스입니다.
@@ -21,8 +18,8 @@ import java.math.BigDecimal;
  * 
  * <p>이 클래스는 하위 호환성을 위해 유지되며, 향후 버전에서 제거될 예정입니다.</p>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 1.0
  * @deprecated 2.0에서 deprecated됨. 대신 {@link TypeConverter}, {@link PrimitiveTypeConverter}, {@link JSON5ElementExtractor}를 사용하세요.
  */
@@ -54,8 +51,7 @@ public class Utils {
      * @deprecated 2.0에서 deprecated됨. 대신 {@link TypeConverter#convertCollectionValue(Object, List, Types)}를 사용하세요.
      */
     @Deprecated
-    @SuppressWarnings({"rawtypes", "ReassignedVariable", "unchecked"})
-    static Object convertCollectionValue(Object origin, List<CollectionItems> resultCollectionItemsList, Types returnType) 
+    static Object convertCollectionValue(Object origin, List<CollectionItems> resultCollectionItemsList, Types returnType)
             throws InvocationTargetException, InstantiationException, IllegalAccessException {
         return TypeConverter.convertCollectionValue(origin, resultCollectionItemsList, returnType);
     }

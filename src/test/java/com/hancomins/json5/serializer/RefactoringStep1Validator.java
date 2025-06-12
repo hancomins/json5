@@ -15,8 +15,8 @@ import com.hancomins.json5.JSON5Object;
  *   <li>기존 Utils 클래스의 하위 호환성</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.2
  * @since 2.0
  */
 public class RefactoringStep1Validator {

@@ -21,8 +21,8 @@ import java.util.*;
  *   <li>상속 관계를 고려한 Schema 구성</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
 public class SchemaFactory {

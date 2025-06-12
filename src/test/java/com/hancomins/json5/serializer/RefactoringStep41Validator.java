@@ -7,8 +7,8 @@ import java.util.*;
 /**
  * TypeHandler 시스템(4.1 단계)의 기능을 검증하는 클래스입니다.
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.2
  * @since 2.0
  */
 public class RefactoringStep41Validator {

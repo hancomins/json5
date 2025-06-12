@@ -961,8 +961,8 @@ JSON5Serializer serializer2 = new JSON5Serializer(config); // 같은 설정 재�
  *   <li>제네릭 타입 및 추상 타입/인터페이스</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 1.0
  * @see DeserializationEngine
  * @see SerializerConfiguration

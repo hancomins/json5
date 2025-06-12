@@ -31,11 +31,13 @@ import java.util.*;
  *     .serialize(myObject);
  * }</pre>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 1.0
  */
 public class JSON5Serializer {
+
+
 
     // 기본 인스턴스 (singleton)
     private static final JSON5Serializer DEFAULT_INSTANCE = new JSON5Serializer(SerializerConfiguration.getDefault());
@@ -50,6 +52,11 @@ public class JSON5Serializer {
      */
     private JSON5Serializer() {
         this(SerializerConfiguration.getDefault());
+    }
+
+
+    public static void addOnCatchExceptionListener(OnCatchExceptionListener listener) {
+        CatchExceptionProvider.getInstance().addOnCatchException(listener);
     }
 
     /**

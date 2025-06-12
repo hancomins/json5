@@ -1,6 +1,5 @@
 package com.hancomins.json5.serializer;
 
-import com.hancomins.json5.JSON5Object;
 
 /**
  * 기본 타입(primitive) 및 단순 타입의 값 처리를 담당하는 프로세서입니다.
@@ -13,11 +12,11 @@ import com.hancomins.json5.JSON5Object;
  *   <li>Enum 타입</li>
  * </ul>
  * 
- * @author JSON5 팀
- * @version 2.0
+ * @author ice3x2
+ * @version 1.1
  * @since 2.0
  */
-public class PrimitiveValueProcessor implements ValueProcessor {
+class PrimitiveValueProcessor implements ValueProcessor {
     
     @Override
     public boolean canHandle(Types type) {
