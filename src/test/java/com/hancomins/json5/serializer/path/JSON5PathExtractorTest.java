@@ -110,17 +110,24 @@ class JSON5PathExtractorTest {
         
         json.put("items", items);
         
-        // When & Then
-        Object item0 = JSON5PathExtractor.extractValue(json, "items.0");
-        assertFalse(JSON5PathExtractor.isMissingValue(item0));
-        assertEquals("item0", item0);
+        // When & Then - 새로운 PathItem 방식 (items[0])
+        Object newItem0 = JSON5PathExtractor.extractValue(json, "items[0]");
+        assertFalse(JSON5PathExtractor.isMissingValue(newItem0));
+        assertEquals("item0", newItem0);
         
-        Object item1 = JSON5PathExtractor.extractValue(json, "items.1");
-        assertFalse(JSON5PathExtractor.isMissingValue(item1));
-        assertEquals("item1", item1);
+        Object newItem1 = JSON5PathExtractor.extractValue(json, "items[1]");
+        assertFalse(JSON5PathExtractor.isMissingValue(newItem1));
+        assertEquals("item1", newItem1);
+        
+        // 기존 방식 (items.0)은 JSON5Array에서 지원되지 않음
+        Object legacyItem0 = JSON5PathExtractor.extractValue(json, "items.0");
+        assertTrue(JSON5PathExtractor.isMissingValue(legacyItem0));
+        
+        Object legacyItem1 = JSON5PathExtractor.extractValue(json, "items.1");
+        assertTrue(JSON5PathExtractor.isMissingValue(legacyItem1));
         
         // 존재하지 않는 인덱스
-        Object missingItem = JSON5PathExtractor.extractValue(json, "items.5");
+        Object missingItem = JSON5PathExtractor.extractValue(json, "items[5]");
         assertTrue(JSON5PathExtractor.isMissingValue(missingItem));
     }
     
