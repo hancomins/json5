@@ -6,7 +6,7 @@ import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.container.ArrayDataContainer;
 import com.hancomins.json5.container.BaseDataContainer;
 
-enum Types {
+public enum Types {
     Byte,
     Short,
     Integer,
