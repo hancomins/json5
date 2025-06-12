@@ -1,33 +1,30 @@
-# JSON5 Serializer Complete User Guide
+# JSON5 
 
-# 한국어 버전 바로가기
- - [JSON5 Serializer 사용자 가이드 (한국어)](README.KO.md)
+## 📋 개요
 
-## 📋 Overview
+JSON5 는 Java 8 이상에서 동작하는 강력한 JSON5 직렬화/역직렬화 라이브러리입니다. JSON5는 JSON의 상위집합으로, **주석 처리, 후행 쉼표, 따옴표 없는 키** 등을 지원하여 **설정 파일 작성에 매우 적합**합니다.
 
-JSON5 Serializer is a powerful JSON5 serialization/deserialization library for Java 8+. JSON5 is a superset of JSON that supports **comments, trailing commas, and unquoted keys**, making it **ideal for configuration files**.
+### ✅ 주요 장점
+- **설정 파일에 최적화**: 주석 처리와 유연한 문법으로 설정 파일 작성이 쉬움
+- **Jackson 수준의 고급 기능**: 생성자 기반 역직렬화, 다형성 처리, 커스텀 값 공급자 지원
+- **XPath 스타일 경로 접근**: `users[0].profile.email` 같은 중첩 경로 접근 지원
 
-### ✅ Key Advantages
-- **Optimized for configuration files**: Easy configuration file creation with comment support and flexible syntax
-- **Jackson-level advanced features**: Constructor-based deserialization, polymorphism, custom value providers
-- **XPath-style path access**: Nested path access like `users[0].profile.email`
-
-### ⚠️ Important Notes
-- **Not suitable as data format**: Standard JSON is recommended for inter-system data exchange
-- **Not recommended for network APIs**: Standard JSON is more appropriate for REST APIs, etc.
+### ⚠️ 주의사항
+- **데이터 포맷으로는 부적절**: 시스템 간 데이터 교환용으로는 표준 JSON 사용 권장
+- **네트워크 API에는 비추천**: REST API 등에서는 표준 JSON이 더 적합
 
 ---
 
-## 🚀 Basic Setup
+## 🚀 기본 설정
 
-### Add Gradle Dependency
+### Gradle 의존성 추가
 ```groovy
 dependencies {
-    implementation 'io.github.hancomins:json5:1.x.x' // Replace with the latest version
+    implementation 'io.github.hancomins:json5:1.x.x' // 최신 버전 확인 후 사용
 }
 ```
 
-### Basic Imports
+### 기본 import
 ```java
 import com.hancomins.json5.*;
 import com.hancomins.json5.serializer.*;
@@ -36,44 +33,44 @@ import com.hancomins.json5.options.*;
 
 ---
 
-## 📦 JSON5Object and JSON5Array Basic Usage
+## 📦 JSON5Object와 JSON5Array 기본 사용법
 
-### JSON5Object Basic Operations
+### JSON5Object 기본 조작
 
-#### 1. Object Creation and Data Addition
+#### 1. 객체 생성과 데이터 추가
 ```java
-// Create empty object
+// 빈 객체 생성
 JSON5Object user = new JSON5Object();
 
-// Add basic type data
-user.put("name", "John Doe");
+// 기본 타입 데이터 추가
+user.put("name", "홍길동");
 user.put("age", 30);
 user.put("isActive", true);
 user.put("score", 95.5);
 
-// Add nested object
+// 중첩 객체 추가
 JSON5Object profile = new JSON5Object();
-profile.put("email", "john@example.com");
-profile.put("department", "Engineering");
+profile.put("email", "hong@example.com");
+profile.put("department", "개발팀");
 user.put("profile", profile);
 
 System.out.println(user);
-// {"name":"John Doe","age":30,"isActive":true,"score":95.5,"profile":{"email":"john@example.com","department":"Engineering"}}
+// {"name":"홍길동","age":30,"isActive":true,"score":95.5,"profile":{"email":"hong@example.com","department":"개발팀"}}
 ```
 
-#### 2. Creating Object from JSON5 String
+#### 2. JSON5 문자열에서 객체 생성
 ```java
-// JSON5 format (supports comments, trailing commas, unquoted keys)
+// JSON5 형식 (주석, 후행 쉼표, 따옴표 없는 키 지원)
 String json5String = """
 {
-    // User basic information
-    name: 'John Doe',
+    // 사용자 기본 정보
+    name: '홍길동',
     age: 30,
-    hobbies: ['reading', 'movies', 'travel',], // trailing comma allowed
-    /* Contact information */
+    hobbies: ['독서', '영화감상', '여행',], // 후행 쉼표 허용
+    /* 연락처 정보 */
     contact: {
-        email: 'john@example.com',
-        phone: '555-1234-5678'
+        email: 'hong@example.com',
+        phone: '010-1234-5678'
     }
 }
 """;
@@ -81,172 +78,172 @@ String json5String = """
 JSON5Object user = new JSON5Object(json5String);
 ```
 
-#### 3. Data Retrieval
+#### 3. 데이터 조회
 ```java
-// Basic retrieval
+// 기본 조회
 String name = user.getString("name");
 int age = user.getInt("age");
-boolean isActive = user.getBoolean("isActive", false); // with default value
+boolean isActive = user.getBoolean("isActive", false); // 기본값 지정
 
-// Nested object retrieval
+// 중첩 객체 조회
 JSON5Object profile = user.getJSON5Object("profile");
 String email = profile.getString("email");
 
-// Safe retrieval (null handling)
-String department = user.getJSON5Object("profile").getString("department", "TBD");
+// 안전한 조회 (null 처리)
+String department = user.getJSON5Object("profile").getString("department", "미정");
 
-// Null check
+// null 체크
 if (user.has("profile")) {
     JSON5Object userProfile = user.getJSON5Object("profile");
-    // Process profile information
+    // 프로필 정보 처리
 }
 ```
 
-### JSON5Array Basic Operations
+### JSON5Array 기본 조작
 
-#### 1. Array Creation and Data Addition
+#### 1. 배열 생성과 데이터 추가
 ```java
-// Create empty array
+// 빈 배열 생성
 JSON5Array hobbies = new JSON5Array();
 
-// Add data
-hobbies.put("reading");
-hobbies.put("movies");
-hobbies.put("travel");
+// 데이터 추가
+hobbies.put("독서");
+hobbies.put("영화감상");
+hobbies.put("여행");
 
-// Add multiple data at once
-hobbies.put("hiking", "cooking", "gaming");
+// 여러 데이터 한 번에 추가
+hobbies.put("등산", "요리", "게임");
 
-// Add object to array
+// 객체를 배열에 추가
 JSON5Object hobby1 = new JSON5Object();
-hobby1.put("name", "reading");
-hobby1.put("frequency", "daily");
+hobby1.put("name", "독서");
+hobby1.put("frequency", "매일");
 hobbies.put(hobby1);
 ```
 
-#### 2. Creating from JSON5 Array String
+#### 2. JSON5 배열 문자열에서 생성
 ```java
 String arrayString = """
 [
-    'reading',
-    'movies',
+    '독서',
+    '영화감상',
     {
-        name: 'travel',
-        frequency: 'monthly',
-        cost: 500
+        name: '여행',
+        frequency: '월 1회',
+        cost: 50000
     },
-    // Last item can also have comments
-    'exercise'
+    // 마지막 항목도 주석 가능
+    '운동'
 ]
 """;
 
 JSON5Array hobbies = new JSON5Array(arrayString);
 ```
 
-#### 3. Data Retrieval
+#### 3. 데이터 조회
 ```java
-// Retrieve by index
+// 인덱스로 조회
 String firstHobby = hobbies.getString(0);
 JSON5Object hobbyDetail = hobbies.getJSON5Object(2);
 
-// Array size
+// 배열 크기
 int size = hobbies.size();
 
-// Iterate through array
+// 반복 처리
 for (int i = 0; i < hobbies.size(); i++) {
     Object item = hobbies.get(i);
-    System.out.println("Item " + i + ": " + item);
+    System.out.println("항목 " + i + ": " + item);
 }
 
-// Enhanced for loop
+// Enhanced for 사용
 for (Object item : hobbies) {
-    System.out.println("Item: " + item);
+    System.out.println("항목: " + item);
 }
 ```
 
-### JSON5 Advanced Features
+### JSON5 고급 기능 활용
 
-#### 1. Comment Handling
+#### 1. 주석 처리
 ```java
 JSON5Object config = new JSON5Object();
 config.put("port", 8080);
 config.put("host", "localhost");
 
-// Add comments to keys
-config.setCommentForKey("port", "Server port number");
-config.setCommentAfterValue("host", "Development environment host");
+// 키에 주석 추가
+config.setCommentForKey("port", "서버 포트 번호");
+config.setCommentAfterValue("host", "개발 환경용 호스트");
 
-// Add comments to entire object
-config.setHeaderComment("Server configuration file");
-config.setFooterComment("End of configuration");
+// 객체 전체에 주석 추가
+config.setHeaderComment("서버 설정 파일");
+config.setFooterComment("설정 끝");
 
 System.out.println(config.toString(WritingOptions.json5Pretty()));
 ```
 
-#### 2. Path-based Access (XPath Style)
+#### 2. 경로 기반 접근 (XPath 스타일)
 ```java
 JSON5Object data = new JSON5Object();
 JSON5Array users = new JSON5Array();
 
 JSON5Object user1 = new JSON5Object();
-user1.put("name", "John Smith");
-user1.put("email", "john@example.com");
+user1.put("name", "김철수");
+user1.put("email", "kim@example.com");
 users.put(user1);
 
 data.put("users", users);
 
-// Access values by path
+// 경로로 값 접근
 String firstUserName = data.getString("$.users[0].name");
 String firstUserEmail = data.getString("$.users[0].email");
 
-// Set values by path
-data.put("$.users[0].department", "Engineering");
-data.put("$.users[1]", new JSON5Object().put("name", "Jane Doe"));
+// 경로로 값 설정
+data.put("$.users[0].department", "개발팀");
+data.put("$.users[1]", new JSON5Object().put("name", "이영희"));
 ```
 
 ---
 
-## 🔄 Complete Serialization/Deserialization Guide
+## 🔄 직렬화/역직렬화 완전 가이드
 
-### Basic Concepts
+### 기본 개념
 
-JSON5 Serializer supports bidirectional conversion between Java objects and JSON5. Fine-grained control is possible through annotations, providing Jackson-like advanced features.
+JSON5 Serializer는 Java 객체와 JSON5 간의 양방향 변환을 지원합니다. 어노테이션을 통해 세밀한 제어가 가능하며, Jackson과 유사한 고급 기능들을 제공합니다.
 
-### 1. Basic Annotations
+### 1. 기본 어노테이션
 
-#### @JSON5Type - Class Annotation
+#### @JSON5Type - 클래스 어노테이션
 ```java
 @JSON5Type
 public class User {
-    // Mark class for serialization/deserialization
+    // 직렬화/역직렬화 대상 클래스 표시
 }
 
-@JSON5Type(comment = "User information", commentAfter = "End of user info")
+@JSON5Type(comment = "사용자 정보", commentAfter = "사용자 정보 끝")
 public class User {
-    // Add comments to class
+    // 클래스에 주석 추가
 }
 ```
 
-#### @JSON5Value - Field Annotation
+#### @JSON5Value - 필드 어노테이션
 ```java
 @JSON5Type
 public class User {
     @JSON5Value
     private String name;
     
-    @JSON5Value(key = "user_id", comment = "User ID")
+    @JSON5Value(key = "user_id", comment = "사용자 ID")
     private String id;
     
     @JSON5Value(ignore = true)
-    private String password; // Exclude from serialization
+    private String password; // 직렬화에서 제외
     
-    private String internalData; // Excluded without annotation
+    private String internalData; // 어노테이션 없으면 제외
 }
 ```
 
-### 2. Basic Serialization/Deserialization
+### 2. 기본 직렬화/역직렬화
 
-#### Using Static Methods (Legacy Way)
+#### 정적 메서드 사용 (기존 방식)
 ```java
 @JSON5Type
 public class User {
@@ -256,7 +253,7 @@ public class User {
     @JSON5Value
     private int age;
     
-    // Default constructor required
+    // 기본 생성자 필요
     public User() {}
     
     public User(String name, int age) {
@@ -264,42 +261,42 @@ public class User {
         this.age = age;
     }
     
-    // Getters/Setters
+    // Getter/Setter
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public int getAge() { return age; }
     public void setAge(int age) { this.age = age; }
 }
 
-// Serialization
-User user = new User("John Doe", 30);
+// 직렬화
+User user = new User("홍길동", 30);
 JSON5Object json = JSON5Serializer.toJSON5Object(user);
 
-// Deserialization
+// 역직렬화
 User restored = JSON5Serializer.fromJSON5Object(json, User.class);
 ```
 
-#### Using Fluent API (Recommended)
+#### Fluent API 사용 (권장 방식)
 ```java
-// Basic usage
+// 기본 사용
 JSON5Serializer serializer = JSON5Serializer.builder().build();
 
-// Serialization
+// 직렬화
 JSON5Object json = serializer.forSerialization()
     .withWritingOptions(WritingOptions.json5Pretty())
     .includeNullValues()
     .serialize(user);
 
-// Deserialization
+// 역직렬화
 User restored = serializer.forDeserialization()
     .ignoreErrors()
     .withStrictTypeChecking(false)
     .deserialize(json, User.class);
 ```
 
-### 3. Constructor-based Deserialization
+### 3. 생성자 기반 역직렬화
 
-#### Basic Usage
+#### 기본 사용법
 ```java
 @JSON5Type
 public class User {
@@ -307,7 +304,7 @@ public class User {
     private final int age;
     private final String email;
     
-    // Specify constructor with @JSON5Creator
+    // @JSON5Creator로 생성자 지정
     @JSON5Creator
     public User(@JSON5Property("name") String name,
                 @JSON5Property("age") int age,
@@ -317,14 +314,14 @@ public class User {
         this.email = email;
     }
     
-    // Only getters needed (immutable object)
+    // Getter만 필요 (불변 객체)
     public String getName() { return name; }
     public int getAge() { return age; }
     public String getEmail() { return email; }
 }
 ```
 
-#### Nested Path Access
+#### 중첩 경로 접근
 ```java
 @JSON5Type
 public class UserProfile {
@@ -345,25 +342,25 @@ public class UserProfile {
     }
 }
 
-// JSON structure
+// JSON 구조
 {
-    "name": "John Doe",
+    "name": "홍길동",
     "contact": {
-        "email": "john@example.com",
-        "phone": "555-1234-5678"
+        "email": "hong@example.com",
+        "phone": "010-1234-5678"
     },
     "work": {
-        "department": "Engineering",
-        "position": "Senior Developer"
+        "department": "개발팀",
+        "position": "시니어 개발자"
     },
     "address": {
-        "city": "New York",
-        "state": "NY"
+        "city": "서울",
+        "district": "강남구"
     }
 }
 ```
 
-#### Array Index Access
+#### 배열 인덱스 접근
 ```java
 @JSON5Type
 public class TeamInfo {
@@ -384,21 +381,21 @@ public class TeamInfo {
     }
 }
 
-// JSON structure
+// JSON 구조
 {
     "team": {
-        "name": "Engineering Team",
-        "leader": "John Manager"
+        "name": "개발팀",
+        "leader": "김팀장"
     },
     "members": [
-        {"name": "Alice Developer", "role": "Senior"},
-        {"name": "Bob Junior", "role": "Junior"},
-        {"name": "Carol Senior", "role": "Senior"}
+        {"name": "이개발", "role": "시니어"},
+        {"name": "박신입", "role": "주니어"},
+        {"name": "최경력", "role": "시니어"}
     ]
 }
 ```
 
-#### Constructor Priority and Required Fields
+#### 생성자 우선순위와 필수 필드
 ```java
 @JSON5Type
 public class FlexibleUser {
@@ -406,7 +403,7 @@ public class FlexibleUser {
     private final int age;
     private final String type;
     
-    // Default constructor (lower priority)
+    // 기본 생성자 (우선순위 낮음)
     @JSON5Creator
     public FlexibleUser(@JSON5Property("name") String name,
                        @JSON5Property("age") int age) {
@@ -415,7 +412,7 @@ public class FlexibleUser {
         this.type = "basic";
     }
     
-    // Higher priority constructor
+    // 우선순위 높은 생성자
     @JSON5Creator(priority = 1)
     public FlexibleUser(@JSON5Property("name") String name,
                        @JSON5Property(value = "age", required = true) int age,
@@ -427,11 +424,11 @@ public class FlexibleUser {
 }
 ```
 
-### 4. Polymorphic Deserialization
+### 4. 다형성 역직렬화
 
-#### Basic Polymorphism
+#### 기본 다형성 처리
 ```java
-// Parent class/interface
+// 부모 클래스/인터페이스
 @JSON5TypeInfo(property = "type")
 @JSON5SubType(value = Dog.class, name = "dog")
 @JSON5SubType(value = Cat.class, name = "cat")
@@ -446,14 +443,14 @@ public abstract class Animal {
     public void setName(String name) { this.name = name; }
 }
 
-// Implementation classes
+// 구현 클래스들
 @JSON5Type
 public class Dog extends Animal {
     @JSON5Value
     private String breed;
     
     @Override
-    public void makeSound() { System.out.println("Woof!"); }
+    public void makeSound() { System.out.println("멍멍!"); }
     
     public String getBreed() { return breed; }
     public void setBreed(String breed) { this.breed = breed; }
@@ -465,23 +462,23 @@ public class Cat extends Animal {
     private boolean indoor;
     
     @Override
-    public void makeSound() { System.out.println("Meow!"); }
+    public void makeSound() { System.out.println("야옹!"); }
     
     public boolean isIndoor() { return indoor; }
     public void setIndoor(boolean indoor) { this.indoor = indoor; }
 }
 
-// Usage example
+// 사용 예제
 JSON5Object dogJson = new JSON5Object();
 dogJson.put("type", "dog");
-dogJson.put("name", "Buddy");
-dogJson.put("breed", "Golden Retriever");
+dogJson.put("name", "멍멍이");
+dogJson.put("breed", "진돗개");
 
 Animal animal = JSON5Serializer.fromJSON5Object(dogJson, Animal.class);
-// Result: Dog instance is created
+// 결과: Dog 인스턴스가 생성됨
 ```
 
-#### Nested Type Information
+#### 중첩된 타입 정보
 ```java
 @JSON5TypeInfo(property = "vehicle.type")
 @JSON5SubType(value = Car.class, name = "car")
@@ -490,18 +487,18 @@ public interface Vehicle {
     void start();
 }
 
-// JSON structure
+// JSON 구조
 {
-    "owner": "John Doe",
+    "owner": "홍길동",
     "vehicle": {
         "type": "car",
-        "brand": "Toyota",
-        "model": "Camry"
+        "brand": "현대",
+        "model": "소나타"
     }
 }
 ```
 
-#### Using Existing Property as Type Information
+#### 기존 속성을 타입 정보로 활용
 ```java
 @JSON5TypeInfo(property = "status", include = TypeInclusion.EXISTING_PROPERTY)
 @JSON5SubType(value = ActiveUser.class, name = "active")
@@ -509,7 +506,7 @@ public interface Vehicle {
 @JSON5SubType(value = PendingUser.class, name = "pending")
 public abstract class User {
     @JSON5Value
-    protected String status; // This field value is also used for type determination
+    protected String status; // 이 필드 값이 타입 결정에도 사용됨
     
     @JSON5Value
     protected String name;
@@ -521,15 +518,15 @@ public class ActiveUser extends User {
     private String lastLoginDate;
 }
 
-// The status field value ("active") in JSON is used for type determination
+// JSON에서 status 필드의 값("active")이 타입 결정에 사용됨
 {
     "status": "active",
-    "name": "John Doe",
+    "name": "홍길동",
     "lastLoginDate": "2024-01-15"
 }
 ```
 
-#### Specifying Default Implementation
+#### 기본 구현체 지정
 ```java
 @JSON5TypeInfo(
     property = "type",
@@ -542,47 +539,47 @@ public interface Payment {
     void process();
 }
 
-// When type info is missing or doesn't match, GenericPayment is used
+// type 정보가 없거나 매칭되지 않으면 GenericPayment로 역직렬화
 {
-    "amount": 100.0,
-    "currency": "USD"
-    // no type field -> GenericPayment used
+    "amount": 10000,
+    "currency": "KRW"
+    // type 필드 없음 -> GenericPayment 사용
 }
 ```
 
-### 5. Custom Value Provider
+### 5. 커스텀 값 공급자 (Value Provider)
 
-#### Basic Usage
+#### 기본 사용법
 ```java
 @JSON5ValueProvider
 public class UserId {
     private final String id;
     
-    // Deserialization: String → UserId
+    // 역직렬화: String → UserId
     @JSON5ValueConstructor
     public UserId(String id) {
         this.id = id;
     }
     
-    // Serialization: UserId → String
+    // 직렬화: UserId → String
     @JSON5ValueExtractor
     public String getId() {
         return id;
     }
 }
 
-// Usage class
+// 사용 클래스
 @JSON5Type
 public class User {
     @JSON5Value
-    private UserId userId;  // UserId object serialized/deserialized as String
+    private UserId userId;  // UserId 객체가 String으로 직렬화/역직렬화됨
     
     @JSON5Value
     private String name;
 }
 ```
 
-#### Complex Type Conversion
+#### 복잡한 타입 변환
 ```java
 @JSON5ValueProvider(targetType = JSON5Object.class, strictTypeMatching = false)
 public class ConnectionConfig {
@@ -605,7 +602,7 @@ public class ConnectionConfig {
 }
 ```
 
-#### Null Handling Configuration
+#### Null 처리 설정
 ```java
 @JSON5ValueProvider
 public class SafeWrapper {
@@ -613,22 +610,22 @@ public class SafeWrapper {
     
     @JSON5ValueConstructor(onNull = NullHandling.EMPTY_OBJECT)
     public SafeWrapper(String value) {
-        this.value = value != null ? value : "default";
+        this.value = value != null ? value : "기본값";
     }
     
     @JSON5ValueExtractor(onNull = NullHandling.EXCEPTION)
     public String getValue() {
         if (value == null) {
-            throw new JSON5SerializerException("Value cannot be null");
+            throw new JSON5SerializerException("값이 null일 수 없습니다");
         }
         return value;
     }
 }
 ```
 
-### 6. Collection and Map Handling
+### 6. 컬렉션과 Map 처리
 
-#### List Serialization/Deserialization
+#### List 직렬화/역직렬화
 ```java
 @JSON5Type
 public class Team {
@@ -642,12 +639,12 @@ public class Team {
     private List<String> skills;
 }
 
-// Usage
+// 사용
 Team team = new Team();
-team.setName("Engineering Team");
+team.setName("개발팀");
 team.setMembers(Arrays.asList(
-    new User("John Developer", 30),
-    new User("Jane Frontend", 28)
+    new User("김개발", 30),
+    new User("이프론트", 28)
 ));
 team.setSkills(Arrays.asList("Java", "JavaScript", "Python"));
 
@@ -655,7 +652,7 @@ JSON5Object json = JSON5Serializer.toJSON5Object(team);
 Team restored = JSON5Serializer.fromJSON5Object(json, Team.class);
 ```
 
-#### Map Serialization/Deserialization
+#### Map 직렬화/역직렬화
 ```java
 @JSON5Type
 public class UserManager {
@@ -666,86 +663,86 @@ public class UserManager {
     private Map<String, List<String>> rolePermissions = new HashMap<>();
 }
 
-// Note: Map keys must be String
-// Values can be basic types, @JSON5Type classes, Lists, etc.
+// 주의: Map의 키는 반드시 String이어야 함
+// 값으로는 기본 타입, @JSON5Type 클래스, List 등 사용 가능
 ```
 
-### 7. Advanced Configuration and Options
+### 7. 고급 설정과 옵션
 
-#### Advanced Configuration with Builder
+#### 빌더를 통한 고급 설정
 ```java
 JSON5Serializer serializer = JSON5Serializer.builder()
-    .ignoreUnknownProperties()     // Ignore unknown properties
-    .enableSchemaCache()           // Use schema cache
-    .withErrorHandling(true)       // Enable error handling
+    .ignoreUnknownProperties()     // 알 수 없는 속성 무시
+    .enableSchemaCache()           // 스키마 캐시 사용
+    .withErrorHandling(true)       // 오류 처리 활성화
     .build();
 ```
 
-#### Serialization Options
+#### 직렬화 옵션
 ```java
 JSON5Object json = serializer.forSerialization()
-    .withWritingOptions(WritingOptions.json5Pretty())  // Pretty output
-    .includeNullValues()                               // Include null values
-    .ignoreFields("password", "internalId")            // Ignore specific fields
+    .withWritingOptions(WritingOptions.json5Pretty())  // 예쁜 출력
+    .includeNullValues()                               // null 값 포함
+    .ignoreFields("password", "internalId")            // 특정 필드 무시
     .serialize(user);
 ```
 
-#### Deserialization Options
+#### 역직렬화 옵션
 ```java
 User user = serializer.forDeserialization()
-    .ignoreErrors()                 // Ignore errors
-    .withStrictTypeChecking(false)  // Disable strict type checking
-    .withDefaultValue(new User())   // Set default value
+    .ignoreErrors()                 // 오류 무시
+    .withStrictTypeChecking(false)  // 엄격한 타입 체크 비활성화
+    .withDefaultValue(new User())   // 기본값 설정
     .deserialize(json, User.class);
 ```
 
-### 8. Real-world Examples
+### 8. 실무 활용 예제
 
-#### Configuration File Handling
+#### 설정 파일 처리
 ```java
-@JSON5Type(comment = "Application configuration")
+@JSON5Type(comment = "애플리케이션 설정")
 public class AppConfig {
-    @JSON5Value(comment = "Server configuration")
+    @JSON5Value(comment = "서버 설정")
     private ServerConfig server;
     
-    @JSON5Value(comment = "Database configuration")
+    @JSON5Value(comment = "데이터베이스 설정")
     private DatabaseConfig database;
     
-    @JSON5Value(comment = "Logging configuration")
+    @JSON5Value(comment = "로깅 설정")
     private LoggingConfig logging;
 }
 
 @JSON5Type
 public class ServerConfig {
-    @JSON5Value(comment = "Server port")
+    @JSON5Value(comment = "서버 포트")
     private int port = 8080;
     
-    @JSON5Value(comment = "Host address")
+    @JSON5Value(comment = "호스트 주소")
     private String host = "localhost";
     
-    @JSON5Value(comment = "SSL enabled")
+    @JSON5Value(comment = "SSL 사용 여부")
     private boolean ssl = false;
 }
 
-// config.json5 file
+// config.json5 파일
 /*
-// Application configuration
+// 애플리케이션 설정
 {
-    // Server configuration
+    // 서버 설정
     server: {
-        // Server port
+        // 서버 포트
         port: 8080,
-        // Host address
+        // 호스트 주소
         host: 'localhost',
-        // SSL enabled
+        // SSL 사용 여부
         ssl: false
     },
-    // Database configuration
+    // 데이터베이스 설정
     database: {
         url: 'jdbc:mysql://localhost:3306/mydb',
         username: 'user',
         password: 'pass',
-        // Connection pool settings
+        // 연결 풀 설정
         pool: {
             minSize: 5,
             maxSize: 20,
@@ -755,7 +752,7 @@ public class ServerConfig {
 */
 ```
 
-#### API Response Handling
+#### API 응답 처리
 ```java
 @JSON5TypeInfo(property = "status")
 @JSON5SubType(value = SuccessResponse.class, name = "success")
@@ -787,7 +784,7 @@ public class ErrorResponse extends ApiResponse {
 }
 ```
 
-#### Complex Business Objects
+#### 복잡한 비즈니스 객체
 ```java
 @JSON5Type
 public class Order {
@@ -825,18 +822,18 @@ public class OrderItem {
     private BigDecimal price;
 }
 
-// Usage example
+// 사용 예제
 Order order = new Order();
 order.setOrderId("ORD-2024-001");
 order.setItems(Arrays.asList(
-    new OrderItem("PROD-001", "Laptop", 1, new BigDecimal("1500.00")),
-    new OrderItem("PROD-002", "Mouse", 2, new BigDecimal("25.00"))
+    new OrderItem("PROD-001", "노트북", 1, new BigDecimal("1500000")),
+    new OrderItem("PROD-002", "마우스", 2, new BigDecimal("25000"))
 ));
 
 JSON5Object orderJson = JSON5Serializer.toJSON5Object(order);
 ```
 
-#### Constructor-based Immutable Object Pattern
+#### 생성자 기반 불변 객체 패턴
 ```java
 @JSON5Type
 public class ImmutableProduct {
@@ -864,7 +861,7 @@ public class ImmutableProduct {
         this.details = new ProductDetails(weight, width, height, depth);
     }
     
-    // Only provide getters (immutable object)
+    // Getter만 제공 (불변 객체)
     public String getId() { return id; }
     public String getName() { return name; }
     public BigDecimal getPrice() { return price; }
@@ -872,12 +869,12 @@ public class ImmutableProduct {
     public ProductDetails getDetails() { return details; }
 }
 
-// JSON structure
+// JSON 구조
 {
     "id": "PROD-001",
-    "name": "Gaming Laptop",
-    "price": 1500.00,
-    "categories": ["Computer", "Gaming", "Electronics"],
+    "name": "게이밍 노트북",
+    "price": 1500000,
+    "categories": ["컴퓨터", "게임", "전자제품"],
     "details": {
         "weight": 2.5,
         "dimensions": {
@@ -890,26 +887,66 @@ public class ImmutableProduct {
 }
 ```
 
-### 9. Troubleshooting Guide
+### 9. 성능 최적화 팁
 
-#### Common Errors and Solutions
-
-**1. "No default constructor found" Error**
+#### 스키마 캐시 활용
 ```java
-// Problem: No default constructor
+// 스키마 캐시를 사용하면 첫 번째 실행 후 성능이 크게 향상됨
+JSON5Serializer serializer = JSON5Serializer.builder()
+    .enableSchemaCache()
+    .build();
+
+// 동일한 클래스의 객체들을 반복 처리할 때 유용
+List<User> users = getUsers();
+for (User user : users) {
+    JSON5Object json = serializer.serialize(user);
+    // 두 번째부터는 캐시된 스키마 사용으로 빠른 처리
+}
+```
+
+#### 바이너리 변환 활용
+```java
+// JSON 문자열보다 더 작은 크기와 빠른 파싱
+JSON5Object data = createLargeData();
+
+// 바이너리로 변환
+byte[] binaryData = data.toBytes();
+
+// 바이너리에서 복원
+JSON5Object restored = new JSON5Object(binaryData, 0, binaryData.length);
+```
+
+#### 스트리밍 처리
+```java
+// 대용량 데이터 처리 시 메모리 효율적 방법
+try (FileInputStream fis = new FileInputStream("large-data.json5");
+     InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8)) {
+    
+    JSON5Object data = new JSON5Object(isr);
+    // 스트리밍 방식으로 파싱
+}
+```
+
+### 10. 문제 해결 가이드
+
+#### 일반적인 오류와 해결책
+
+**1. "No default constructor found" 오류**
+```java
+// 문제: 기본 생성자 없음
 @JSON5Type
 public class User {
-    public User(String name) { ... } // Only parameterized constructor exists
+    public User(String name) { ... } // 매개변수 있는 생성자만 존재
 }
 
-// Solution 1: Add default constructor
+// 해결책 1: 기본 생성자 추가
 @JSON5Type
 public class User {
-    private User() {} // private is OK
+    private User() {} // private도 가능
     public User(String name) { ... }
 }
 
-// Solution 2: Use @JSON5Creator
+// 해결책 2: @JSON5Creator 사용
 @JSON5Type
 public class User {
     @JSON5Creator
@@ -917,9 +954,9 @@ public class User {
 }
 ```
 
-**2. "Circular reference detected" Error**
+**2. "Circular reference detected" 오류**
 ```java
-// Problem: Circular reference
+// 문제: 순환 참조
 @JSON5Type
 public class Department {
     @JSON5Value
@@ -929,84 +966,84 @@ public class Department {
 @JSON5Type  
 public class Employee {
     @JSON5Value
-    private Department department; // Circular reference!
+    private Department department; // 순환 참조!
 }
 
-// Solution: Remove one side reference or use ignore
+// 해결책: 한쪽 참조 제거 또는 ignore 사용
 @JSON5Type
 public class Employee {
     @JSON5Value(ignore = true)
-    private Department department; // Exclude from serialization
+    private Department department; // 직렬화에서 제외
 }
 ```
 
-**3. Generic Type Handling Issues**
+**3. 제네릭 타입 처리 문제**
 ```java
-// Problem: Raw type usage
+// 문제: Raw 타입 사용
 @JSON5Value
-private List userList; // No generic information
+private List userList; // 제네릭 정보 없음
 
-// Solution: Specify generic type
+// 해결책: 제네릭 타입 명시
 @JSON5Value
 private List<User> userList;
 ```
 
-#### Debugging Tips
+#### 디버깅 팁
 
-**1. Check Serialization Results**
+**1. 직렬화 결과 확인**
 ```java
 JSON5Object json = JSON5Serializer.toJSON5Object(object);
-System.out.println("Serialization result:");
+System.out.println("직렬화 결과:");
 System.out.println(json.toString(WritingOptions.json5Pretty()));
 ```
 
-**2. Test with Error Ignore Mode**
+**2. 오류 무시 모드로 테스트**
 ```java
-// Check which fields are causing problems
+// 어떤 필드에서 문제가 발생하는지 확인
 User user = JSON5Serializer.getInstance()
     .forDeserialization()
-    .ignoreErrors() // Ignore errors and proceed
+    .ignoreErrors() // 오류 무시하고 진행
     .deserialize(json, User.class);
 ```
 
-**3. Verify Type Information**
+**3. 타입 정보 확인**
 ```java
-// Check type information in polymorphic handling
+// 다형성 처리에서 타입 정보 확인
 if (json.has("type")) {
-    System.out.println("Type info: " + json.getString("type"));
+    System.out.println("타입 정보: " + json.getString("type"));
 } else {
-    System.out.println("No type info - default implementation used");
+    System.out.println("타입 정보 없음 - 기본 구현체 사용됨");
 }
 ```
 
-### 10. Best Practices
+### 11. 모범 사례 (Best Practices)
 
-#### 1. Annotation Usage Guidelines
+#### 1. 어노테이션 사용 가이드
 ```java
-// ✅ Good example
-@JSON5Type(comment = "User information")
+// ✅ 좋은 예
+@JSON5Type(comment = "사용자 정보")
 public class User {
-    @JSON5Value(comment = "User ID")
+    @JSON5Value(comment = "사용자 ID")
     private String id;
     
-    @JSON5Value(key = "user_name", comment = "User name")
+    @JSON5Value(key = "user_name", comment = "사용자 이름")
     private String name;
     
     @JSON5Value(ignore = true)
-    private String password; // Exclude sensitive information
+    private String password; // 민감 정보 제외
 }
 
-// ❌ Bad example
+// ❌ 나쁜 예
 public class User {
-    private String id; // Missing annotation
+    private String id; // 어노테이션 누락
     @JSON5Value
-    private String password; // Including sensitive information
+    private String password; // 민감 정보 포함
 }
 ```
 
-#### 2. Prefer Immutable Objects
+#### 2. 불변 객체 선호
 ```java
-// ✅ Good example: Immutable object
+// ✅ 좋은 예: 불변 객체
 @JSON5Type
 public class ImmutableUser {
     private final String name;
@@ -1024,53 +1061,53 @@ public class ImmutableUser {
 }
 ```
 
-#### 3. Proper Type Usage
+#### 3. 적절한 타입 사용
 ```java
-// ✅ Good example
+// ✅ 좋은 예
 @JSON5Value
-private List<String> tags;              // Specific type
+private List<String> tags;              // 구체적 타입
 
 @JSON5Value  
-private Map<String, User> userMap;      // String key usage
+private Map<String, User> userMap;      // String 키 사용
 
-// ❌ Bad example
+// ❌ 나쁜 예
 @JSON5Value
-private List tags;                      // Raw type
+private List tags;                      // Raw 타입
 
 @JSON5Value
-private Map<User, String> reverseMap;   // Non-String key
+private Map<User, String> reverseMap;   // 비String 키
 ```
 
-#### 4. Exception Handling
+#### 4. 예외 처리
 ```java
-// ✅ Good example: Safe deserialization
+// ✅ 좋은 예: 안전한 역직렬화
 public User parseUserSafely(String jsonString) {
     try {
         JSON5Object json = new JSON5Object(jsonString);
         return JSON5Serializer.fromJSON5Object(json, User.class);
     } catch (JSON5SerializerException e) {
-        logger.error("User parsing failed: " + e.getMessage());
-        return new User(); // Return default value
+        logger.error("사용자 파싱 실패: " + e.getMessage());
+        return new User(); // 기본값 반환
     }
 }
 ```
 
 ---
 
-## 🎯 Summary
+## 🎯 요약
 
-JSON5 Serializer is a powerful library specialized for configuration file processing:
+JSON5 Serializer는 설정 파일 처리에 특화된 강력한 라이브러리입니다:
 
-### Core Advantages
-- **JSON5 Support**: Easy configuration file creation with comments, trailing commas, unquoted keys
-- **Advanced Features**: Jackson-level constructor-based deserialization, polymorphism, custom value providers
-- **Flexible API**: Support for both static methods and Fluent API
+### 핵심 장점
+- **JSON5 지원**: 주석, 후행 쉼표, 따옴표 없는 키 등으로 설정 파일 작성 용이
+- **고급 기능**: Jackson 수준의 생성자 기반 역직렬화, 다형성 처리, 커스텀 값 공급자
+- **유연한 API**: 정적 메서드와 Fluent API 모두 지원
 
-### Usage Recommendations
-- **✅ Configuration files**: Application settings, environment configuration, etc.
-- **✅ Development tools**: Build scripts, developer tool configurations
-- **✅ Complex object structures**: Domain models requiring polymorphism
-- **❌ REST APIs**: Standard JSON recommended
-- **❌ Inter-system data exchange**: Use standard JSON for compatibility
+### 사용 권장 사항
+- **✅ 설정 파일**: 애플리케이션 설정, 환경 설정 등
+- **✅ 개발 도구**: 빌드 스크립트, 개발자 도구 설정
+- **✅ 복잡한 객체 구조**: 다형성이 필요한 도메인 모델
+- **❌ REST API**: 표준 JSON 사용 권장
+- **❌ 시스템 간 데이터 교환**: 호환성을 위해 표준 JSON 사용
 
-This guide enables you to effectively utilize all features of JSON5 Serializer to implement maintainable configuration files and powerful object serialization.
+이 가이드를 통해 JSON5 Serializer의 모든 기능을 효과적으로 활용하여 유지보수하기 쉬운 설정 파일과 강력한 객체 직렬화를 구현할 수 있습니다.
