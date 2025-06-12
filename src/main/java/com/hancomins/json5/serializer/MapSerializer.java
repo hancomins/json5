@@ -57,8 +57,10 @@ public class MapSerializer {
             return null;
         }
         
+        // Collection 처리 강화
         if (value instanceof Collection<?>) {
-            return new CollectionSerializer().serializeCollection((Collection<?>) value, null);
+            CollectionSerializer collectionSerializer = new CollectionSerializer();
+            return collectionSerializer.serializeCollection((Collection<?>) value, null);
         }
         
         if (value instanceof Map<?, ?>) {
@@ -89,7 +91,7 @@ public class MapSerializer {
     private void validateMapValue(Class<?> valueType, String key) {
         ISchemaValue.assertValueType(valueType, null);
         
-        if (!(key instanceof String)) {
+        if (key == null) {
             throw new JSON5SerializerException("Map key type is not String. Please use String key.");
         }
     }

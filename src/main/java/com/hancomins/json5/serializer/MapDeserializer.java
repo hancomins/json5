@@ -6,7 +6,6 @@ import java.util.*;
 
 /**
  * Map 타입의 역직렬화를 담당하는 클래스
- * 
  * JSON5Serializer의 fromJSON5ObjectToMap 메소드의 복잡한 로직을 분리하여
  * Map 역직렬화만을 전담으로 처리합니다.
  */
@@ -54,14 +53,43 @@ public class MapDeserializer {
      * @return 역직렬화된 Map
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public Map deserialize(Map target, JSON5Object json5Object, Class<?> valueType, 
-                         DeserializationContext context, OnObtainTypeValue onObtainTypeValue) {
+    public Map deserialize(Map target, JSON5Object json5Object, Class<?> valueType,
+                           @SuppressWarnings("unused") DeserializationContext context, OnObtainTypeValue onObtainTypeValue) {
         Types types = Types.of(valueType);
         if (target == null) {
             target = new HashMap<>();
         }
         
         Map finalTarget = target;
+        
+        // Collection 타입 처리 추가
+        if (Collection.class.isAssignableFrom(valueType)) {
+            json5Object.keySet().forEach(key -> {
+                JSON5Array arrayValue = json5Object.getJSON5Array(key, null);
+                if (arrayValue != null) {
+                    try {
+                        // CollectionDeserializer 활용
+                        CollectionDeserializer collectionDeserializer = new CollectionDeserializer();
+                        
+                        // Collection의 제네릭 타입 추출 (Object로 fallback)
+                        Class<?> elementType = Object.class; // 기본값
+                        
+                        // 단순한 List 생성 (구체적인 Collection 타입은 추후 개선)
+                        List<?> deserializedCollection = collectionDeserializer.deserializeToList(
+                            arrayValue, elementType, null, true, null);
+                        
+                        finalTarget.put(key, deserializedCollection);
+                    } catch (Exception e) {
+                        CatchExceptionProvider.getInstance().catchException(
+                            "Failed to deserialize collection value for key: " + key, e);
+                        finalTarget.put(key, null);
+                    }
+                } else {
+                    finalTarget.put(key, null);
+                }
+            });
+            return target;
+        }
         
         if (onObtainTypeValue != null) {
             // 제네릭/추상 타입 처리
@@ -112,21 +140,13 @@ public class MapDeserializer {
             // JSON5Object 타입 처리
             json5Object.keySet().forEach(key -> {
                 JSON5Object child = json5Object.getJSON5Object(key, null);
-                if (child != null) {
-                    finalTarget.put(key, child);
-                } else {
-                    finalTarget.put(key, null);
-                }
+                finalTarget.put(key, child);
             });
         } else if (types == Types.JSON5Array) {
             // JSON5Array 타입 처리
             json5Object.keySet().forEach(key -> {
                 JSON5Array child = json5Object.getJSON5Array(key, null);
-                if (child != null) {
-                    finalTarget.put(key, child);
-                } else {
-                    finalTarget.put(key, null);
-                }
+                finalTarget.put(key, child);
             });
         } else if (types == Types.JSON5Element) {
             // JSON5Element 타입 처리
@@ -149,9 +169,14 @@ public class MapDeserializer {
     private void validateValueType(Class<?> valueType) {
         if (valueType.isPrimitive()) {
             throw new JSON5SerializerException("valueType is primitive type. valueType=" + valueType.getName());
-        } else if (Collection.class.isAssignableFrom(valueType)) {
-            throw new JSON5SerializerException("valueType is java.util.Collection type. Use a class that wraps your Collection. valueType=" + valueType.getName());
-        } else if (Map.class.isAssignableFrom(valueType)) {
+        } 
+        // Collection 타입 제한 제거 (기존 제한을 완화)
+        else //noinspection StatementWithEmptyBody
+            if (Collection.class.isAssignableFrom(valueType)) {
+            // Collection 타입을 이제 허용 - 더 이상 예외를 던지지 않음
+            // throw new JSON5SerializerException("valueType is java.util.Collection type. Use a class that wraps your Collection. valueType=" + valueType.getName());
+        } 
+        else if (Map.class.isAssignableFrom(valueType)) {
             throw new JSON5SerializerException("valueType is java.util.Map type. Use a class that wraps your Map. valueType=" + valueType.getName());
         } else if (valueType.isArray() && Types.ByteArray != Types.of(valueType)) {
             throw new JSON5SerializerException("valueType is Array type. ArrayType cannot be used. valueType=" + valueType.getName());

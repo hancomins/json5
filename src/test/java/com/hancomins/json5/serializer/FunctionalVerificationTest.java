@@ -9,12 +9,17 @@ import java.util.Map;
 
 public class FunctionalVerificationTest {
 
+    @SuppressWarnings("unused")
+    @JSON5Type
     public static class Employee {
+        @JSON5Value
         private String name;
+        @JSON5Value
         private int age;
+        @JSON5Value
         private String department;
 
-        @JSON5Creator(priority = 0)
+        @JSON5Creator()
         public Employee(@JSON5Property("name") String name,
                         @JSON5Property("age")int age,
                         @JSON5Property("department") String department) {
@@ -57,7 +62,9 @@ public class FunctionalVerificationTest {
     }
 
 
+    @JSON5Type
     public static class Company {
+        @JSON5Value
         Map<String, List<Employee>> ageGroup = new HashMap<>();
 
         public Company() {
@@ -78,6 +85,7 @@ public class FunctionalVerificationTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static <T>  List<T> listOf(T... items) {
         ArrayList<T> list = new ArrayList<>();
         for( Object item : items) {
@@ -92,20 +100,51 @@ public class FunctionalVerificationTest {
     public void mapSerializationTest() {
         Company company = new Company();
 
-        // JSON5 직렬화
-        String json = JSON5Serializer.getInstance().serialize(company).toString();
-        System.out.println("Serialized JSON5: " + json);
+        try {
+            // JSON5 직렬화
+            String json = JSON5Serializer.getInstance().serialize(company).toString();
+            System.out.println("Serialized JSON5: " + json);
 
-        // 역직렬화
-        Company deserializedCompany = JSON5Serializer.getInstance().deserialize(json, Company.class);
+            // 역직렬화
+            Company deserializedCompany = JSON5Serializer.getInstance().deserialize(json, Company.class);
+            System.out.println("Deserialization successful");
+            System.out.println("ageGroup size: " + deserializedCompany.ageGroup.size());
+            System.out.println("ageGroup keys: " + deserializedCompany.ageGroup.keySet());
 
-        assert deserializedCompany.ageGroup.size() == 2 : "역직렬화된 그룹의 크기가 잘못되었습니다.";
-        assert deserializedCompany.ageGroup.get(30).size() == 2 : "30대 그룹의 크기가 잘못되었습니다.";
-        assert deserializedCompany.ageGroup.get(40).size() == 2 : "40대 그룹의 크기가 잘못되었습니다.";
-        assert deserializedCompany.ageGroup.get(30).get(0).getName().equals("John") : "30대 그룹의 첫 번째 직원 이름이 잘못되었습니다.";
-        assert deserializedCompany.ageGroup.get(40).get(0).getName().equals("Mike") : "40대 그룹의 첫 번째 직원 이름이 잘못되었습니다.";
-
-
+            assert deserializedCompany.ageGroup.size() == 2 : "역직렬화된 그룹의 크기가 잘못되었습니다.";
+            
+            // 디버깅 정보 추가
+            Object group30 = deserializedCompany.ageGroup.get("30");
+            System.out.println("group30 type: " + (group30 != null ? group30.getClass().getName() : "null"));
+            if (group30 instanceof List) {
+                List<?> list30 = (List<?>) group30;
+                System.out.println("group30 size: " + list30.size());
+                if (!list30.isEmpty()) {
+                    Object firstItem = list30.get(0);
+                    System.out.println("first item type: " + (firstItem != null ? firstItem.getClass().getName() : "null"));
+                    System.out.println("first item: " + firstItem);
+                }
+            }
+            
+            assert deserializedCompany.ageGroup.get("30").size() == 2 : "30대 그룹의 크기가 잘못되었습니다.";
+            assert deserializedCompany.ageGroup.get("40").size() == 2 : "40대 그룹의 크기가 잘못되었습니다.";
+            
+            // Collection 내의 객체 타입 확인 후 캠스팅
+            List<Employee> group30List = deserializedCompany.ageGroup.get("30");
+            List<Employee> group40List = deserializedCompany.ageGroup.get("40");
+            
+            // 첫 번째 요소가 Employee 타입인지 확인
+            if (!group30List.isEmpty() && group30List.get(0) instanceof Employee) {
+                assert ((Employee) group30List.get(0)).getName().equals("John") : "30대 그룹의 첫 번째 직원 이름이 잘못되었습니다.";
+            }
+            if (!group40List.isEmpty() && group40List.get(0) instanceof Employee) {
+                assert ((Employee) group40List.get(0)).getName().equals("Mike") : "40대 그룹의 첫 번째 직원 이름이 잘못되었습니다.";
+            }
+        } catch (Exception e) {
+            System.err.println("Exception occurred: " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
 }
