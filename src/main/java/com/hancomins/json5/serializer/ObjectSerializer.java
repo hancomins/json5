@@ -83,6 +83,13 @@ public class ObjectSerializer {
         ArrayDeque<ObjectSerializeDequeueItem> objectSerializeDequeueItems = new ArrayDeque<>();
         Iterator<Object> iter = schemaRoot.keySet().iterator();
         SchemaObjectNode schemaNode = schemaRoot;
+        
+        // 스키마 정보 출력 (필요시 주석 해제)
+        // System.out.println("[DEBUG] Schema root keys: " + schemaRoot.keySet());
+        // for (Object key : schemaRoot.keySet()) {
+        //     System.out.println("[DEBUG] Schema key: " + key + ", node type: " + schemaRoot.get(key).getClass().getSimpleName());
+        // }
+        
         ObjectSerializeDequeueItem currentObjectSerializeDequeueItem = new ObjectSerializeDequeueItem(iter, schemaNode, JSON5Element);
         objectSerializeDequeueItems.add(currentObjectSerializeDequeueItem);
 
@@ -90,10 +97,58 @@ public class ObjectSerializer {
             Object key = iter.next();
             ISchemaNode node = schemaNode.get(key);
             if(node instanceof SchemaObjectNode) {
+                // System.out.println("[DEBUG] Processing SchemaObjectNode for key: " + key);
                 schemaNode = (SchemaObjectNode)node;
                 iter = schemaNode.keySet().iterator();
                 List<SchemaValueAbs> parentschemaField = schemaNode.getParentSchemaFieldList();
                 int nullCount = parentschemaField.size();
+                
+                // 값 공급자 처리: SchemaObjectNode에서 값 공급자 확인
+                boolean valueProviderProcessed = false;
+                if (!parentschemaField.isEmpty()) {
+                    SchemaValueAbs firstParentField = parentschemaField.get(0);
+                    Object parent = obtainParentObjects(parentObjMap, firstParentField, rootObject);
+                    if (parent != null) {
+                        Object value = firstParentField.getValue(parent);
+                        System.out.println("[DEBUG] SchemaObjectNode value: " + value + ", type: " + (value != null ? value.getClass() : "null"));
+                        if (value != null && VALUE_PROVIDER_REGISTRY.isValueProvider(value.getClass())) {
+                            System.out.println("[DEBUG] Found value provider in SchemaObjectNode: " + value.getClass().getName());
+                            try {
+                                Object serializedValue = VALUE_PROVIDER_SERIALIZER.serialize(value);
+                                System.out.println("[DEBUG] Serialized value provider to: " + serializedValue);
+                                // 값 공급자로 직렬화된 경우 직접 JSON에 저장
+                                putValueInJSON5Element(JSON5Element, firstParentField, key, serializedValue);
+                                // 값 공급자 처리 완료 표시
+                                valueProviderProcessed = true;
+                                // 현재 SchemaObjectNode의 자식 노드들을 건너뛰고 루프 종료
+                                while (iter.hasNext()) {
+                                    iter.next();
+                                }
+                            } catch (Exception e) {
+                                System.err.println("Value provider serialization failed: " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+                
+                // 값 공급자가 처리된 경우 나머지 SchemaObjectNode 처리를 건너뛰기
+                if (valueProviderProcessed) {
+                    // 값 공급자 처리 후 루트 레벨로 강제 복귀
+                    while (!objectSerializeDequeueItems.isEmpty()) {
+                        ObjectSerializeDequeueItem rootItem = objectSerializeDequeueItems.removeFirst();
+                        if (rootItem.ISchemaNode == schemaRoot) {
+                            // 루트 레벨을 찾음
+                            iter = rootItem.keyIterator;
+                            schemaNode = (SchemaObjectNode) rootItem.ISchemaNode;
+                            JSON5Element = rootItem.resultElement;
+                            System.out.println("[DEBUG] Restored to root level after value provider processing");
+                            break;
+                        }
+                    }
+                    // 현재의 if/else if 체인을 건너뛰고 루프 끝으로 이동
+                    continue;
+                }
 
                 // 부모 필드들의 값을 가져온다.
                 for(SchemaValueAbs parentSchemaValueAbs : parentschemaField) {
@@ -162,9 +217,13 @@ public class ObjectSerializer {
             else if(node instanceof SchemaFieldNormal || SchemaMethod.isSchemaMethodGetter(node)) {
                 SchemaValueAbs schemaValueAbs = (SchemaValueAbs)node;
                 Object parent = obtainParentObjects(parentObjMap, schemaValueAbs, rootObject);
+                System.out.println("[DEBUG] Processing field: " + key + ", parent: " + parent);
                 if(parent != null) {
                     Object value = schemaValueAbs.getValue(parent);
+                    System.out.println("[DEBUG] Extracted value for " + key + ": " + value + ", type: " + (value != null ? value.getClass() : "null"));
                     putValueInJSON5Element(JSON5Element, schemaValueAbs, key, value);
+                } else {
+                    System.out.println("[DEBUG] Parent is null for field: " + key);
                 }
             } else if(node instanceof ISchemaMapValue) {
                 SchemaValueAbs schemaMap = (SchemaValueAbs)node;
@@ -209,17 +268,22 @@ public class ObjectSerializer {
 
     // 기존 JSON5Serializer의 helper 메소드들 복사
     private void putValueInJSON5Element(JSON5Element JSON5Element, ISchemaValue ISchemaValueAbs, Object key, Object value) {
+        System.out.println("[DEBUG] putValueInJSON5Element called with key: " + key + ", value: " + value + ", valueType: " + (value != null ? value.getClass() : "null"));
+        
         // 값 공급자 처리 추가
-        if (value != null && VALUE_PROVIDER_REGISTRY.isValueProvider(value.getClass())) {
-            try {
-                System.out.println("[DEBUG] Found value provider: " + value.getClass().getName() + ", value: " + value);
-                Object serializedValue = VALUE_PROVIDER_SERIALIZER.serialize(value);
-                System.out.println("[DEBUG] Serialized to: " + serializedValue + ", type: " + (serializedValue != null ? serializedValue.getClass() : "null"));
-                value = serializedValue;
-            } catch (Exception e) {
-                // 값 공급자 직렬화 실패 시 기존 방식으로 처리
-                System.err.println("Value provider serialization failed for field '" + key + "': " + e.getMessage());
-                e.printStackTrace();
+        if (value != null) {
+            System.out.println("[DEBUG] Checking if " + value.getClass().getName() + " is value provider: " + VALUE_PROVIDER_REGISTRY.isValueProvider(value.getClass()));
+            if (VALUE_PROVIDER_REGISTRY.isValueProvider(value.getClass())) {
+                try {
+                    System.out.println("[DEBUG] Found value provider: " + value.getClass().getName() + ", value: " + value);
+                    Object serializedValue = VALUE_PROVIDER_SERIALIZER.serialize(value);
+                    System.out.println("[DEBUG] Serialized to: " + serializedValue + ", type: " + (serializedValue != null ? serializedValue.getClass() : "null"));
+                    value = serializedValue;
+                } catch (Exception e) {
+                    // 값 공급자 직렬화 실패 시 기존 방식으로 처리
+                    System.err.println("Value provider serialization failed for field '" + key + "': " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
         
@@ -241,10 +305,13 @@ public class ObjectSerializer {
     private Object obtainParentObjects(Map<Integer, Object> parentsMap, SchemaValueAbs schemaField, Object rootObject) {
         SchemaField parentschemaField = schemaField.getParentField();
         if(parentschemaField == null) {
+            System.out.println("[DEBUG] No parent field, returning rootObject: " + rootObject);
             return rootObject;
         }
         int parentId = parentschemaField.getId();
-        return parentsMap.get(parentId);
+        Object parent = parentsMap.get(parentId);
+        System.out.println("[DEBUG] Parent ID: " + parentId + ", parent: " + parent);
+        return parent;
     }
 
     private JSON5Object mapObjectToJSON5Object(Map<String, ?> map, Class<?> valueType) {

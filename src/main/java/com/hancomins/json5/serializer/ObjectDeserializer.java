@@ -113,6 +113,23 @@ public class ObjectDeserializer {
                                        SchemaObjectNode schemaNode, DeserializationContext context,
                                        ArrayDeque<ObjectDeserializeItem> deserializeStack) {
         
+        SchemaObjectNode childSchemaNode = (SchemaObjectNode) node;
+        List<SchemaValueAbs> parentSchemaFieldList = childSchemaNode.getParentSchemaFieldList();
+        
+        // 값 공급자 처리 먼저 확인
+        if (!parentSchemaFieldList.isEmpty()) {
+            SchemaValueAbs firstParentField = parentSchemaFieldList.get(0);
+            Class<?> fieldType = firstParentField.getValueTypeClass();
+            
+            if (VALUE_PROVIDER_REGISTRY.isValueProvider(fieldType)) {
+                System.out.println("[DEBUG] Handling value provider field in handleSchemaElementNode: " + key + ", type: " + fieldType.getName());
+                // 값 공급자인 경우 SchemaValueAbs로 처리
+                handleSchemaValueNode(key, firstParentField, currentElement, context);
+                return;
+            }
+        }
+        
+        // 기존 SchemaElementNode 처리 로직
         boolean nullValue = false;
         JSON5Element childElement = getChildElement((SchemaElementNode) node, currentElement, key);
         
@@ -139,9 +156,6 @@ public class ObjectDeserializer {
         }
         
         // 부모 객체들 생성 및 등록
-        SchemaObjectNode childSchemaNode = (SchemaObjectNode) node;
-        List<SchemaValueAbs> parentSchemaFieldList = childSchemaNode.getParentSchemaFieldList();
-        
         for (SchemaValueAbs parentSchemaField : parentSchemaFieldList) {
             getOrCreateParentObject(parentSchemaField, context, nullValue, currentElement);
         }
