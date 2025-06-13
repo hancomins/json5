@@ -3,9 +3,7 @@ package com.hancomins.json5.serializer;
 import com.hancomins.json5.*;
 import com.hancomins.json5.JSON5Object;
 import com.hancomins.json5.JSON5Element;
-import com.hancomins.json5.container.json5.JSON5Parser;
 import com.hancomins.json5.options.WritingOptions;
-import com.hancomins.json5.util.DataConverter;
 
 import java.util.*;
 
@@ -410,6 +408,69 @@ public class JSON5Serializer {
             return (Boolean) isValueProviderMethod.invoke(registry, clazz);
         } catch (Exception e) {
             return false;
+        }
+    }
+    
+    // ============== TypeReference 지원 메서드들 ==============
+    
+    /**
+     * TypeReference를 사용한 완전한 제네릭 타입 지원 역직렬화
+     * Map과 Collection 모두 지원
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T fromJSON5ObjectWithTypeReference(JSON5Object json5Object, JSON5TypeReference<T> typeRef) {
+        if (typeRef.isMapType()) {
+            MapDeserializer mapDeserializer = new MapDeserializer();
+            return mapDeserializer.deserializeWithTypeReference(json5Object, typeRef);
+        } else {
+            throw new JSON5SerializerException("지금은 Map 타입만 JSON5Object 입력에 대해 지원됩니다");
+        }
+    }
+    
+    /**
+     * TypeReference를 사용한 Collection 역직렬화
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T fromJSON5ArrayWithTypeReference(JSON5Array json5Array, JSON5TypeReference<T> typeRef) {
+        if (typeRef.isCollectionType()) {
+            CollectionDeserializer collectionDeserializer = new CollectionDeserializer();
+            return collectionDeserializer.deserializeWithTypeReference(json5Array, typeRef);
+        } else {
+            throw new JSON5SerializerException("지금은 Collection 타입만 JSON5Array 입력에 대해 지원됩니다");
+        }
+    }
+    
+    /**
+     * TypeReference를 사용한 완전한 제네릭 타입 지원 직렬화
+     */
+    public static <T> Object toJSON5WithTypeReference(T object, JSON5TypeReference<T> typeRef) {
+        if (typeRef.isMapType() && object instanceof Map) {
+            MapSerializer mapSerializer = new MapSerializer();
+            return mapSerializer.serializeWithTypeReference(object, typeRef);
+        } else if (typeRef.isCollectionType() && object instanceof Collection) {
+            CollectionSerializer collectionSerializer = new CollectionSerializer();
+            return collectionSerializer.serializeWithTypeReference(object, typeRef);
+        } else {
+            throw new JSON5SerializerException("TypeReference와 객체 타입이 일치하지 않습니다");
+        }
+    }
+    
+    /**
+     * 문자열 JSON에서 TypeReference를 사용한 역직렬화
+     */
+    public static <T> T parseWithTypeReference(String json5String, JSON5TypeReference<T> typeRef) {
+        try {
+            if (typeRef.isMapType()) {
+                JSON5Object json5Object = new JSON5Object(json5String);
+                return fromJSON5ObjectWithTypeReference(json5Object, typeRef);
+            } else if (typeRef.isCollectionType()) {
+                JSON5Array json5Array = new JSON5Array(json5String);
+                return fromJSON5ArrayWithTypeReference(json5Array, typeRef);
+            } else {
+                throw new JSON5SerializerException("파싱에 지원되지 않는 타입입니다: " + typeRef.getType());
+            }
+        } catch (Exception e) {
+            throw new JSON5SerializerException("TypeReference로 JSON5 문자열 파싱에 실패했습니다", e);
         }
     }
 

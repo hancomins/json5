@@ -1,5 +1,6 @@
 package com.hancomins.json5.serializer;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
@@ -23,6 +24,9 @@ public class CollectionTypeInfo {
     }
     
     public Class<?> getElementClass() {
+        if (elementType instanceof ParameterizedType) {
+            return (Class<?>) ((ParameterizedType) elementType).getRawType();
+        }
         return (Class<?>) elementType;
     }
     

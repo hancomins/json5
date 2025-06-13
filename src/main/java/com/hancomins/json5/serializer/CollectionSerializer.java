@@ -142,6 +142,99 @@ public class CollectionSerializer {
         return objectSerializer.serializeObject(typeSchema, object, rootJSON5Object, context);
     }
     
+    /**
+     * TypeReference를 사용한 Collection 직렬화
+     */
+    public <T> JSON5Array serializeWithTypeReference(T collection, JSON5TypeReference<T> typeRef) {
+        if (!typeRef.isCollectionType()) {
+            throw new JSON5SerializerException("TypeReference must be a Collection type");
+        }
+        
+        if (!(collection instanceof Collection)) {
+            throw new JSON5SerializerException("Object must be a Collection instance");
+        }
+        
+        @SuppressWarnings("unchecked")
+        Collection<?> coll = (Collection<?>) collection;
+        
+        CollectionTypeInfo typeInfo = typeRef.analyzeCollectionType();
+        Class<?> elementClass = typeInfo.getElementClass();
+        
+        return serializeCollectionWithElementType(coll, elementClass);
+    }
+    
+    /**
+     * 요소 타입 정보를 활용한 Collection 직렬화
+     */
+    private JSON5Array serializeCollectionWithElementType(Collection<?> collection, Class<?> elementClass) {
+        JSON5Array result = new JSON5Array();
+        
+        for (Object element : collection) {
+            Object serializedElement = serializeElementWithTypeInfo(element, elementClass);
+            result.add(serializedElement);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 요소를 타입 정보와 함께 직렬화
+     */
+    private Object serializeElementWithTypeInfo(Object element, Class<?> elementClass) {
+        if (element == null) {
+            return null;
+        }
+        
+        // 중첩 Collection 처리
+        if (element instanceof Collection) {
+            CollectionSerializer nestedSerializer = new CollectionSerializer();
+            return nestedSerializer.serializeCollection((Collection<?>) element, null);
+        }
+        
+        // 중첩 Map 처리
+        if (element instanceof Map) {
+            MapSerializer mapSerializer = new MapSerializer();
+            @SuppressWarnings("unchecked")
+            Map<String, ?> map = (Map<String, ?>) element;
+            return mapSerializer.serializeMap(map, null);
+        }
+        
+        // 커스텀 객체 처리
+        if (!isPrimitiveOrWrapper(element.getClass())) {
+            try {
+                // 커스텀 객체를 JSON5Object로 직렬화
+                if (JSON5Serializer.serializable(element.getClass())) {
+                    TypeSchema typeSchema = TypeSchemaMap.getInstance().getTypeInfo(element.getClass());
+                    if (typeSchema != null) {
+                        ObjectSerializer objectSerializer = new ObjectSerializer();
+                        SerializationContext context = new SerializationContext(element, typeSchema);
+                        JSON5Object rootJSON5Object = new JSON5Object();
+                        return objectSerializer.serializeObject(typeSchema, element, rootJSON5Object, context);
+                    }
+                }
+                return null;
+            } catch (Exception e) {
+                CatchExceptionProvider.getInstance().catchException(
+                    "Failed to serialize custom object", e);
+                return null;
+            }
+        }
+        
+        // 기본 타입은 그대로 반환
+        return element;
+    }
+    
+    /**
+     * primitive 또는 wrapper 타입인지 확인
+     */
+    private boolean isPrimitiveOrWrapper(Class<?> type) {
+        return type.isPrimitive() ||
+               type == String.class ||
+               type == Integer.class || type == Long.class || type == Double.class ||
+               type == Float.class || type == Boolean.class || type == Character.class ||
+               type == Byte.class || type == Short.class;
+    }
+    
     // 내부 클래스
     private static class ArraySerializeDequeueItem {
         Iterator<?> iterator;

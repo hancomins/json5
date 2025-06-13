@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
 public class FunctionalVerificationTest {
 
     @SuppressWarnings("unused")
@@ -62,21 +64,27 @@ public class FunctionalVerificationTest {
     }
 
 
-    @JSON5Type
+    @JSON5Type(explicit = true)
     public static class Company {
+
         @JSON5Value
         Map<String, List<Employee>> ageGroup = new HashMap<>();
 
         public Company() {
+            init();
+
+        }
+
+        public void init() {
             // 30대 그룹
             List<Employee> group30s = listOf(
-                new Employee("John", 30, "Engineering"),
-                new Employee("Jane", 25, "Marketing")
+                    new Employee("John", 30, "Engineering"),
+                    new Employee("Jane", 25, "Marketing")
             );
             // 40대 그룹
             List<Employee> group40s = listOf(
-                new Employee("Mike", 45, "Sales"),
-                new Employee("Sara", 42, "HR")
+                    new Employee("Mike", 45, "Sales"),
+                    new Employee("Sara", 42, "HR")
             );
 
             ageGroup.put("30", group30s);
@@ -103,7 +111,9 @@ public class FunctionalVerificationTest {
         try {
             // JSON5 직렬화
             String json = JSON5Serializer.getInstance().serialize(company).toString();
+
             System.out.println("Serialized JSON5: " + json);
+            assertNotEquals("{}", json, "직렬화된 JSON5가 비어있지 않아야 합니다.");
 
             // 역직렬화
             Company deserializedCompany = JSON5Serializer.getInstance().deserialize(json, Company.class);

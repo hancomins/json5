@@ -68,7 +68,7 @@ public class MapSerializer {
             // 값 타입이 지정되지 않은 경우 실제 값의 타입 사용  
             if (value != null && valueType == null) {
                 valueType = value.getClass();
-                validateMapValue(valueType, keyStr);
+                validateMapValue(valueType);
                 types = Types.of(valueType);
             }
             
@@ -131,7 +131,6 @@ public class MapSerializer {
             throw new JSON5SerializerException("Object must be a Map instance");
         }
         
-        @SuppressWarnings("unchecked")
         Map<?, ?> map = (Map<?, ?>) object;
         
         MapTypeInfo typeInfo = typeRef.analyzeMapType();
@@ -145,10 +144,9 @@ public class MapSerializer {
      * Map 값의 유효성을 검증합니다.
      * 
      * @param valueType 값 타입
-     * @param key 현재 키
      * @throws JSON5SerializerException 유효하지 않은 타입인 경우
      */
-    private void validateMapValue(Class<?> valueType, String key) {
+    private void validateMapValue(Class<?> valueType) {
         ISchemaValue.assertValueType(valueType, null);
         // Key 검증 제거 - 이제 MapKeyConverter에서 처리됨
     }
