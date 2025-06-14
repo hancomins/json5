@@ -1,29 +1,31 @@
-# JSON5 Serializer Complete User Guide
+# Complete JSON5 Serializer
 
-# 한국어 버전 바로가기
- - [JSON5 Serializer 사용자 가이드 (한국어)](README.KO.md)
+# 한글 가이드 바로가기
+ - [JSON5 한글 가이드](README.KO.md)
 
 ## 📋 Overview
 
-JSON5 Serializer is a powerful JSON5 serialization/deserialization library for Java 8+. JSON5 is a superset of JSON that supports **comments, trailing commas, and unquoted keys**, making it **ideal for configuration files**.
+JSON5 Serializer is a powerful JSON5 serialization/deserialization library that works with Java 8 and above. JSON5 is a superset of JSON that supports **comments, trailing commas, and unquoted keys**, making it **highly suitable for configuration files**.
 
 ### ✅ Key Advantages
-- **Optimized for configuration files**: Easy configuration file creation with comment support and flexible syntax
-- **Jackson-level advanced features**: Constructor-based deserialization, polymorphism, custom value providers
-- **XPath-style path access**: Nested path access like `users[0].profile.email`
+- **Optimized for configuration files**: Easy configuration file creation with comments and flexible syntax
+- **Advanced features comparable to Jackson**: Constructor-based deserialization, polymorphism handling, custom value providers, TypeReference support
+- **Complex nested type support**: Perfect support for `List<Map<Car, Brand>>`, `Map<String, List<Map<String, User>>>`, etc.
+- **Flexible annotation mode**: Works without annotations, with strict control using explicit mode when needed
+- **XPath-style path access**: Supports nested path access like `users[0].profile.email`
 
-### ⚠️ Important Notes
-- **Not suitable as data format**: Standard JSON is recommended for inter-system data exchange
-- **Not recommended for network APIs**: Standard JSON is more appropriate for REST APIs, etc.
+### ⚠️ Cautions
+- **Inappropriate as a data format**: Standard JSON is recommended for data exchange between systems
+- **Not recommended for network APIs**: Standard JSON is more suitable for REST APIs
 
 ---
 
 ## 🚀 Basic Setup
 
-### Add Gradle Dependency
+### Adding Gradle Dependency
 ```groovy
 dependencies {
-    implementation 'io.github.hancomins:json5:1.x.x' // Replace with the latest version
+    implementation 'io.github.hancomins:json5:1.x.x'
 }
 ```
 
@@ -36,29 +38,29 @@ import com.hancomins.json5.options.*;
 
 ---
 
-## 📦 JSON5Object and JSON5Array Basic Usage
+## 📦 Basic Usage of JSON5Object and JSON5Array
 
-### JSON5Object Basic Operations
+### Basic JSON5Object Operations
 
-#### 1. Object Creation and Data Addition
+#### 1. Creating Objects and Adding Data
 ```java
 // Create empty object
 JSON5Object user = new JSON5Object();
 
 // Add basic type data
-user.put("name", "John Doe");
+user.put("name", "Hong Gil-dong");
 user.put("age", 30);
 user.put("isActive", true);
 user.put("score", 95.5);
 
 // Add nested object
 JSON5Object profile = new JSON5Object();
-profile.put("email", "john@example.com");
-profile.put("department", "Engineering");
+profile.put("email", "hong@example.com");
+profile.put("department", "Development Team");
 user.put("profile", profile);
 
 System.out.println(user);
-// {"name":"John Doe","age":30,"isActive":true,"score":95.5,"profile":{"email":"john@example.com","department":"Engineering"}}
+// {"name":"Hong Gil-dong","age":30,"isActive":true,"score":95.5,"profile":{"email":"hong@example.com","department":"Development Team"}}
 ```
 
 #### 2. Creating Object from JSON5 String
@@ -66,14 +68,14 @@ System.out.println(user);
 // JSON5 format (supports comments, trailing commas, unquoted keys)
 String json5String = """
 {
-    // User basic information
-    name: 'John Doe',
+    // Basic user information
+    name: 'Hong Gil-dong',
     age: 30,
-    hobbies: ['reading', 'movies', 'travel',], // trailing comma allowed
+    hobbies: ['Reading', 'Watching movies', 'Travel',], // trailing commas allowed
     /* Contact information */
     contact: {
-        email: 'john@example.com',
-        phone: '555-1234-5678'
+        email: 'hong@example.com',
+        phone: '010-1234-5678'
     }
 }
 """;
@@ -86,14 +88,14 @@ JSON5Object user = new JSON5Object(json5String);
 // Basic retrieval
 String name = user.getString("name");
 int age = user.getInt("age");
-boolean isActive = user.getBoolean("isActive", false); // with default value
+boolean isActive = user.getBoolean("isActive", false); // specify default value
 
 // Nested object retrieval
 JSON5Object profile = user.getJSON5Object("profile");
 String email = profile.getString("email");
 
 // Safe retrieval (null handling)
-String department = user.getJSON5Object("profile").getString("department", "TBD");
+String department = user.getJSON5Object("profile").getString("department", "Unspecified");
 
 // Null check
 if (user.has("profile")) {
@@ -102,25 +104,25 @@ if (user.has("profile")) {
 }
 ```
 
-### JSON5Array Basic Operations
+### Basic JSON5Array Operations
 
-#### 1. Array Creation and Data Addition
+#### 1. Creating Arrays and Adding Data
 ```java
 // Create empty array
 JSON5Array hobbies = new JSON5Array();
 
 // Add data
-hobbies.put("reading");
-hobbies.put("movies");
-hobbies.put("travel");
+hobbies.put("Reading");
+hobbies.put("Watching movies");
+hobbies.put("Travel");
 
 // Add multiple data at once
-hobbies.put("hiking", "cooking", "gaming");
+hobbies.put("Hiking", "Cooking", "Gaming");
 
-// Add object to array
+// Add objects to array
 JSON5Object hobby1 = new JSON5Object();
-hobby1.put("name", "reading");
-hobby1.put("frequency", "daily");
+hobby1.put("name", "Reading");
+hobby1.put("frequency", "Daily");
 hobbies.put(hobby1);
 ```
 
@@ -128,15 +130,15 @@ hobbies.put(hobby1);
 ```java
 String arrayString = """
 [
-    'reading',
-    'movies',
+    'Reading',
+    'Watching movies',
     {
-        name: 'travel',
-        frequency: 'monthly',
-        cost: 500
+        name: 'Travel',
+        frequency: 'Once a month',
+        cost: 50000
     },
-    // Last item can also have comments
-    'exercise'
+    // Comments can be used for the last item too
+    'Exercise'
 ]
 """;
 
@@ -145,28 +147,28 @@ JSON5Array hobbies = new JSON5Array(arrayString);
 
 #### 3. Data Retrieval
 ```java
-// Retrieve by index
+// Retrieval by index
 String firstHobby = hobbies.getString(0);
 JSON5Object hobbyDetail = hobbies.getJSON5Object(2);
 
 // Array size
 int size = hobbies.size();
 
-// Iterate through array
+// Iteration
 for (int i = 0; i < hobbies.size(); i++) {
     Object item = hobbies.get(i);
     System.out.println("Item " + i + ": " + item);
 }
 
-// Enhanced for loop
+// Using enhanced for loop
 for (Object item : hobbies) {
     System.out.println("Item: " + item);
 }
 ```
 
-### JSON5 Advanced Features
+### Advanced JSON5 Features
 
-#### 1. Comment Handling
+#### 1. Using Comments
 ```java
 JSON5Object config = new JSON5Object();
 config.put("port", 8080);
@@ -174,34 +176,34 @@ config.put("host", "localhost");
 
 // Add comments to keys
 config.setCommentForKey("port", "Server port number");
-config.setCommentAfterValue("host", "Development environment host");
+config.setCommentAfterValue("host", "Host for development environment");
 
-// Add comments to entire object
+// Add comments to the entire object
 config.setHeaderComment("Server configuration file");
 config.setFooterComment("End of configuration");
 
 System.out.println(config.toString(WritingOptions.json5Pretty()));
 ```
 
-#### 2. Path-based Access (XPath Style)
+#### 2. Path-based Access (XPath style)
 ```java
 JSON5Object data = new JSON5Object();
 JSON5Array users = new JSON5Array();
 
 JSON5Object user1 = new JSON5Object();
-user1.put("name", "John Smith");
-user1.put("email", "john@example.com");
+user1.put("name", "Kim Chul-soo");
+user1.put("email", "kim@example.com");
 users.put(user1);
 
 data.put("users", users);
 
-// Access values by path
+// Access values using paths
 String firstUserName = data.getString("$.users[0].name");
 String firstUserEmail = data.getString("$.users[0].email");
 
-// Set values by path
-data.put("$.users[0].department", "Engineering");
-data.put("$.users[1]", new JSON5Object().put("name", "Jane Doe"));
+// Set values using paths
+data.put("$.users[0].department", "Development Team");
+data.put("$.users[1]", new JSON5Object().put("name", "Lee Young-hee"));
 ```
 
 ---
@@ -210,20 +212,69 @@ data.put("$.users[1]", new JSON5Object().put("name", "Jane Doe"));
 
 ### Basic Concepts
 
-JSON5 Serializer supports bidirectional conversion between Java objects and JSON5. Fine-grained control is possible through annotations, providing Jackson-like advanced features.
+JSON5 Serializer supports bidirectional conversion between Java objects and JSON5. It provides fine-grained control through annotations and offers advanced features similar to Jackson.
 
-### 1. Basic Annotations
+### 1. Basic Annotations and Modes
+
+#### Selecting Annotation Mode
+JSON5 Serializer works **without annotations** similar to Jackson.
+
+```java
+// 📝 Method 1: Use without annotations (Jackson style)
+public class User {
+    private String name;    // Automatically serialized/deserialized
+    private int age;        // Automatically serialized/deserialized
+    
+    public User() {}
+    
+    // Getter/Setter
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+}
+
+// 📝 Method 2: Using optional annotations
+@JSON5Type
+public class User {
+    @JSON5Value(comment = "User name")
+    private String name;
+    
+    @JSON5Value(ignore = true)
+    private String password;    // Excluded from serialization
+    
+    private int age;            // Included even without annotation
+}
+
+// 📝 Method 3: Strict mode (explicit = true)
+@JSON5Type(explicit = true)
+public class User {
+    @JSON5Value
+    private String name;        // Has annotation → included
+    
+    private int age;            // No annotation → excluded
+    private String email;       // No annotation → excluded
+    
+    @JSON5Value
+    private boolean isActive;   // Has annotation → included
+}
+```
 
 #### @JSON5Type - Class Annotation
 ```java
 @JSON5Type
 public class User {
-    // Mark class for serialization/deserialization
+    // Default mode: All fields automatically processed
 }
 
-@JSON5Type(comment = "User information", commentAfter = "End of user info")
+@JSON5Type(explicit = true)
 public class User {
-    // Add comments to class
+    // Strict mode: Only fields with @JSON5Value are processed
+}
+
+@JSON5Type(comment = "User information", commentAfter = "End of user information")
+public class User {
+    // Add comments to the class
 }
 ```
 
@@ -238,15 +289,76 @@ public class User {
     private String id;
     
     @JSON5Value(ignore = true)
-    private String password; // Exclude from serialization
+    private String password; // Excluded from serialization
     
-    private String internalData; // Excluded without annotation
+    private String internalData; // Included if explicit=false, excluded if explicit=true
+}
+```
+
+#### @JSON5ValueGetter/@JSON5ValueSetter - Method Annotations
+```java
+@JSON5Type
+public class User {
+    private String firstName;
+    private String lastName;
+    private List<String> hobbies;
+    
+    // Create virtual field with Getter method
+    @JSON5ValueGetter(comment = "Full name")
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+    
+    // Use custom key name
+    @JSON5ValueGetter(key = "hobby_list", comment = "Hobby list")
+    public List<String> getUserHobbies() {
+        return hobbies;
+    }
+    
+    // Handle deserialization with Setter method
+    @JSON5ValueSetter
+    public void setFullName(String fullName) {
+        String[] parts = fullName.split(" ", 2);
+        this.firstName = parts[0];
+        this.lastName = parts.length > 1 ? parts[1] : "";
+    }
+    
+    @JSON5ValueSetter(key = "hobby_list", ignoreError = true)
+    public void setUserHobbies(List<String> hobbies) {
+        this.hobbies = hobbies != null ? hobbies : new ArrayList<>();
+    }
+}
+```
+
+#### @ObtainTypeValue - Handling Generic/Abstract Types
+```java
+@JSON5Type
+public class Container<T> {
+    @JSON5Value
+    private T data;
+    
+    @JSON5Value
+    private String type;
+    
+    // Determine the actual type of generic type
+    @ObtainTypeValue(fieldNames = {"data"})
+    public T obtainDataType(JSON5Object fieldJson, JSON5Object rootJson) {
+        String type = rootJson.getString("type");
+        switch (type) {
+            case "user":
+                return (T) JSON5Serializer.fromJSON5Object(fieldJson, User.class);
+            case "product":
+                return (T) JSON5Serializer.fromJSON5Object(fieldJson, Product.class);
+            default:
+                return (T) fieldJson.get("value");
+        }
+    }
 }
 ```
 
 ### 2. Basic Serialization/Deserialization
 
-#### Using Static Methods (Legacy Way)
+#### Using Static Methods (Traditional Approach)
 ```java
 @JSON5Type
 public class User {
@@ -264,7 +376,7 @@ public class User {
         this.age = age;
     }
     
-    // Getters/Setters
+    // Getter/Setter
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public int getAge() { return age; }
@@ -272,14 +384,14 @@ public class User {
 }
 
 // Serialization
-User user = new User("John Doe", 30);
+User user = new User("Hong Gil-dong", 30);
 JSON5Object json = JSON5Serializer.toJSON5Object(user);
 
 // Deserialization
 User restored = JSON5Serializer.fromJSON5Object(json, User.class);
 ```
 
-#### Using Fluent API (Recommended)
+#### Using Fluent API (Recommended Approach)
 ```java
 // Basic usage
 JSON5Serializer serializer = JSON5Serializer.builder().build();
@@ -347,18 +459,18 @@ public class UserProfile {
 
 // JSON structure
 {
-    "name": "John Doe",
+    "name": "Hong Gil-dong",
     "contact": {
-        "email": "john@example.com",
-        "phone": "555-1234-5678"
+        "email": "hong@example.com",
+        "phone": "010-1234-5678"
     },
     "work": {
-        "department": "Engineering",
+        "department": "Development Team",
         "position": "Senior Developer"
     },
     "address": {
-        "city": "New York",
-        "state": "NY"
+        "city": "Seoul",
+        "district": "Gangnam-gu"
     }
 }
 ```
@@ -387,13 +499,13 @@ public class TeamInfo {
 // JSON structure
 {
     "team": {
-        "name": "Engineering Team",
-        "leader": "John Manager"
+        "name": "Development Team",
+        "leader": "Kim Team Lead"
     },
     "members": [
-        {"name": "Alice Developer", "role": "Senior"},
-        {"name": "Bob Junior", "role": "Junior"},
-        {"name": "Carol Senior", "role": "Senior"}
+        {"name": "Lee Developer", "role": "Senior"},
+        {"name": "Park Newcomer", "role": "Junior"},
+        {"name": "Choi Experienced", "role": "Senior"}
     ]
 }
 ```
@@ -429,7 +541,7 @@ public class FlexibleUser {
 
 ### 4. Polymorphic Deserialization
 
-#### Basic Polymorphism
+#### Basic Polymorphism Handling
 ```java
 // Parent class/interface
 @JSON5TypeInfo(property = "type")
@@ -475,7 +587,7 @@ public class Cat extends Animal {
 JSON5Object dogJson = new JSON5Object();
 dogJson.put("type", "dog");
 dogJson.put("name", "Buddy");
-dogJson.put("breed", "Golden Retriever");
+dogJson.put("breed", "Jindo");
 
 Animal animal = JSON5Serializer.fromJSON5Object(dogJson, Animal.class);
 // Result: Dog instance is created
@@ -492,11 +604,11 @@ public interface Vehicle {
 
 // JSON structure
 {
-    "owner": "John Doe",
+    "owner": "Hong Gil-dong",
     "vehicle": {
         "type": "car",
-        "brand": "Toyota",
-        "model": "Camry"
+        "brand": "Hyundai",
+        "model": "Sonata"
     }
 }
 ```
@@ -521,10 +633,10 @@ public class ActiveUser extends User {
     private String lastLoginDate;
 }
 
-// The status field value ("active") in JSON is used for type determination
+// The value of the status field ("active") in JSON is used for type determination
 {
     "status": "active",
-    "name": "John Doe",
+    "name": "Hong Gil-dong",
     "lastLoginDate": "2024-01-15"
 }
 ```
@@ -542,15 +654,15 @@ public interface Payment {
     void process();
 }
 
-// When type info is missing or doesn't match, GenericPayment is used
+// If type information is missing or doesn't match, deserialize as GenericPayment
 {
-    "amount": 100.0,
-    "currency": "USD"
-    // no type field -> GenericPayment used
+    "amount": 10000,
+    "currency": "KRW"
+    // No type field -> Uses GenericPayment
 }
 ```
 
-### 5. Custom Value Provider
+### 5. Custom Value Providers
 
 #### Basic Usage
 ```java
@@ -575,7 +687,7 @@ public class UserId {
 @JSON5Type
 public class User {
     @JSON5Value
-    private UserId userId;  // UserId object serialized/deserialized as String
+    private UserId userId;  // UserId object is serialized/deserialized as String
     
     @JSON5Value
     private String name;
@@ -613,7 +725,7 @@ public class SafeWrapper {
     
     @JSON5ValueConstructor(onNull = NullHandling.EMPTY_OBJECT)
     public SafeWrapper(String value) {
-        this.value = value != null ? value : "default";
+        this.value = value != null ? value : "default value";
     }
     
     @JSON5ValueExtractor(onNull = NullHandling.EXCEPTION)
@@ -626,53 +738,144 @@ public class SafeWrapper {
 }
 ```
 
-### 6. Collection and Map Handling
+### 6. Advanced Collection and Map Handling
 
-#### List Serialization/Deserialization
+#### Advanced Map Features
+
+**Support for Various Key Types**
 ```java
 @JSON5Type
-public class Team {
+public class AdvancedMaps {
+    // Enum Key support
     @JSON5Value
-    private String name;
+    private Map<UserRole, List<String>> enumKeyMap;
     
+    // Primitive Key support
     @JSON5Value
-    private List<User> members;
+    private Map<Integer, User> intKeyMap;
     
+    // @JSON5ValueProvider Key support
     @JSON5Value
-    private List<String> skills;
+    private Map<UserId, UserProfile> customKeyMap;
 }
 
-// Usage
-Team team = new Team();
-team.setName("Engineering Team");
-team.setMembers(Arrays.asList(
-    new User("John Developer", 30),
-    new User("Jane Frontend", 28)
-));
-team.setSkills(Arrays.asList("Java", "JavaScript", "Python"));
+public enum UserRole { ADMIN, USER, GUEST }
 
-JSON5Object json = JSON5Serializer.toJSON5Object(team);
-Team restored = JSON5Serializer.fromJSON5Object(json, Team.class);
+// JSON result
+{
+    "enumKeyMap": {
+        "ADMIN": ["all", "read", "write"],
+        "USER": ["read"]
+    },
+    "intKeyMap": {
+        "1": {"name": "John", "age": 30},
+        "2": {"name": "Jane", "age": 25}
+    }
+}
 ```
 
-#### Map Serialization/Deserialization
+**Collection Support as Map Values**
 ```java
 @JSON5Type
-public class UserManager {
-    @JSON5Value(key = "users")
-    private Map<String, User> userMap = new HashMap<>();
+public class CollectionValues {
+    @JSON5Value
+    private Map<String, List<String>> rolePermissions;
     
     @JSON5Value
-    private Map<String, List<String>> rolePermissions = new HashMap<>();
+    private Map<String, Set<Permission>> userPermissions;
+    
+    @JSON5Value
+    private Map<UserRole, List<User>> roleUsers;
 }
-
-// Note: Map keys must be String
-// Values can be basic types, @JSON5Type classes, Lists, etc.
 ```
 
-### 7. Advanced Configuration and Options
+#### Complete Generic Type Support with TypeReference
 
-#### Advanced Configuration with Builder
+**Basic TypeReference Usage**
+```java
+// Limitation of traditional approach
+Map<UserRole, List<String>> result1 = deserializer.deserializeWithKeyType(
+    json, UserRole.class, List.class); // ❌ Type information of List elements is lost
+
+// Preserving complete type information with TypeReference
+Map<UserRole, List<String>> result2 = deserializer.deserializeWithTypeReference(json,
+    new JSON5TypeReference<Map<UserRole, List<String>>>() {}); // ✅ Complete type information
+```
+
+**Perfect Support for Complex Nested Types**
+```java
+// Now even complex types like this are fully supported!
+Map<String, List<Map<Car, Brand>>> ultraComplex;
+
+// Usage example
+@JSON5Type
+public class ComplexContainer {
+    // List<Map<String, User>> - List containing maps
+    @JSON5Value
+    private List<Map<String, User>> userMaps;
+    
+    // Map<UserRole, List<Map<String, Permission>>> - 3-level nesting
+    @JSON5Value  
+    private Map<UserRole, List<Map<String, Permission>>> complexStructure;
+    
+    // Map<String, Set<List<Category>>> - All Collection type combinations
+    @JSON5Value
+    private Map<String, Set<List<Category>>> megaComplex;
+}
+
+// Serialization/Deserialization with TypeReference
+JSON5Serializer serializer = JSON5Serializer.getInstance();
+
+// Serialization
+JSON5Object json = (JSON5Object) JSON5Serializer.toJSON5WithTypeReference(complexData,
+    new JSON5TypeReference<Map<UserRole, List<Map<String, User>>>>() {});
+
+// Deserialization - Preserving all type information perfectly
+Map<UserRole, List<Map<String, User>>> restored = 
+    JSON5Serializer.fromJSON5ObjectWithTypeReference(json,
+        new JSON5TypeReference<Map<UserRole, List<Map<String, User>>>>() {});
+```
+
+**Collection TypeReference Support**
+```java
+// Support for complex Collections like List<Map<String, Integer>>
+List<Map<String, Integer>> complexList = new ArrayList<>();
+Map<String, Integer> item1 = new HashMap<>();
+item1.put("score", 95);
+item1.put("rank", 1);
+complexList.add(item1);
+
+// Serialization/Deserialization with complete type information
+JSON5Array json = (JSON5Array) JSON5Serializer.toJSON5WithTypeReference(complexList,
+    new JSON5TypeReference<List<Map<String, Integer>>>() {});
+
+List<Map<String, Integer>> restored = 
+    JSON5Serializer.fromJSON5ArrayWithTypeReference(json,
+        new JSON5TypeReference<List<Map<String, Integer>>>() {});
+```
+
+**Unified API Methods**
+```java
+// TypeReference deserialization from JSON5Object
+Map<UserRole, List<String>> mapResult = JSON5Serializer.fromJSON5ObjectWithTypeReference(
+    jsonObject, new JSON5TypeReference<Map<UserRole, List<String>>>() {});
+
+// TypeReference deserialization from JSON5Array  
+List<Map<String, User>> listResult = JSON5Serializer.fromJSON5ArrayWithTypeReference(
+    jsonArray, new JSON5TypeReference<List<Map<String, User>>>() {});
+
+// Direct TypeReference parsing from string
+Map<String, List<Integer>> directResult = JSON5Serializer.parseWithTypeReference(
+    jsonString, new JSON5TypeReference<Map<String, List<Integer>>>() {});
+
+// Serialization with TypeReference
+Object serialized = JSON5Serializer.toJSON5WithTypeReference(complexObject,
+    new JSON5TypeReference<Map<String, List<Map<String, User>>>>() {});
+```
+
+### 7. Advanced Settings and Options
+
+#### Advanced Configuration Using Builder
 ```java
 JSON5Serializer serializer = JSON5Serializer.builder()
     .ignoreUnknownProperties()     // Ignore unknown properties
@@ -699,19 +902,19 @@ User user = serializer.forDeserialization()
     .deserialize(json, User.class);
 ```
 
-### 8. Real-world Examples
+### 8. Practical Usage Examples
 
 #### Configuration File Handling
 ```java
-@JSON5Type(comment = "Application configuration")
+@JSON5Type(comment = "Application Configuration")
 public class AppConfig {
-    @JSON5Value(comment = "Server configuration")
+    @JSON5Value(comment = "Server settings")
     private ServerConfig server;
     
-    @JSON5Value(comment = "Database configuration")
+    @JSON5Value(comment = "Database settings")
     private DatabaseConfig database;
     
-    @JSON5Value(comment = "Logging configuration")
+    @JSON5Value(comment = "Logging settings")
     private LoggingConfig logging;
 }
 
@@ -723,24 +926,24 @@ public class ServerConfig {
     @JSON5Value(comment = "Host address")
     private String host = "localhost";
     
-    @JSON5Value(comment = "SSL enabled")
+    @JSON5Value(comment = "Use SSL")
     private boolean ssl = false;
 }
 
 // config.json5 file
 /*
-// Application configuration
+// Application Configuration
 {
-    // Server configuration
+    // Server settings
     server: {
         // Server port
         port: 8080,
         // Host address
         host: 'localhost',
-        // SSL enabled
+        // Use SSL
         ssl: false
     },
-    // Database configuration
+    // Database settings
     database: {
         url: 'jdbc:mysql://localhost:3306/mydb',
         username: 'user',
@@ -787,53 +990,82 @@ public class ErrorResponse extends ApiResponse {
 }
 ```
 
-#### Complex Business Objects
+#### Complex Nested Type Practical Example
 ```java
 @JSON5Type
-public class Order {
-    @JSON5Value
-    private String orderId;
+public class GameConfiguration {
+    // Map<GameMode, List<Map<ItemType, ItemConfig>>>
+    @JSON5Value(comment = "Item configuration by game mode")
+    private Map<GameMode, List<Map<ItemType, ItemConfig>>> modeItemConfigs;
     
-    @JSON5Value
-    private List<OrderItem> items;
+    // List<Map<String, List<SkillTree>>>
+    @JSON5Value(comment = "Skill trees by character")
+    private List<Map<String, List<SkillTree>>> characterSkills;
     
-    @JSON5Value
-    private Customer customer;
-    
-    @JSON5Value
-    private Payment payment;
-    
-    @JSON5Value
-    private OrderStatus status;
-    
-    @JSON5Value
-    private LocalDateTime createdAt;
+    // Map<String, Set<List<Achievement>>>
+    @JSON5Value(comment = "Achievement groups by category")
+    private Map<String, Set<List<Achievement>>> achievementGroups;
 }
 
-@JSON5Type
-public class OrderItem {
-    @JSON5Value
-    private String productId;
-    
-    @JSON5Value
-    private String productName;
-    
-    @JSON5Value
-    private int quantity;
-    
-    @JSON5Value
-    private BigDecimal price;
+public enum GameMode { NORMAL, HARD, EXPERT }
+public enum ItemType { WEAPON, ARMOR, CONSUMABLE }
+
+// Process with TypeReference to preserve complete type information
+GameConfiguration config = new GameConfiguration();
+// ... set data
+
+// Serialization - preserving all generic type information
+JSON5Object configJson = (JSON5Object) JSON5Serializer.toJSON5WithTypeReference(config,
+    new JSON5TypeReference<GameConfiguration>() {});
+
+// Save configuration file in JSON5 format
+configJson.toString(WritingOptions.json5Pretty());
+/*
+// Game configuration file
+{
+    // Item configuration by game mode
+    modeItemConfigs: {
+        NORMAL: [
+            {
+                WEAPON: {
+                    damage: 100,
+                    durability: 50
+                },
+                ARMOR: {
+                    defense: 30,
+                    weight: 2.5
+                }
+            }
+        ],
+        HARD: [
+            // ...
+        ]
+    },
+    // Skill trees by character
+    characterSkills: [
+        {
+            "warrior": [
+                {name: "Power Strike", level: 1},
+                {name: "Shield Bash", level: 2}
+            ],
+            "mage": [
+                {name: "Fireball", level: 1},
+                {name: "Ice Storm", level: 3}
+            ]
+        }
+    ]
 }
+*/
 
-// Usage example
-Order order = new Order();
-order.setOrderId("ORD-2024-001");
-order.setItems(Arrays.asList(
-    new OrderItem("PROD-001", "Laptop", 1, new BigDecimal("1500.00")),
-    new OrderItem("PROD-002", "Mouse", 2, new BigDecimal("25.00"))
-));
+// Deserialization - restoring complete type information
+GameConfiguration restoredConfig = 
+    JSON5Serializer.fromJSON5ObjectWithTypeReference(configJson,
+        new JSON5TypeReference<GameConfiguration>() {});
 
-JSON5Object orderJson = JSON5Serializer.toJSON5Object(order);
+// Now all generic types are perfectly preserved
+Map<GameMode, List<Map<ItemType, ItemConfig>>> itemConfigs = 
+    restoredConfig.getModeItemConfigs();
+ItemConfig weaponConfig = itemConfigs.get(GameMode.NORMAL).get(0).get(ItemType.WEAPON);
 ```
 
 #### Constructor-based Immutable Object Pattern
@@ -864,7 +1096,7 @@ public class ImmutableProduct {
         this.details = new ProductDetails(weight, width, height, depth);
     }
     
-    // Only provide getters (immutable object)
+    // Only getters provided (immutable object)
     public String getId() { return id; }
     public String getName() { return name; }
     public BigDecimal getPrice() { return price; }
@@ -876,8 +1108,8 @@ public class ImmutableProduct {
 {
     "id": "PROD-001",
     "name": "Gaming Laptop",
-    "price": 1500.00,
-    "categories": ["Computer", "Gaming", "Electronics"],
+    "price": 1500000,
+    "categories": ["Computers", "Gaming", "Electronics"],
     "details": {
         "weight": 2.5,
         "dimensions": {
@@ -905,7 +1137,7 @@ public class User {
 // Solution 1: Add default constructor
 @JSON5Type
 public class User {
-    private User() {} // private is OK
+    private User() {} // Private is also acceptable
     public User(String name) { ... }
 }
 
@@ -932,23 +1164,64 @@ public class Employee {
     private Department department; // Circular reference!
 }
 
-// Solution: Remove one side reference or use ignore
+// Solution: Remove one reference or use ignore
 @JSON5Type
 public class Employee {
     @JSON5Value(ignore = true)
-    private Department department; // Exclude from serialization
+    private Department department; // Excluded from serialization
 }
 ```
 
 **3. Generic Type Handling Issues**
 ```java
-// Problem: Raw type usage
+// Problem: Using raw type
 @JSON5Value
 private List userList; // No generic information
 
-// Solution: Specify generic type
+// Solution 1: Specify generic type
 @JSON5Value
 private List<User> userList;
+
+// Solution 2: Use TypeReference (for complex nested types)
+Map<UserRole, List<User>> complexType = JSON5Serializer.fromJSON5ObjectWithTypeReference(
+    json, new JSON5TypeReference<Map<UserRole, List<User>>>() {});
+```
+
+**4. TypeReference ClassCastException Issues**
+```java
+// Problem: Type casting errors in complex nested types
+Map<UserRole, List<Map<String, User>>> complexData; // ClassCastException possible
+
+// Solution: Ensure type safety with TypeReference
+Map<UserRole, List<Map<String, User>>> safeData = 
+    deserializer.deserializeWithTypeReference(json,
+        new JSON5TypeReference<Map<UserRole, List<Map<String, User>>>>() {});
+```
+
+**5. Class Serialization Issues Without Annotations**
+```java
+// Problem: Class without annotations
+public class SimpleUser {
+    private String name; // Seems like it won't be serialized but...
+    private int age;
+}
+
+// It actually works! (Same as Jackson)
+SimpleUser user = new SimpleUser();
+user.setName("John");
+user.setAge(30);
+
+JSON5Object json = JSON5Serializer.toJSON5Object(user); // ✅ Works fine
+// {"name":"John","age":30}
+
+// For strict control, use explicit mode
+@JSON5Type(explicit = true)
+public class StrictUser {
+    @JSON5Value
+    private String name;     // Included
+    
+    private int age;         // Excluded (no annotation)
+}
 ```
 
 #### Debugging Tips
@@ -960,28 +1233,28 @@ System.out.println("Serialization result:");
 System.out.println(json.toString(WritingOptions.json5Pretty()));
 ```
 
-**2. Test with Error Ignore Mode**
+**2. Test with Error-Ignore Mode**
 ```java
-// Check which fields are causing problems
+// Identify which field is causing issues
 User user = JSON5Serializer.getInstance()
     .forDeserialization()
     .ignoreErrors() // Ignore errors and proceed
     .deserialize(json, User.class);
 ```
 
-**3. Verify Type Information**
+**3. Check Type Information**
 ```java
 // Check type information in polymorphic handling
 if (json.has("type")) {
     System.out.println("Type info: " + json.getString("type"));
 } else {
-    System.out.println("No type info - default implementation used");
+    System.out.println("No type info - default implementation will be used");
 }
 ```
 
 ### 10. Best Practices
 
-#### 1. Annotation Usage Guidelines
+#### 1. Annotation Usage Guide
 ```java
 // ✅ Good example
 @JSON5Type(comment = "User information")
@@ -1004,44 +1277,109 @@ public class User {
 }
 ```
 
-#### 2. Prefer Immutable Objects
+#### 2. Complex Type Handling Guide
 ```java
-// ✅ Good example: Immutable object
-@JSON5Type
-public class ImmutableUser {
-    private final String name;
-    private final int age;
-    
-    @JSON5Creator
-    public ImmutableUser(@JSON5Property("name") String name,
-                        @JSON5Property("age") int age) {
-        this.name = name;
-        this.age = age;
-    }
-    
-    public String getName() { return name; }
-    public int getAge() { return age; }
-}
-```
+// ✅ Good example: Complete type safety with TypeReference
+Map<UserRole, List<Map<String, User>>> complexData = 
+    deserializer.deserializeWithTypeReference(json,
+        new JSON5TypeReference<Map<UserRole, List<Map<String, User>>>>() {});
 
-#### 3. Proper Type Usage
-```java
-// ✅ Good example
+// ✅ Good example: Specific type specification
 @JSON5Value
 private List<String> tags;              // Specific type
 
 @JSON5Value  
 private Map<String, User> userMap;      // String key usage
 
-// ❌ Bad example
+@JSON5Value
+private Map<UserRole, List<String>> enumKeyMap; // Enum key support
+
+// ❌ Bad example: Raw type usage
 @JSON5Value
 private List tags;                      // Raw type
 
 @JSON5Value
-private Map<User, String> reverseMap;   // Non-String key
+private Map userMap;                    // Raw type
+
+// ❌ Bad example: Unsupported key type
+@JSON5Value
+private Map<CustomObject, String> invalidKeyMap; // Unsupported key type
 ```
 
-#### 4. Exception Handling
+#### 3. Method Annotation Usage
+```java
+// ✅ Good example: Creating virtual fields with Getter/Setter
+@JSON5Type
+public class User {
+    private String firstName;
+    private String lastName;
+    
+    @JSON5ValueGetter(comment = "Full name")
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+    
+    @JSON5ValueSetter
+    public void setFullName(String fullName) {
+        String[] parts = fullName.split(" ", 2);
+        this.firstName = parts[0];
+        this.lastName = parts.length > 1 ? parts[1] : "";
+    }
+    
+    @JSON5ValueGetter(key = "display_name")
+    public String getDisplayName() {
+        return "Mr/Ms. " + getFullName();
+    }
+}
+
+// JSON result
+{
+    "firstName": "John",
+    "lastName": "Doe", 
+    "fullName": "John Doe",        // Virtual field created by Getter
+    "display_name": "Mr/Ms. John Doe"  // Custom key name
+}
+```
+
+#### 4. Annotation Mode Usage Strategies
+```java
+// Scenario 1: Simple data class → Use without annotations
+public class SimpleConfig {
+    private String host = "localhost";
+    private int port = 8080;
+    private boolean ssl = false;
+    // Just add Getters/Setters
+}
+
+// Scenario 2: Need to control some fields → Selective annotations
+@JSON5Type
+public class UserConfig {
+    private String username;     // Automatically included
+    private String email;        // Automatically included
+    
+    @JSON5Value(ignore = true)
+    private String password;     // Excluded
+    
+    @JSON5Value(comment = "Last login")
+    private LocalDateTime lastLogin; // Added comment
+}
+
+// Scenario 3: Need strict control → Explicit mode
+@JSON5Type(explicit = true)
+public class SecurityConfig {
+    @JSON5Value
+    private String publicKey;    // Explicitly included
+    
+    @JSON5Value  
+    private String algorithm;    // Explicitly included
+    
+    private String privateKey;   // Excluded (security)
+    private String salt;         // Excluded (security)
+    private String internalConfig; // Excluded (internal use)
+}
+```
+
+#### 5. Exception Handling
 ```java
 // ✅ Good example: Safe deserialization
 public User parseUserSafely(String jsonString) {
@@ -1053,24 +1391,58 @@ public User parseUserSafely(String jsonString) {
         return new User(); // Return default value
     }
 }
+
+// ✅ Good example: Safe TypeReference usage
+public Map<String, List<User>> parseComplexDataSafely(JSON5Object json) {
+    try {
+        return JSON5Serializer.fromJSON5ObjectWithTypeReference(json,
+            new JSON5TypeReference<Map<String, List<User>>>() {});
+    } catch (JSON5SerializerException e) {
+        logger.error("Complex data parsing failed: " + e.getMessage());
+        return new HashMap<>(); // Return empty Map
+    }
+}
+```
+
+#### 6. Performance Optimization Tips
+```java
+// ✅ Good example: Utilize schema cache
+JSON5Serializer serializer = JSON5Serializer.builder()
+    .enableSchemaCache()  // Enable schema cache
+    .build();
+
+// Performance improvement for repeated processing
+List<User> users = getUsers();
+for (User user : users) {
+    JSON5Object json = serializer.serialize(user);
+    // Uses cached schema from second iteration
+}
+
+// ✅ Good example: Appropriate configuration combination
+User user = serializer.forDeserialization()
+    .ignoreErrors()                // Ignore errors
+    .withStrictTypeChecking(false) // Disable strict type checking  
+    .deserialize(json, User.class);
 ```
 
 ---
 
 ## 🎯 Summary
 
-JSON5 Serializer is a powerful library specialized for configuration file processing:
+JSON5 Serializer is a powerful library specialized for configuration file handling:
 
-### Core Advantages
+### Key Advantages
 - **JSON5 Support**: Easy configuration file creation with comments, trailing commas, unquoted keys
-- **Advanced Features**: Jackson-level constructor-based deserialization, polymorphism, custom value providers
+- **Advanced Features**: Jackson-level constructor-based deserialization, polymorphism handling, custom value providers, TypeReference
+- **Complex Nested Type Support**: Perfect support for `List<Map<Car, Brand>>`, `Map<String, List<Map<String, User>>>`, etc.
 - **Flexible API**: Support for both static methods and Fluent API
+- **Annotation Choice**: Works without annotations, with strict control using explicit mode when needed
 
 ### Usage Recommendations
-- **✅ Configuration files**: Application settings, environment configuration, etc.
-- **✅ Development tools**: Build scripts, developer tool configurations
-- **✅ Complex object structures**: Domain models requiring polymorphism
+- **✅ Configuration Files**: Application settings, environment configurations
+- **✅ Development Tools**: Build scripts, developer tool settings
+- **✅ Complex Object Structures**: Domain models requiring polymorphism
 - **❌ REST APIs**: Standard JSON recommended
-- **❌ Inter-system data exchange**: Use standard JSON for compatibility
+- **❌ System Data Exchange**: Use standard JSON for compatibility
 
-This guide enables you to effectively utilize all features of JSON5 Serializer to implement maintainable configuration files and powerful object serialization.
+This guide helps you effectively utilize all features of JSON5 Serializer to implement maintainable configuration files and powerful object serialization.

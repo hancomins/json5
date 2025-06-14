@@ -1,4 +1,4 @@
-# JSON5 Serializer 완전 사용 설명서
+# JSON5 완전 사용 설명서
 
 ## 📋 개요
 
@@ -6,7 +6,9 @@ JSON5 Serializer는 Java 8 이상에서 동작하는 강력한 JSON5 직렬화/�
 
 ### ✅ 주요 장점
 - **설정 파일에 최적화**: 주석 처리와 유연한 문법으로 설정 파일 작성이 쉬움
-- **Jackson 수준의 고급 기능**: 생성자 기반 역직렬화, 다형성 처리, 커스텀 값 공급자 지원
+- **Jackson 수준의 고급 기능**: 생성자 기반 역직렬화, 다형성 처리, 커스텀 값 공급자, TypeReference 지원
+- **복잡한 중첩 타입 지원**: `List<Map<Car, Brand>>`, `Map<String, List<Map<String, User>>>` 등 완벽 지원
+- **유연한 어노테이션 모드**: 어노테이션 없이도 동작, 필요시 explicit 모드로 엄격 제어
 - **XPath 스타일 경로 접근**: `users[0].profile.email` 같은 중첩 경로 접근 지원
 
 ### ⚠️ 주의사항
@@ -209,400 +211,144 @@ data.put("$.users[1]", new JSON5Object().put("name", "이영희"));
 
 JSON5 Serializer는 Java 객체와 JSON5 간의 양방향 변환을 지원합니다. 어노테이션을 통해 세밀한 제어가 가능하며, Jackson과 유사한 고급 기능들을 제공합니다.
 
-### 1. 모든 어노테이션 완전 가이드
+### 1. 기본 어노테이션과 모드
 
-JSON5 Serializer는 다양한 어노테이션을 제공하여 세밀한 직렬화/역직렬화 제어가 가능합니다.
+#### 어노테이션 모드 선택
+JSON5 Serializer는 Jackson과 유사하게 **어노테이션 없이도 동작**합니다.
 
-#### 클래스 레벨 어노테이션
+```java
+// 📝 방법 1: 어노테이션 없이 사용 (Jackson 스타일)
+public class User {
+    private String name;    // 자동으로 직렬화/역직렬화됨
+    private int age;        // 자동으로 직렬화/역직렬화됨
+    
+    public User() {}
+    
+    // Getter/Setter
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+}
 
-##### @JSON5Type - 기본 클래스 마킹
+// 📝 방법 2: 선택적 어노테이션 사용
+@JSON5Type
+public class User {
+    @JSON5Value(comment = "사용자 이름")
+    private String name;
+    
+    @JSON5Value(ignore = true)
+    private String password;    // 직렬화에서 제외
+    
+    private int age;            // 어노테이션 없어도 포함됨
+}
+
+// 📝 방법 3: 엄격 모드 (explicit = true)
+@JSON5Type(explicit = true)
+public class User {
+    @JSON5Value
+    private String name;        // 어노테이션 있음 → 포함됨
+    
+    private int age;            // 어노테이션 없음 → 제외됨
+    private String email;       // 어노테이션 없음 → 제외됨
+    
+    @JSON5Value
+    private boolean isActive;   // 어노테이션 있음 → 포함됨
+}
+```
+
+#### @JSON5Type - 클래스 어노테이션
 ```java
 @JSON5Type
 public class User {
-    // 직렬화/역직렬화 대상 클래스 표시
+    // 기본 모드: 모든 필드 자동 처리
 }
 
-@JSON5Type(comment = "사용자 정보", commentAfter = "사용자 정보 끝", explicit = false)
+@JSON5Type(explicit = true)
 public class User {
-    // comment: 클래스 앞에 추가할 주석
-    // commentAfter: 클래스 뒤에 추가할 주석  
-    // explicit: 명시적 모드 (false가 기본값)
+    // 엄격 모드: @JSON5Value가 있는 필드만 처리
+}
+
+@JSON5Type(comment = "사용자 정보", commentAfter = "사용자 정보 끝")
+public class User {
+    // 클래스에 주석 추가
 }
 ```
 
-##### @JSON5TypeInfo - 다형성 타입 정보
-```java
-@JSON5TypeInfo(
-    property = "type",                              // 타입 결정 키
-    include = TypeInclusion.PROPERTY,               // 포함 방식
-    defaultImpl = DefaultUser.class,                // 기본 구현체
-    onMissingType = MissingTypeStrategy.DEFAULT_IMPL // 누락 시 동작
-)
-public abstract class User { }
-```
-
-**TypeInclusion 옵션:**
-- `PROPERTY`: 별도 속성으로 타입 정보 포함
-- `EXISTING_PROPERTY`: 기존 속성을 타입 정보로 활용
-
-**MissingTypeStrategy 옵션:**
-- `DEFAULT_IMPL`: 기본 구현체 사용
-- `EXCEPTION`: 예외 발생
-
-##### @JSON5SubType - 서브타입 정의
-```java
-@JSON5SubType(value = AdminUser.class, name = "admin")
-@JSON5SubType(value = RegularUser.class, name = "regular")
-@JSON5SubType(value = GuestUser.class, name = "guest")
-public abstract class User { }
-
-// 또는 @JSON5SubTypes 사용
-@JSON5SubTypes({
-    @JSON5SubType(value = AdminUser.class, name = "admin"),
-    @JSON5SubType(value = RegularUser.class, name = "regular"),
-    @JSON5SubType(value = GuestUser.class, name = "guest")
-})
-public abstract class User { }
-```
-
-##### @JSON5ValueProvider - 커스텀 값 공급자
-```java
-@JSON5ValueProvider(
-    targetType = String.class,           // 대상 타입
-    nullHandling = NullHandling.DEFAULT, // null 처리 방식
-    strictTypeMatching = true            // 엄격한 타입 매칭
-)
-public class UserId { }
-```
-
-**NullHandling 옵션:**
-- `DEFAULT`: null을 그대로 유지
-- `EXCEPTION`: 예외 발생
-- `EMPTY_OBJECT`: 기본값으로 초기화
-
-#### 필드 레벨 어노테이션
-
-##### @JSON5Value - 기본 필드 마킹
+#### @JSON5Value - 필드 어노테이션
 ```java
 @JSON5Type
 public class User {
     @JSON5Value
-    private String name; // 기본 사용법
+    private String name;
     
-    @JSON5Value(key = "user_name", comment = "사용자 이름")
-    private String name; // 커스텀 키와 주석
-    
-    @JSON5Value(value = "email_address", comment = "이메일", commentAfterKey = "필수 항목")
-    private String email; // value는 key와 동일
+    @JSON5Value(key = "user_id", comment = "사용자 ID")
+    private String id;
     
     @JSON5Value(ignore = true)
     private String password; // 직렬화에서 제외
+    
+    private String internalData; // explicit=false면 포함, explicit=true면 제외
 }
 ```
 
-#### 메서드 레벨 어노테이션
-
-##### @JSON5ValueGetter - 커스텀 Getter
+#### @JSON5ValueGetter/@JSON5ValueSetter - 메서드 어노테이션
 ```java
 @JSON5Type
 public class User {
     private String firstName;
     private String lastName;
+    private List<String> hobbies;
     
-    // 기본 사용법 (메서드 이름에서 키 추출)
-    @JSON5ValueGetter
+    // Getter 메서드로 가상 필드 생성
+    @JSON5ValueGetter(comment = "전체 이름")
     public String getFullName() {
         return firstName + " " + lastName;
     }
     
-    // 커스텀 키 지정
-    @JSON5ValueGetter(key = "display_name", comment = "화면 표시용 이름")
-    public String getDisplayName() {
-        return firstName + " " + lastName;
+    // 커스텀 키 이름 사용
+    @JSON5ValueGetter(key = "hobby_list", comment = "취미 목록")
+    public List<String> getUserHobbies() {
+        return hobbies;
     }
     
-    // value와 key는 동일한 의미
-    @JSON5ValueGetter(value = "full_name", commentAfterKey = "전체 이름")
-    public String getFullName() {
-        return firstName + " " + lastName;
-    }
-    
-    // 오류 무시 옵션
-    @JSON5ValueGetter(key = "risky_value", ignoreError = true)
-    public String getRiskyValue() {
-        // 예외가 발생할 수 있는 로직
-        return someRiskyOperation();
-    }
-}
-```
-
-##### @JSON5ValueSetter - 커스텀 Setter
-```java
-@JSON5Type
-public class User {
-    private String firstName;
-    private String lastName;
-    
-    // 기본 사용법 (메서드 이름에서 키 추출)
+    // Setter 메서드로 역직렬화 처리
     @JSON5ValueSetter
     public void setFullName(String fullName) {
-        String[] parts = fullName.split(" ");
+        String[] parts = fullName.split(" ", 2);
         this.firstName = parts[0];
         this.lastName = parts.length > 1 ? parts[1] : "";
     }
     
-    // 커스텀 키 지정
-    @JSON5ValueSetter(key = "display_name")
-    public void setDisplayName(String displayName) {
-        setFullName(displayName);
-    }
-    
-    // value와 key는 동일한 의미
-    @JSON5ValueSetter(value = "user_name")
-    public void setUserName(String userName) {
-        setFullName(userName);
-    }
-    
-    // 오류 무시 옵션
-    @JSON5ValueSetter(key = "optional_field", ignoreError = true)
-    public void setOptionalField(String value) {
-        // 실패해도 무시되는 설정
-        someOptionalOperation(value);
+    @JSON5ValueSetter(key = "hobby_list", ignoreError = true)
+    public void setUserHobbies(List<String> hobbies) {
+        this.hobbies = hobbies != null ? hobbies : new ArrayList<>();
     }
 }
 ```
 
-#### 생성자 레벨 어노테이션
-
-##### @JSON5Creator - 생성자 지정
-```java
-@JSON5Type
-public class User {
-    private final String name;
-    private final int age;
-    
-    // 기본 우선순위 (0)
-    @JSON5Creator
-    public User(@JSON5Property("name") String name) {
-        this.name = name;
-        this.age = 0;
-    }
-    
-    // 높은 우선순위 (1)
-    @JSON5Creator(priority = 1)
-    public User(@JSON5Property("name") String name,
-                @JSON5Property("age") int age) {
-        this.name = name;
-        this.age = age;
-    }
-}
-```
-
-#### 파라미터 레벨 어노테이션
-
-##### @JSON5Property - 생성자 파라미터 매핑
-```java
-@JSON5Creator
-public User(
-    @JSON5Property("name") String name,
-    @JSON5Property(value = "age", required = true) int age,
-    @JSON5Property(value = "email", onMissing = MissingValueStrategy.EXCEPTION) String email,
-    @JSON5Property("profile.department") String department
-) {
-    // value: JSON 키 (경로 지원)
-    // required: 필수 여부
-    // onMissing: 누락 시 동작
-}
-```
-
-**MissingValueStrategy 옵션:**
-- `DEFAULT_VALUE`: 기본값 사용 (null, 0, false 등)
-- `EXCEPTION`: 예외 발생
-
-##### @JSON5ValueConstructor - 값 공급자 생성자
-```java
-@JSON5ValueProvider
-public class UserId {
-    @JSON5ValueConstructor(onNull = NullHandling.EMPTY_OBJECT)
-    public UserId(String id) {
-        // onNull: null 입력 시 동작
-    }
-}
-```
-
-##### @JSON5ValueExtractor - 값 공급자 추출자
-```java
-@JSON5ValueProvider
-public class UserId {
-    @JSON5ValueExtractor(onNull = NullHandling.EXCEPTION)
-    public String getId() {
-        // onNull: null 반환 시 동작
-        return id;
-    }
-}
-```
-
-#### 고급 어노테이션
-
-##### @ObtainTypeValue - 제네릭 타입 처리
+#### @ObtainTypeValue - 제네릭/추상 타입 처리
 ```java
 @JSON5Type
 public class Container<T> {
     @JSON5Value
     private T data;
     
-    // 필드 기반 타입 해석 (역직렬화 전)
-    @ObtainTypeValue(fieldNames = {"data"}, deserializeAfter = false)
-    public Class<?> getDataType(JSON5Object fieldObject, JSON5Object rootObject) {
-        String typeHint = rootObject.getString("dataType");
-        switch (typeHint) {
-            case "string": return String.class;
-            case "number": return Integer.class;
-            case "user": return User.class;
-            default: return Object.class;
-        }
-    }
-    
-    // 세터 기반 타입 해석 (역직렬화 후)
-    @ObtainTypeValue(setterMethodNames = {"setData"}, deserializeAfter = true)
-    public Object transformData(JSON5Object fieldObject, JSON5Object rootObject) {
-        // 역직렬화된 데이터를 추가 변환
-        return processedData;
-    }
-    
-    // 오류 무시 옵션
-    @ObtainTypeValue(fieldNames = {"data"}, ignoreError = true)
-    public Class<?> getDataTypeSafely(JSON5Object fieldObject, JSON5Object rootObject) {
-        try {
-            return determineType(fieldObject);
-        } catch (Exception e) {
-            return Object.class; // 기본 타입 반환
-        }
-    }
-}
-```
-
-**@ObtainTypeValue 상세 옵션:**
-- `fieldNames`: 대상 필드명 배열
-- `setterMethodNames`: 대상 세터 메서드명 배열
-- `deserializeAfter`: 역직렬화 후 실행 여부
-- `ignoreError`: 오류 무시 여부
-
-### 2. 어노테이션 조합 패턴
-
-#### 완전한 커스텀 객체
-```java
-@JSON5Type(comment = "사용자 관리 클래스")
-public class UserManager {
-    private Map<String, User> users = new HashMap<>();
-    private int totalCount;
-    
-    // Getter로 계산된 값 제공
-    @JSON5ValueGetter(key = "user_count", comment = "총 사용자 수")
-    public int getUserCount() {
-        return users.size();
-    }
-    
-    // Setter로 복잡한 데이터 처리
-    @JSON5ValueSetter(key = "users_data")
-    public void setUsersData(List<User> userList) {
-        this.users.clear();
-        for (User user : userList) {
-            this.users.put(user.getId(), user);
-        }
-    }
-    
-    // 기본 필드
-    @JSON5Value(key = "total", comment = "전체 등록 수")
-    private int totalCount;
-}
-```
-
-#### 다형성 + 생성자 기반
-```java
-@JSON5TypeInfo(property = "type")
-@JSON5SubType(value = EmailNotification.class, name = "email")
-@JSON5SubType(value = SmsNotification.class, name = "sms")
-public abstract class Notification {
     @JSON5Value
-    protected String type;
+    private String type;
     
-    @JSON5Value
-    protected String message;
-}
-
-@JSON5Type
-public class EmailNotification extends Notification {
-    private final String email;
-    private final String subject;
-    
-    @JSON5Creator
-    public EmailNotification(@JSON5Property("recipient.email") String email,
-                            @JSON5Property("email.subject") String subject,
-                            @JSON5Property("message") String message) {
-        this.email = email;
-        this.subject = subject;
-        this.type = "email";
-        this.message = message;
-    }
-}
-```
-
-### 3. 실무 활용 예제
-
-#### 설정 파일 클래스
-```java
-@JSON5Type(comment = "애플리케이션 설정 파일")
-public class AppConfig {
-    
-    @JSON5Value(comment = "서버 포트")
-    private int port = 8080;
-    
-    @JSON5Value(key = "db_config", comment = "데이터베이스 설정")
-    private DatabaseConfig database;
-    
-    // 환경변수로부터 값 조합
-    @JSON5ValueGetter(key = "jdbc_url", comment = "JDBC 연결 URL")
-    public String getJdbcUrl() {
-        return "jdbc:mysql://" + database.getHost() + ":" + database.getPort() + "/" + database.getName();
-    }
-    
-    // 복잡한 설정 파싱
-    @JSON5ValueSetter(key = "logging_levels")
-    public void setLoggingLevels(Map<String, String> levels) {
-        for (Map.Entry<String, String> entry : levels.entrySet()) {
-            Logger.getLogger(entry.getKey()).setLevel(Level.parse(entry.getValue()));
+    // 제네릭 타입의 실제 타입을 결정
+    @ObtainTypeValue(fieldNames = {"data"})
+    public T obtainDataType(JSON5Object fieldJson, JSON5Object rootJson) {
+        String type = rootJson.getString("type");
+        switch (type) {
+            case "user":
+                return (T) JSON5Serializer.fromJSON5Object(fieldJson, User.class);
+            case "product":
+                return (T) JSON5Serializer.fromJSON5Object(fieldJson, Product.class);
+            default:
+                return (T) fieldJson.get("value");
         }
-    }
-}
-```
-
-#### API 응답 클래스
-```java
-@JSON5TypeInfo(property = "status")
-@JSON5SubType(value = SuccessResponse.class, name = "success")
-@JSON5SubType(value = ErrorResponse.class, name = "error")
-public abstract class ApiResponse {
-    @JSON5Value
-    protected String status;
-    
-    @JSON5ValueGetter(key = "timestamp")
-    public long getTimestamp() {
-        return System.currentTimeMillis();
-    }
-}
-
-@JSON5Type
-public class SuccessResponse extends ApiResponse {
-    @JSON5Value
-    private Object data;
-    
-    @JSON5ValueGetter(key = "data_size", comment = "데이터 크기")
-    public int getDataSize() {
-        if (data instanceof Collection) {
-            return ((Collection<?>) data).size();
-        }
-        return data != null ? 1 : 0;
     }
 }
 ```
@@ -989,48 +735,139 @@ public class SafeWrapper {
 }
 ```
 
-### 6. 컬렉션과 Map 처리
+### 6. 컬렉션과 Map 고도화 처리
 
-#### List 직렬화/역직렬화
+#### 고급 Map 기능
+
+**다양한 Key 타입 지원**
 ```java
 @JSON5Type
-public class Team {
+public class AdvancedMaps {
+    // Enum Key 지원
     @JSON5Value
-    private String name;
+    private Map<UserRole, List<String>> enumKeyMap;
     
+    // Primitive Key 지원
     @JSON5Value
-    private List<User> members;
+    private Map<Integer, User> intKeyMap;
     
+    // @JSON5ValueProvider Key 지원
     @JSON5Value
-    private List<String> skills;
+    private Map<UserId, UserProfile> customKeyMap;
 }
 
-// 사용
-Team team = new Team();
-team.setName("개발팀");
-team.setMembers(Arrays.asList(
-    new User("김개발", 30),
-    new User("이프론트", 28)
-));
-team.setSkills(Arrays.asList("Java", "JavaScript", "Python"));
+public enum UserRole { ADMIN, USER, GUEST }
 
-JSON5Object json = JSON5Serializer.toJSON5Object(team);
-Team restored = JSON5Serializer.fromJSON5Object(json, Team.class);
+// JSON 결과
+{
+    "enumKeyMap": {
+        "ADMIN": ["all", "read", "write"],
+        "USER": ["read"]
+    },
+    "intKeyMap": {
+        "1": {"name": "John", "age": 30},
+        "2": {"name": "Jane", "age": 25}
+    }
+}
 ```
 
-#### Map 직렬화/역직렬화
+**Map 값으로 Collection 지원**
 ```java
 @JSON5Type
-public class UserManager {
-    @JSON5Value(key = "users")
-    private Map<String, User> userMap = new HashMap<>();
+public class CollectionValues {
+    @JSON5Value
+    private Map<String, List<String>> rolePermissions;
     
     @JSON5Value
-    private Map<String, List<String>> rolePermissions = new HashMap<>();
+    private Map<String, Set<Permission>> userPermissions;
+    
+    @JSON5Value
+    private Map<UserRole, List<User>> roleUsers;
+}
+```
+
+#### TypeReference를 통한 완전한 제네릭 타입 지원
+
+**기본 TypeReference 사용법**
+```java
+// 기존 방식의 한계
+Map<UserRole, List<String>> result1 = deserializer.deserializeWithKeyType(
+    json, UserRole.class, List.class); // ❌ List의 요소 타입 정보 손실
+
+// TypeReference로 완전한 타입 정보 보존
+Map<UserRole, List<String>> result2 = deserializer.deserializeWithTypeReference(json,
+    new JSON5TypeReference<Map<UserRole, List<String>>>() {}); // ✅ 완전한 타입 정보
+```
+
+**복잡한 중첩 타입 완벽 지원**
+```java
+// 이제 이런 복잡한 타입도 완벽하게 지원됩니다!
+Map<String, List<Map<Car, Brand>>> ultraComplex;
+
+// 사용 예제
+@JSON5Type
+public class ComplexContainer {
+    // List<Map<String, User>> - 리스트 안에 맵
+    @JSON5Value
+    private List<Map<String, User>> userMaps;
+    
+    // Map<UserRole, List<Map<String, Permission>>> - 3단계 중첩
+    @JSON5Value  
+    private Map<UserRole, List<Map<String, Permission>>> complexStructure;
+    
+    // Map<String, Set<List<Category>>> - 모든 Collection 타입 조합
+    @JSON5Value
+    private Map<String, Set<List<Category>>> megaComplex;
 }
 
-// 주의: Map의 키는 반드시 String이어야 함
-// 값으로는 기본 타입, @JSON5Type 클래스, List 등 사용 가능
+// TypeReference로 직렬화/역직렬화
+JSON5Serializer serializer = JSON5Serializer.getInstance();
+
+// 직렬화
+JSON5Object json = (JSON5Object) JSON5Serializer.toJSON5WithTypeReference(complexData,
+    new JSON5TypeReference<Map<UserRole, List<Map<String, User>>>>() {});
+
+// 역직렬화 - 모든 타입 정보 완벽 보존
+Map<UserRole, List<Map<String, User>>> restored = 
+    JSON5Serializer.fromJSON5ObjectWithTypeReference(json,
+        new JSON5TypeReference<Map<UserRole, List<Map<String, User>>>>() {});
+```
+
+**Collection TypeReference 지원**
+```java
+// List<Map<String, Integer>> 같은 복잡한 Collection도 지원
+List<Map<String, Integer>> complexList = new ArrayList<>();
+Map<String, Integer> item1 = new HashMap<>();
+item1.put("score", 95);
+item1.put("rank", 1);
+complexList.add(item1);
+
+// 완전한 타입 정보로 직렬화/역직렬화
+JSON5Array json = (JSON5Array) JSON5Serializer.toJSON5WithTypeReference(complexList,
+    new JSON5TypeReference<List<Map<String, Integer>>>() {});
+
+List<Map<String, Integer>> restored = 
+    JSON5Serializer.fromJSON5ArrayWithTypeReference(json,
+        new JSON5TypeReference<List<Map<String, Integer>>>() {});
+```
+
+**통합 API 메서드들**
+```java
+// JSON5Object에서 TypeReference 역직렬화
+Map<UserRole, List<String>> mapResult = JSON5Serializer.fromJSON5ObjectWithTypeReference(
+    jsonObject, new JSON5TypeReference<Map<UserRole, List<String>>>() {});
+
+// JSON5Array에서 TypeReference 역직렬화  
+List<Map<String, User>> listResult = JSON5Serializer.fromJSON5ArrayWithTypeReference(
+    jsonArray, new JSON5TypeReference<List<Map<String, User>>>() {});
+
+// 문자열에서 직접 TypeReference 파싱
+Map<String, List<Integer>> directResult = JSON5Serializer.parseWithTypeReference(
+    jsonString, new JSON5TypeReference<Map<String, List<Integer>>>() {});
+
+// TypeReference로 직렬화
+Object serialized = JSON5Serializer.toJSON5WithTypeReference(complexObject,
+    new JSON5TypeReference<Map<String, List<Map<String, User>>>>() {});
 ```
 
 ### 7. 고급 설정과 옵션
@@ -1150,53 +987,82 @@ public class ErrorResponse extends ApiResponse {
 }
 ```
 
-#### 복잡한 비즈니스 객체
+#### 복잡한 중첩 타입 실무 예제
 ```java
 @JSON5Type
-public class Order {
-    @JSON5Value
-    private String orderId;
+public class GameConfiguration {
+    // Map<GameMode, List<Map<ItemType, ItemConfig>>>
+    @JSON5Value(comment = "게임 모드별 아이템 설정")
+    private Map<GameMode, List<Map<ItemType, ItemConfig>>> modeItemConfigs;
     
-    @JSON5Value
-    private List<OrderItem> items;
+    // List<Map<String, List<SkillTree>>>
+    @JSON5Value(comment = "캐릭터별 스킬 트리")
+    private List<Map<String, List<SkillTree>>> characterSkills;
     
-    @JSON5Value
-    private Customer customer;
-    
-    @JSON5Value
-    private Payment payment;
-    
-    @JSON5Value
-    private OrderStatus status;
-    
-    @JSON5Value
-    private LocalDateTime createdAt;
+    // Map<String, Set<List<Achievement>>>
+    @JSON5Value(comment = "카테고리별 업적 그룹")
+    private Map<String, Set<List<Achievement>>> achievementGroups;
 }
 
-@JSON5Type
-public class OrderItem {
-    @JSON5Value
-    private String productId;
-    
-    @JSON5Value
-    private String productName;
-    
-    @JSON5Value
-    private int quantity;
-    
-    @JSON5Value
-    private BigDecimal price;
+public enum GameMode { NORMAL, HARD, EXPERT }
+public enum ItemType { WEAPON, ARMOR, CONSUMABLE }
+
+// TypeReference로 완전한 타입 정보 보존하여 처리
+GameConfiguration config = new GameConfiguration();
+// ... 데이터 설정
+
+// 직렬화 - 모든 제네릭 타입 정보 보존
+JSON5Object configJson = (JSON5Object) JSON5Serializer.toJSON5WithTypeReference(config,
+    new JSON5TypeReference<GameConfiguration>() {});
+
+// JSON5 형태로 설정 파일 저장
+configJson.toString(WritingOptions.json5Pretty());
+/*
+// 게임 설정 파일
+{
+    // 게임 모드별 아이템 설정
+    modeItemConfigs: {
+        NORMAL: [
+            {
+                WEAPON: {
+                    damage: 100,
+                    durability: 50
+                },
+                ARMOR: {
+                    defense: 30,
+                    weight: 2.5
+                }
+            }
+        ],
+        HARD: [
+            // ...
+        ]
+    },
+    // 캐릭터별 스킬 트리
+    characterSkills: [
+        {
+            "warrior": [
+                {name: "Power Strike", level: 1},
+                {name: "Shield Bash", level: 2}
+            ],
+            "mage": [
+                {name: "Fireball", level: 1},
+                {name: "Ice Storm", level: 3}
+            ]
+        }
+    ]
 }
+*/
 
-// 사용 예제
-Order order = new Order();
-order.setOrderId("ORD-2024-001");
-order.setItems(Arrays.asList(
-    new OrderItem("PROD-001", "노트북", 1, new BigDecimal("1500000")),
-    new OrderItem("PROD-002", "마우스", 2, new BigDecimal("25000"))
-));
+// 역직렬화 - 완전한 타입 정보 복원
+GameConfiguration restoredConfig = 
+    JSON5Serializer.fromJSON5ObjectWithTypeReference(configJson,
+        new JSON5TypeReference<GameConfiguration>() {});
 
-JSON5Object orderJson = JSON5Serializer.toJSON5Object(order);
+// 이제 모든 제네릭 타입이 완벽하게 보존됨
+Map<GameMode, List<Map<ItemType, ItemConfig>>> itemConfigs = 
+    restoredConfig.getModeItemConfigs();
+ItemConfig weaponConfig = itemConfigs.get(GameMode.NORMAL).get(0).get(ItemType.WEAPON);
 ```
 
 #### 생성자 기반 불변 객체 패턴
@@ -1309,9 +1175,50 @@ public class Employee {
 @JSON5Value
 private List userList; // 제네릭 정보 없음
 
-// 해결책: 제네릭 타입 명시
+// 해결책 1: 제네릭 타입 명시
 @JSON5Value
 private List<User> userList;
+
+// 해결책 2: TypeReference 사용 (복잡한 중첩 타입)
+Map<UserRole, List<User>> complexType = JSON5Serializer.fromJSON5ObjectWithTypeReference(
+    json, new JSON5TypeReference<Map<UserRole, List<User>>>() {});
+```
+
+**4. TypeReference ClassCastException 문제**
+```java
+// 문제: 복잡한 중첩 타입에서 타입 캐스팅 오류
+Map<UserRole, List<Map<String, User>>> complexData; // ClassCastException 발생 가능
+
+// 해결책: TypeReference 사용으로 타입 안전성 보장
+Map<UserRole, List<Map<String, User>>> safeData = 
+    deserializer.deserializeWithTypeReference(json,
+        new JSON5TypeReference<Map<UserRole, List<Map<String, User>>>>() {});
+```
+
+**5. 어노테이션 없는 클래스 직렬화 문제**
+```java
+// 문제: 어노테이션 없는 클래스
+public class SimpleUser {
+    private String name; // 직렬화되지 않을 것 같지만...
+    private int age;
+}
+
+// 실제로는 동작함! (Jackson과 동일)
+SimpleUser user = new SimpleUser();
+user.setName("John");
+user.setAge(30);
+
+JSON5Object json = JSON5Serializer.toJSON5Object(user); // ✅ 정상 동작
+// {"name":"John","age":30}
+
+// 엄격한 제어가 필요하다면 explicit 모드 사용
+@JSON5Type(explicit = true)
+public class StrictUser {
+    @JSON5Value
+    private String name;     // 포함됨
+    
+    private int age;         // 제외됨 (어노테이션 없음)
+}
 ```
 
 #### 디버깅 팁
@@ -1351,10 +1258,10 @@ if (json.has("type")) {
 public class User {
     @JSON5Value(comment = "사용자 ID")
     private String id;
-
+    
     @JSON5Value(key = "user_name", comment = "사용자 이름")
     private String name;
-
+    
     @JSON5Value(ignore = true)
     private String password; // 민감 정보 제외
 }
@@ -1367,44 +1274,109 @@ public class User {
 }
 ```
 
-#### 2. 불변 객체 선호
+#### 2. 복잡한 타입 처리 가이드
 ```java
-// ✅ 좋은 예: 불변 객체
-@JSON5Type
-public class ImmutableUser {
-    private final String name;
-    private final int age;
+// ✅ 좋은 예: TypeReference로 완전한 타입 안전성
+Map<UserRole, List<Map<String, User>>> complexData = 
+    deserializer.deserializeWithTypeReference(json,
+        new JSON5TypeReference<Map<UserRole, List<Map<String, User>>>>() {});
 
-    @JSON5Creator
-    public ImmutableUser(@JSON5Property("name") String name,
-                         @JSON5Property("age") int age) {
-        this.name = name;
-        this.age = age;
-    }
-
-    public String getName() { return name; }
-    public int getAge() { return age; }
-}
-```
-
-#### 3. 적절한 타입 사용
-```java
-// ✅ 좋은 예
+// ✅ 좋은 예: 구체적 타입 명시
 @JSON5Value
 private List<String> tags;              // 구체적 타입
 
-@JSON5Value
+@JSON5Value  
 private Map<String, User> userMap;      // String 키 사용
 
-// ❌ 나쁜 예
+@JSON5Value
+private Map<UserRole, List<String>> enumKeyMap; // Enum 키 지원
+
+// ❌ 나쁜 예: Raw 타입 사용
 @JSON5Value
 private List tags;                      // Raw 타입
 
 @JSON5Value
-private Map<User, String> reverseMap;   // 비String 키
+private Map userMap;                    // Raw 타입
+
+// ❌ 나쁜 예: 지원하지 않는 키 타입
+@JSON5Value
+private Map<CustomObject, String> invalidKeyMap; // 지원되지 않는 키 타입
 ```
 
-#### 4. 예외 처리
+#### 3. 메서드 어노테이션 활용
+```java
+// ✅ 좋은 예: Getter/Setter로 가상 필드 생성
+@JSON5Type
+public class User {
+    private String firstName;
+    private String lastName;
+    
+    @JSON5ValueGetter(comment = "전체 이름")
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+    
+    @JSON5ValueSetter
+    public void setFullName(String fullName) {
+        String[] parts = fullName.split(" ", 2);
+        this.firstName = parts[0];
+        this.lastName = parts.length > 1 ? parts[1] : "";
+    }
+    
+    @JSON5ValueGetter(key = "display_name")
+    public String getDisplayName() {
+        return "Mr/Ms. " + getFullName();
+    }
+}
+
+// JSON 결과
+{
+    "firstName": "John",
+    "lastName": "Doe", 
+    "fullName": "John Doe",        // Getter로 생성된 가상 필드
+    "display_name": "Mr/Ms. John Doe"  // 커스텀 키 이름
+}
+```
+
+#### 4. 어노테이션 모드별 사용 전략
+```java
+// 상황 1: 간단한 데이터 클래스 → 어노테이션 없이 사용
+public class SimpleConfig {
+    private String host = "localhost";
+    private int port = 8080;
+    private boolean ssl = false;
+    // Getter/Setter만 추가
+}
+
+// 상황 2: 일부 필드 제어 필요 → 선택적 어노테이션
+@JSON5Type
+public class UserConfig {
+    private String username;     // 자동 포함
+    private String email;        // 자동 포함
+    
+    @JSON5Value(ignore = true)
+    private String password;     // 제외
+    
+    @JSON5Value(comment = "마지막 로그인")
+    private LocalDateTime lastLogin; // 주석 추가
+}
+
+// 상황 3: 엄격한 제어 필요 → explicit 모드
+@JSON5Type(explicit = true)
+public class SecurityConfig {
+    @JSON5Value
+    private String publicKey;    // 명시적 포함
+    
+    @JSON5Value  
+    private String algorithm;    // 명시적 포함
+    
+    private String privateKey;   // 제외 (보안)
+    private String salt;         // 제외 (보안)
+    private String internalConfig; // 제외 (내부용)
+}
+```
+
+#### 5. 예외 처리
 ```java
 // ✅ 좋은 예: 안전한 역직렬화
 public User parseUserSafely(String jsonString) {
@@ -1416,6 +1388,38 @@ public User parseUserSafely(String jsonString) {
         return new User(); // 기본값 반환
     }
 }
+
+// ✅ 좋은 예: TypeReference 안전 사용
+public Map<String, List<User>> parseComplexDataSafely(JSON5Object json) {
+    try {
+        return JSON5Serializer.fromJSON5ObjectWithTypeReference(json,
+            new JSON5TypeReference<Map<String, List<User>>>() {});
+    } catch (JSON5SerializerException e) {
+        logger.error("복잡한 데이터 파싱 실패: " + e.getMessage());
+        return new HashMap<>(); // 빈 Map 반환
+    }
+}
+```
+
+#### 6. 성능 최적화 팁
+```java
+// ✅ 좋은 예: 스키마 캐시 활용
+JSON5Serializer serializer = JSON5Serializer.builder()
+    .enableSchemaCache()  // 스키마 캐시 활성화
+    .build();
+
+// 반복 처리 시 성능 향상
+List<User> users = getUsers();
+for (User user : users) {
+    JSON5Object json = serializer.serialize(user);
+    // 두 번째부터는 캐시된 스키마 사용
+}
+
+// ✅ 좋은 예: 적절한 설정 조합
+User user = serializer.forDeserialization()
+    .ignoreErrors()                // 오류 무시
+    .withStrictTypeChecking(false) // 엄격한 타입 체크 비활성화  
+    .deserialize(json, User.class);
 ```
 
 ---
@@ -1426,8 +1430,10 @@ JSON5 Serializer는 설정 파일 처리에 특화된 강력한 라이브러리�
 
 ### 핵심 장점
 - **JSON5 지원**: 주석, 후행 쉼표, 따옴표 없는 키 등으로 설정 파일 작성 용이
-- **고급 기능**: Jackson 수준의 생성자 기반 역직렬화, 다형성 처리, 커스텀 값 공급자
+- **고급 기능**: Jackson 수준의 생성자 기반 역직렬화, 다형성 처리, 커스텀 값 공급자, TypeReference
+- **복잡한 중첩 타입**: `List<Map<Car, Brand>>`, `Map<String, List<Map<String, User>>>` 등 완벽 지원
 - **유연한 API**: 정적 메서드와 Fluent API 모두 지원
+- **어노테이션 선택**: 어노테이션 없이도 동작, 필요시 explicit 모드로 엄격 제어
 
 ### 사용 권장 사항
 - **✅ 설정 파일**: 애플리케이션 설정, 환경 설정 등
@@ -1436,3 +1442,4 @@ JSON5 Serializer는 설정 파일 처리에 특화된 강력한 라이브러리�
 - **❌ REST API**: 표준 JSON 사용 권장
 - **❌ 시스템 간 데이터 교환**: 호환성을 위해 표준 JSON 사용
 
+이 가이드를 통해 JSON5 Serializer의 모든 기능을 효과적으로 활용하여 유지보수하기 쉬운 설정 파일과 강력한 객체 직렬화를 구현할 수 있습니다.
